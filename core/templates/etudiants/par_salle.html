@@ -1,0 +1,38 @@
+{% for salle in salles %}
+
+<div class="card mb-4">
+
+    <div class="card-header">
+        {{ salle.nom }}
+    </div>
+
+    <div class="card-body">
+
+        {% for classe in salle.classe_set.all %}
+
+            <h5>{{ classe }}</h5>
+
+            <ul>
+
+            {% for etudiant in classe.etudiants.all %}
+
+                <li>
+                    {{ etudiant.nom }}
+                    {{ etudiant.prenoms }}
+                </li>
+
+            {% empty %}
+
+                <li>Aucun étudiant</li>
+
+            {% endfor %}
+
+            </ul>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endfor %}

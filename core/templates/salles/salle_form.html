@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-lg rounded-4">
+
+                <!-- HEADER -->
+                <div class="card-header bg-primary text-white text-center py-4">
+
+                    <h4 class="mb-0">
+                        🏫 Salle
+                    </h4>
+
+                    <small>
+                        Ajouter ou modifier une salle
+                    </small>
+
+                </div>
+
+                <!-- BODY -->
+                <div class="card-body p-4">
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+                        <!-- CODE -->
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Code de la salle
+                            </label>
+
+                            <input type="text"
+                                   name="code"
+                                   class="form-control"
+                                   value="{{ salle.code|default:'' }}"
+                                   required>
+
+                        </div>
+
+                        <!-- NOM -->
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Nom de la salle
+                            </label>
+
+                            <input type="text"
+                                   name="nom"
+                                   class="form-control"
+                                   value="{{ salle.nom|default:'' }}"
+                                   required>
+
+                        </div>
+
+                        <!-- CAPACITE -->
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Capacité
+                            </label>
+
+                            <input type="number"
+                                   name="capacite"
+                                   class="form-control"
+                                   value="{{ salle.capacite|default:0 }}"
+                                   required>
+
+                        </div>
+
+                        <!-- BUTTONS -->
+                        <button type="submit"
+                                class="btn btn-success w-100 py-2">
+                            💾 Enregistrer
+                        </button>
+
+                        <a href="{% url 'salle_list' %}"
+                           class="btn btn-outline-secondary w-100 mt-2">
+                            ⬅ Retour
+                        </a>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

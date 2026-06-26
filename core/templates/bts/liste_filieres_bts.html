@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between mb-3">
+        <h3>Filières BTS</h3>
+
+        <a href="{% url 'ajouter_filiere_bts' %}"
+           class="btn btn-primary">
+            + Nouvelle Filière
+        </a>
+    </div>
+
+    <table class="table table-bordered table-hover">
+
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th width="180">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for filiere in filieres %}
+            <tr>
+                <td>{{ filiere.id }}</td>
+                <td>{{ filiere.nom }}</td>
+
+                <td>
+
+                    <a href="{% url 'modifier_filiere_bts' filiere.id %}"
+                       class="btn btn-warning btn-sm">
+                        Modifier
+                    </a>
+
+                    <a href="{% url 'supprimer_filiere_bts' filiere.id %}"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Supprimer cette filière ?')">
+                        Supprimer
+                    </a>
+
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center">
+                    Aucune filière BTS enregistrée
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
