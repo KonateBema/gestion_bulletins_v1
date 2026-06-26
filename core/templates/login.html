@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -111,7 +112,8 @@ body {
         <div class="col-md-6 left-panel">
 
             <!-- Remplace par ton logo école -->
-            <img src="https://cdn-icons-png.flaticon.com/512/167/167707.png" class="logo">
+            <!-- <img src="https://cdn-icons-png.flaticon.com/512/167/167707.png" class="logo"> -->
+            <img src="{% static 'logo.jpeg' %}" class="logo" alt="Logo">
 
             <h1>Gestion intelligente<br>des bulletins scolaires</h1>
 

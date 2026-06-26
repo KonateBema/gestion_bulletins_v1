@@ -1,8 +1,26 @@
+{% load static %}
+<style>
+    .brand{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.brand-logo{
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+</style>
 <div class="sidebar">
 
     <!-- BRAND -->
     <div class="brand">
-        🎓 École Pro
+        <img src="{% static 'logo.jpeg' %}" alt="Logo" class="brand-logo">
+        <span>UIC-Abidjan</span>
     </div>
 
     <!-- DASHBOARD -->
