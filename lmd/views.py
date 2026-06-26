@@ -589,7 +589,7 @@ def etudiant_lmd_update(request, pk):
         etudiant.telephone = request.POST.get("telephone")
         etudiant.sexe = request.POST.get("sexe")
         etudiant.annee_academique = request.POST.get("annee_academique")
-
+        # etudiant.filiere_id = request.POST.get("filiere")
         etudiant.save()
 
     return redirect("etudiant_lmd_list")

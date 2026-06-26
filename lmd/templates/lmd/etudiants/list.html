@@ -207,47 +207,237 @@
                                         <div class="modal-body">
 
                                             <div class="row g-3">
-
+                                        
+                                                <!-- Matricule -->
                                                 <div class="col-md-4">
-                                                    <input name="matricule" value="{{ e.matricule }}"
-                                                           class="form-control" placeholder="Matricule">
+                                                    <label class="form-label">Matricule</label>
+                                                    <input type="text"
+                                                           name="matricule"
+                                                           value="{{ e.matricule }}"
+                                                           class="form-control">
                                                 </div>
-
+                                        
+                                                <!-- Nom -->
                                                 <div class="col-md-4">
-                                                    <input name="nom" value="{{ e.nom }}"
-                                                           class="form-control" placeholder="Nom">
+                                                    <label class="form-label">Nom</label>
+                                                    <input type="text"
+                                                           name="nom"
+                                                           value="{{ e.nom }}"
+                                                           class="form-control">
                                                 </div>
-
+                                        
+                                                <!-- Prénoms -->
                                                 <div class="col-md-4">
-                                                    <input name="prenoms" value="{{ e.prenoms }}"
-                                                           class="form-control" placeholder="Prénoms">
+                                                    <label class="form-label">Prénoms</label>
+                                                    <input type="text"
+                                                           name="prenoms"
+                                                           value="{{ e.prenoms }}"
+                                                           class="form-control">
                                                 </div>
-
-                                                <div class="col-md-4">
-                                                    <input name="telephone" value="{{ e.telephone }}"
-                                                           class="form-control" placeholder="Téléphone">
-                                                </div>
-
-                                                <div class="col-md-4">
+                                        
+                                                <!-- Sexe -->
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Sexe</label>
+                                        
                                                     <select name="sexe" class="form-select">
-
-                                                        <option value="M" {% if e.sexe == "M" %}selected{% endif %}>M</option>
-                                                        <option value="F" {% if e.sexe == "F" %}selected{% endif %}>F</option>
-
+                                                        <option value="M" {% if e.sexe == "M" %}selected{% endif %}>Masculin</option>
+                                                        <option value="F" {% if e.sexe == "F" %}selected{% endif %}>Féminin</option>
                                                     </select>
                                                 </div>
-
-                                                <div class="col-md-4">
-                                                    <input name="annee_academique"
-                                                           value="{{ e.annee_academique }}"
-                                                           class="form-control"
-                                                           placeholder="Année">
+                                        
+                                                <!-- Date naissance -->
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Date de naissance</label>
+                                        
+                                                    <input type="date"
+                                                           name="date_naissance"
+                                                           value="{{ e.date_naissance|date:'Y-m-d' }}"
+                                                           class="form-control">
                                                 </div>
-
+                                        
+                                                <!-- Lieu naissance -->
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Lieu de naissance</label>
+                                        
+                                                    <input type="text"
+                                                           name="lieu_naissance"
+                                                           value="{{ e.lieu_naissance }}"
+                                                           class="form-control">
+                                                </div>
+                                        
+                                                <!-- Téléphone -->
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Téléphone</label>
+                                        
+                                                    <input type="text"
+                                                           name="telephone"
+                                                           value="{{ e.telephone }}"
+                                                           class="form-control">
+                                                </div>
+                                        
+                                                <!-- Email -->
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Email</label>
+                                        
+                                                    <input type="email"
+                                                           name="email"
+                                                           value="{{ e.email }}"
+                                                           class="form-control">
+                                                </div>
+                                        
+                                                <!-- Niveau -->
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Niveau</label>
+                                        
+                                                    <select name="niveau" class="form-select">
+                                        
+                                                        <option value="L1" {% if e.niveau == "L1" %}selected{% endif %}>Licence 1</option>
+                                        
+                                                        <option value="L2" {% if e.niveau == "L2" %}selected{% endif %}>Licence 2</option>
+                                        
+                                                        <option value="M1" {% if e.niveau == "M1" %}selected{% endif %}>Master 1</option>
+                                        
+                                                        <option value="M2" {% if e.niveau == "M2" %}selected{% endif %}>Master 2</option>
+                                        
+                                                        <option value="DOC" {% if e.niveau == "DOC" %}selected{% endif %}>Doctorat</option>
+                                        
+                                                    </select>
+                                                </div>
+                                        
+                                                <!-- Filière -->
+                                                <!-- <div class="col-md-5">
+                                                    <label class="form-label">Filière</label>
+                                        
+                                                    <select name="filiere" class="form-select">
+                                        
+                                                        {% for f in filieres %}
+                                                            <option value="{{ f.id }}"
+                                                                {% if e.filiere.id == f.id %}selected{% endif %}>
+                                                                {{ f.nom }}
+                                                            </option>
+                                                        {% endfor %}
+                                        
+                                                    </select>
+                                                </div> -->
+                                        
+                                                <!-- Statut -->
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Statut</label>
+                                        
+                                                    <select name="statut" class="form-select">
+                                        
+                                                        <option value="AF"
+                                                            {% if e.statut == "AF" %}selected{% endif %}>
+                                                            Affecté
+                                                        </option>
+                                        
+                                                        <option value="NF"
+                                                            {% if e.statut == "NF" %}selected{% endif %}>
+                                                            Non Affecté
+                                                        </option>
+                                        
+                                                    </select>
+                                                </div>
+                                        
+                                                <!-- Année académique -->
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Année académique</label>
+                                        
+                                                    <input type="text"
+                                                           name="annee_academique"
+                                                           value="{{ e.annee_academique }}"
+                                                           class="form-control">
+                                                </div>
+                                        
                                             </div>
-
+                                        
+                                            <hr>
+                                        
+                                            <!-- UE -->
+                                            <!-- <h5 class="mt-4">📚 Unités d'Enseignement</h5>
+                                        
+                                            <div class="row">
+                                        
+                                                {% for ue in ues %}
+                                        
+                                                <div class="col-md-4 mb-2">
+                                        
+                                                    <div class="form-check">
+                                        
+                                                        <input
+                                                            type="checkbox"
+                                                            class="form-check-input"
+                                                            name="ue"
+                                                            value="{{ ue.id }}"
+                                                            id="edit_ue{{ ue.id }}{{ e.id }}"
+                                        
+                                                            {% if ue in e.ues.all %}
+                                                                checked
+                                                            {% endif %}
+                                                        >
+                                        
+                                                        <label class="form-check-label"
+                                                               for="edit_ue{{ ue.id }}{{ e.id }}">
+                                        
+                                                            {{ ue.code }} - {{ ue.libelle }}
+                                        
+                                                        </label>
+                                        
+                                                    </div>
+                                        
+                                                </div>
+                                        
+                                                {% endfor %}
+                                        
+                                            </div>
+                                        
+                                            <hr> -->
+                                        
+                                            <!-- ECUE -->
+                                            <!-- <h5 class="mt-4">📖 ECUE</h5>
+                                        
+                                            <div class="row">
+                                        
+                                                {% for ecue in ecues %}
+                                        
+                                                <div class="col-md-6 mb-2">
+                                        
+                                                    <div class="form-check">
+                                        
+                                                        <input
+                                                            type="checkbox"
+                                                            class="form-check-input"
+                                                            name="ecue"
+                                                            value="{{ ecue.id }}"
+                                                            id="edit_ecue{{ ecue.id }}{{ e.id }}"
+                                        
+                                                            {% if ecue in e.ecues.all %}
+                                                                checked
+                                                            {% endif %}
+                                                        >
+                                        
+                                                        <label class="form-check-label"
+                                                               for="edit_ecue{{ ecue.id }}{{ e.id }}">
+                                        
+                                                            {{ ecue.code }} - {{ ecue.libelle }}
+                                        
+                                                            <br>
+                                        
+                                                            <small class="text-muted">
+                                                                UE : {{ ecue.ue.code }}
+                                                            </small>
+                                        
+                                                        </label>
+                                        
+                                                    </div>
+                                        
+                                                </div>
+                                        
+                                                {% endfor %}
+                                        
+                                            </div> -->
+                                        
                                         </div>
-
                                         <div class="modal-footer">
 
                                             <button class="btn btn-secondary" data-bs-dismiss="modal">
