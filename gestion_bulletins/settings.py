@@ -29,7 +29,12 @@ SECRET_KEY = "django-insecure-v-5c)vcsv6_(ei75o6a1+@^d2y*%z$3ayp9$4-*uz+11vn_^es
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+import os
+
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "localhost,127.0.0.1"
+).split(",")
 
 
 # Application definition
