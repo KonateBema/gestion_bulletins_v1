@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+<h3>Liste des notes</h3>
+
+<a href="{% url 'note_lmdecue_add' %}" class="btn btn-primary mb-3">
+    Nouvelle saisie
+</a>
+
+<table class="table table-bordered table-striped">
+
+<thead>
+
+<tr>
+
+<th>Matricule</th>
+<th>Etudiant</th>
+<th>Filière</th>
+<th>Niveau</th>
+<th>ECUE</th>
+<th>CC</th>
+<th>Examen</th>
+<th>Moyenne</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for note in notes %}
+
+<tr>
+
+<td>{{ note.etudiant.matricule }}</td>
+
+<td>{{ note.etudiant.nom }} {{ note.etudiant.prenoms }}</td>
+
+<td>{{ note.etudiant.filiere.nom }}</td>
+
+<td>{{ note.etudiant.niveau }}</td>
+
+<td>{{ note.ecue.nom }}</td>
+
+<td>{{ note.cc }}</td>
+
+<td>{{ note.examen }}</td>
+
+<td>{{ note.moyenne }}</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="8">
+Aucune note enregistrée.
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

@@ -13,11 +13,20 @@ class UE(models.Model):
     credit = models.IntegerField()
 
     filiere = models.ForeignKey(
-        Filiere,
-        on_delete=models.CASCADE,
-        related_name="ues"
+    "FiliereLMD",
+    null=True,
+    blank=True,
+    on_delete=models.CASCADE
     )
 
+    grande_unite = models.ForeignKey(
+    "GrandeUnite",
+    on_delete=models.PROTECT,
+    related_name="ues",
+    null=True,
+    blank=True
+    )
+  
     semestre = models.CharField(max_length=5)
 
     def __str__(self):
@@ -44,8 +53,21 @@ class ECUE(models.Model):
 
 
 # =====================
-
 class NoteLMD(models.Model):
+
+    SESSION_CHOICES = (
+        ("1", "Session 1"),
+        ("2", "Session 2 (Rattrapage)"),
+    )
+
+    SEMESTRE_CHOICES = (
+        ("S1", "Semestre 1"),
+        ("S2", "Semestre 2"),
+        ("S3", "Semestre 3"),
+        ("S4", "Semestre 4"),
+        ("S5", "Semestre 5"),
+        ("S6", "Semestre 6"),
+    )
 
     etudiant = models.ForeignKey(
         "EtudiantLMD",
@@ -59,20 +81,47 @@ class NoteLMD(models.Model):
         related_name="notes"
     )
 
+    semestre = models.CharField(
+        max_length=2,
+        choices=SEMESTRE_CHOICES
+    )
+
+    session = models.CharField(
+        max_length=1,
+        choices=SESSION_CHOICES,
+        default="1"
+    )
+
     cc = models.FloatField(default=0)
     examen = models.FloatField(default=0)
 
     moyenne = models.FloatField(blank=True, null=True, editable=False)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "etudiant",
+                    "ecue",
+                    "semestre",
+                    "session",
+                ],
+                name="unique_note_par_session",
+            )
+        ]
+
     def save(self, *args, **kwargs):
+        cc = float(self.cc or 0)
+        examen = float(self.examen or 0)
         self.moyenne = round(
-            (float(self.cc) * 0.4) + (float(self.examen) * 0.6),
+            self.cc * 0.4 + self.examen * 0.6,
             2
         )
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.etudiant} - {self.ecue} ({self.moyenne})"
+        return f"{self.etudiant} - {self.ecue} - {self.semestre} Session {self.session}"
+
 # =====================
 # ÉTUDIANT LMD (structure académique)
 # =====================
@@ -88,6 +137,8 @@ class EtudiantLMD(models.Model):
     matricule = models.CharField(max_length=50, unique=True)
     nom = models.CharField(max_length=100)
     prenoms = models.CharField(max_length=150)
+    ues = models.ManyToManyField("UE", blank=True)
+    ecues = models.ManyToManyField("ECUE", blank=True)
 
     sexe = models.CharField(
         max_length=1,
@@ -120,6 +171,7 @@ class EtudiantLMD(models.Model):
     NIVEAUX = [
         ("L1", "Licence 1"),
         ("L2", "Licence 2"),
+        ("L3", "Licence 3"),
         ("M1", "Master 1"),
         ("M2", "Master 2"),
         ("DOC", "Doctorat"),
@@ -130,10 +182,14 @@ class EtudiantLMD(models.Model):
         choices=NIVEAUX
     )
 
+    # filiere = models.ForeignKey(
+    #     FiliereLMD,
+    #     on_delete=models.CASCADE,
+    #     related_name="etudiants_lmd"
+    # )
     filiere = models.ForeignKey(
-        Filiere,
-        on_delete=models.CASCADE,
-        related_name="etudiants_lmd"
+    "FiliereLMD",
+    on_delete=models.CASCADE
     )
 
     annee_academique = models.CharField(max_length=20)
@@ -184,13 +240,13 @@ class ClasseLMD(models.Model):
     niveau = models.ForeignKey(
         "NiveauLMD",
         on_delete=models.PROTECT,
-        related_name="classes"
+        related_name="ClasseLMD"
     )
 
     filiere = models.ForeignKey(
         "FiliereLMD",
         on_delete=models.PROTECT,
-        related_name="classes"
+        related_name="ClasseLMD"
     )
 
     class Meta:
@@ -207,7 +263,54 @@ class FiliereLMD(models.Model):
         return self.libelle
 
 
-# class InscriptionUE(models.Model):
-#     etudiant = models.ForeignKey("EtudiantLMD", on_delete=models.CASCADE)
-#     ue = models.ForeignKey("UE", on_delete=models.CASCADE)
-#     annee_academique = models.CharField(max_length=20)
+
+class GrandeUnite(models.Model):
+    nom = models.CharField(max_length=150)
+    filiere = models.ForeignKey("FiliereLMD", on_delete=models.CASCADE)
+    semestre = models.CharField(max_length=2)
+
+    def __str__(self):
+        filiere = getattr(self.filiere, "libelle", "Sans filière")
+        return f"{self.nom} - {filiere} ({self.semestre})"
+
+class SaisieNoteLMD(models.Model):
+
+    filiere = models.ForeignKey("FiliereLMD", on_delete=models.CASCADE)
+    niveau = models.CharField(max_length=10)
+    ecue = models.ForeignKey("ECUE", on_delete=models.CASCADE)
+
+    semestre = models.CharField(max_length=2)
+    session = models.CharField(max_length=1, default="1")
+
+    date_creation = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.filiere} - {self.niveau} - {self.ecue}"
+
+class SaisieNoteLMDItem(models.Model):
+
+    saisie = models.ForeignKey(
+        "SaisieNoteLMD",
+        on_delete=models.CASCADE,
+        related_name="items"
+    )
+
+    etudiant = models.ForeignKey("EtudiantLMD", on_delete=models.CASCADE)
+
+    cc = models.FloatField(default=0)
+    examen = models.FloatField(default=0)
+
+    moyenne = models.FloatField(blank=True, null=True)
+
+    class Meta:
+        unique_together = ("saisie", "etudiant")
+
+    def save(self, *args, **kwargs):
+        self.moyenne = round(self.cc * 0.4 + self.examen * 0.6, 2)
+        super().save(*args, **kwargs)

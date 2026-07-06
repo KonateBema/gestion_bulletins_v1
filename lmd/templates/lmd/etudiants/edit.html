@@ -7,7 +7,7 @@
     <div class="card shadow">
 
         <div class="card-header bg-primary text-white">
-            Modifier étudiant
+            Modifier étudiant bbb
         </div>
 
         <div class="card-body">
@@ -15,15 +15,58 @@
             <form method="post">
                 {% csrf_token %}
 
-                {{ form.as_p }}
+                <div class="row">
+
+                    <!-- CHAMPS ETUDIANT -->
+                    <div class="col-md-6">
+                        {{ form.matricule.label_tag }} {{ form.matricule }}
+                        {{ form.nom.label_tag }} {{ form.nom }}
+                        {{ form.prenoms.label_tag }} {{ form.prenoms }}
+                        {{ form.sexe.label_tag }} {{ form.sexe }}
+                        {{ form.date_naissance.label_tag }} {{ form.date_naissance }}
+                        {{ form.lieu_naissance.label_tag }} {{ form.lieu_naissance }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.telephone.label_tag }} {{ form.telephone }}
+                        {{ form.email.label_tag }} {{ form.email }}
+                        {{ form.niveau.label_tag }} {{ form.niveau }}
+                        {{ form.filiere.label_tag }} {{ form.filiere }}
+                        {{ form.statut.label_tag }} {{ form.statut }}
+                        {{ form.annee_academique.label_tag }} {{ form.annee_academique }}
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <!-- UE -->
+                <h5>Unités d'Enseignement (UE)</h5>
+                <div class="row">
+                    {% for ue in form.ues %}
+                    <div class="col-md-4">
+                        {{ ue }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr>
+
+                <!-- ECUE -->
+                <h5>ECUE</h5>
+                <div class="row">
+                    {% for ecue in form.ecues %}
+                    <div class="col-md-4">
+                        {{ ecue }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <br>
 
                 <button type="submit" class="btn btn-success">
                     Enregistrer
                 </button>
-
-                <a href="{% url 'etudiant_lmd_list' %}" class="btn btn-secondary">
-                    Retour
-                </a>
 
             </form>
 

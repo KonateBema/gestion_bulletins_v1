@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h3 class="fw-bold text-primary">
+            📝 Saisie des notes
+        </h3>
+
+        <span class="badge bg-dark">
+            {{ saisie.ecue.libelle }}
+        </span>
+
+    </div>
+
+    <!-- INFOS -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <small class="text-muted">Filière</small><br>
+                        <strong>{{ saisie.filiere.libelle }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="p-3 bg-light rounded text-center">
+                        <small class="text-muted">Niveau</small><br>
+                        <strong>{{ saisie.niveau }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="p-3 bg-light rounded text-center">
+                        <small class="text-muted">Semestre</small><br>
+                        <strong>{{ saisie.semestre }}</strong>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="p-3 bg-light rounded text-center">
+                        <small class="text-muted">Session</small><br>
+                        <span class="badge bg-primary">
+                            {{ saisie.session }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded text-center">
+                        <small class="text-muted">ECUE</small><br>
+                        <strong>{{ saisie.ecue.libelle }}</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FORM -->
+    <form method="POST" action="{% url 'saisie_note_etudiant' saisie.id %}">
+        {% csrf_token %}
+
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-header bg-dark text-white d-flex justify-content-between">
+
+                <span>👨‍🎓 Notes des étudiants</span>
+
+                <span class="badge bg-light text-dark">
+                    {{ etudiants|length }}
+                </span>
+
+            </div>
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Matricule</th>
+                                <th>Nom & Prénoms</th>
+                                <th width="150">CC (/20)</th>
+                                <th width="150">Examen (/20)</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for etudiant in etudiants %}
+
+                            <tr>
+
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ etudiant.matricule }}
+                                    </span>
+                                </td>
+
+                                <td class="fw-semibold">
+                                    {{ etudiant.nom }} {{ etudiant.prenoms }}
+                                </td>
+
+                                <td>
+                                    <input type="number"
+                                           step="0.01"
+                                           min="0"
+                                           max="20"
+                                           name="cc_{{ etudiant.id }}"
+                                           value="{{ etudiant.note.cc|default_if_none:'' }}"
+                                           class="form-control form-control-sm text-center">
+                                </td>
+
+                                <td>
+                                    <input type="number"
+                                           step="0.01"
+                                           min="0"
+                                           max="20"
+                                           name="examen_{{ etudiant.id }}"
+                                           value="{{ etudiant.note.examen|default_if_none:'' }}"
+                                           class="form-control form-control-sm text-center">
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ACTION -->
+        <div class="mt-4 d-flex justify-content-end">
+
+            <button type="submit" class="btn btn-success btn-lg shadow-sm">
+                💾 Enregistrer les notes
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

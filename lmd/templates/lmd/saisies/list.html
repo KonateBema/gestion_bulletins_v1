@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h3 class="fw-bold text-primary">
+            🧾 Saisies de notes
+        </h3>
+
+        <div class="d-flex gap-2">
+
+            <a href="{% url 'saisie_list' %}" class="btn btn-outline-secondary">
+                ← Retour
+            </a>
+
+            <a href="{% url 'saisie_add' %}" class="btn btn-primary shadow-sm">
+                ➕ Nouvelle saisie
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-dark text-white d-flex justify-content-between">
+
+            <span>📋 Liste des saisies</span>
+
+            <span class="badge bg-light text-dark">
+                {{ saisies|length }}
+            </span>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            {% if saisies %}
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Filière</th>
+                            <th>Niveau</th>
+                            <th>ECUE</th>
+                            <th>Semestre</th>
+                            <th>Session</th>
+                            <th>Date</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for s in saisies %}
+
+                        <tr>
+
+                            <td class="fw-semibold">
+                                {{ s.filiere.libelle }}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ s.niveau }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ s.ecue.libelle }}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-info text-dark">
+                                    {{ s.semestre }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {% if s.session == "1" %}
+                                    <span class="badge bg-success">Session 1</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Rattrapage</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-muted small">
+                                {{ s.date_creation|date:"d/m/Y H:i" }}
+                            </td>
+
+                            <!-- ✅ ACTIONS PRO ALIGNÉES -->
+                            <td class="text-center">
+
+                                <div class="d-flex justify-content-center gap-2">
+
+                                    <a href="{% url 'saisie_note_etudiant' s.id %}"
+                                       class="btn btn-success btn-sm">
+                                        📝
+                                    </a>
+
+                                    <a href="{% url 'saisie_edit' s.id %}"
+                                       class="btn btn-warning btn-sm">
+                                        ✏️
+                                    </a>
+
+                                    <a href="{% url 'saisie_delete' s.id %}"
+                                       class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Supprimer cette saisie ?')">
+                                        🗑️
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="p-4 text-center text-muted">
+                Aucune saisie trouvée.
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+        <h3 class="fw-bold">🧾 Création d’une saisie de notes</h3>
+        <p class="text-muted mb-0">
+            Sélectionnez les paramètres pour commencer la saisie des notes ECUE
+        </p>
+    </div>
+
+    <!-- CARD -->
+    <div class="card border-0 shadow-lg rounded-4">
+        <div class="card-body p-4">
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <!-- FILIERE -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">🎓 Filière LMD</label>
+
+                        <select name="filiere" class="form-select form-select-lg" required>
+                            <option value="">-- Choisir la filière --</option>
+
+                            {% for f in filieres %}
+                            <option value="{{ f.id }}">
+                                {{ f.libelle }}
+                            </option>
+                            {% empty %}
+                            <option disabled>Aucune filière disponible</option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+
+                    <!-- NIVEAU -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">📚 Niveau</label>
+
+                        <select name="niveau" class="form-select" required>
+                            <option value="">-- Choisir --</option>
+
+                            <option value="L1">Licence 1</option>
+                            <option value="L2">Licence 2</option>
+                            <option value="L3">Licence 3</option>
+                            <option value="M1">Master 1</option>
+                            <option value="M2">Master 2</option>
+                            <option value="DOC">Doctorat</option>
+                        </select>
+                    </div>
+
+                    <!-- ECUE -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">📘 ECUE</label>
+
+                        <select name="ecue" class="form-select form-select-lg" required>
+                            <option value="">-- Choisir l’ECUE --</option>
+
+                            {% for e in ecues %}
+                            <option value="{{ e.id }}">
+                                {{ e.libelle }}
+                            </option>
+                            {% empty %}
+                            <option disabled>Aucun ECUE disponible</option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+
+                    <!-- SEMESTRE -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">📆 Semestre</label>
+
+                        <select name="semestre" class="form-select form-select-lg" required>
+                            <option value="">-- Choisir --</option>
+                            <option value="S1">S1</option>
+                            <option value="S2">S2</option>
+                            <option value="S3">S3</option>
+                            <option value="S4">S4</option>
+                            <option value="S5">S5</option>
+                            <option value="S6">S6</option>
+                        </select>
+                    </div>
+
+                    <!-- SESSION -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">🔁 Session</label>
+
+                        <select name="session" class="form-select form-select-lg" required>
+                            <option value="">-- Choisir --</option>
+                            <option value="1">Session 1</option>
+                            <option value="2">Rattrapage</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- BUTTON -->
+                <div class="mt-4 d-flex justify-content-end">
+                    <button class="btn btn-primary btn-lg px-4 shadow-sm">
+                        ➕ Lancer la saisie
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

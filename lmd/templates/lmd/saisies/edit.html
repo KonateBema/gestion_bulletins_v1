@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h3 class="text-primary fw-bold">
+            ✏️ Modifier une saisie
+        </h3>
+
+        <a href="{% url 'saisie_list' %}" class="btn btn-outline-secondary">
+            ← Retour
+        </a>
+
+    </div>
+
+    <!-- FORM -->
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <!-- FILIERE -->
+                    <div class="col-md-4">
+                        <label class="form-label">Filière</label>
+
+                        <select name="filiere" class="form-control">
+
+                            {% for f in filieres %}
+                                <option value="{{ f.id }}"
+                                    {% if saisie.filiere.id == f.id %}selected{% endif %}>
+                                    {{ f.libelle }}
+                                </option>
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <!-- NIVEAU -->
+                    <div class="col-md-2">
+                        <label class="form-label">Niveau</label>
+
+                        <input type="text" name="niveau"
+                               value="{{ saisie.niveau }}"
+                               class="form-control">
+                    </div>
+
+                    <!-- ECUE -->
+                    <div class="col-md-3">
+                        <label class="form-label">ECUE</label>
+
+                        <select name="ecue" class="form-control">
+
+                            {% for e in ecues %}
+                                <option value="{{ e.id }}"
+                                    {% if saisie.ecue.id == e.id %}selected{% endif %}>
+                                    {{ e.libelle }}
+                                </option>
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <!-- SEMESTRE -->
+                    <div class="col-md-2">
+                        <label class="form-label">Semestre</label>
+
+                        <input type="text" name="semestre"
+                               value="{{ saisie.semestre }}"
+                               class="form-control">
+                    </div>
+
+                    <!-- SESSION -->
+                    <div class="col-md-1">
+                        <label class="form-label">Session</label>
+
+                        <input type="text" name="session"
+                               value="{{ saisie.session }}"
+                               class="form-control">
+                    </div>
+
+                </div>
+
+                <!-- BTN -->
+                <div class="mt-4 d-flex justify-content-end">
+
+                    <button type="submit" class="btn btn-success">
+                        💾 Enregistrer
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

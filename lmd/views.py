@@ -11,6 +11,7 @@ from .forms import EtudiantLMDForm
 from django.db.models import Sum
 from .pdf_service_ue import generate_bulletin_lmd_pdf
 from django.core.paginator import Paginator
+from django.contrib import messages
 
 def niveau_list(request):
     niveaux = Niveau.objects.all()
@@ -26,8 +27,8 @@ def niveau_add(request):
     return render(request, "lmd/niveaux/add.html")
 
 def filiere_list(request):
-    filieres = Filiere.objects.all()
-    return render(request, "lmd/filieres/list.html", {"filieres": filieres})
+    filieres = FiliereLMD.objects.all()
+    return render(request, "lmd/filieresLMD/list.html", {"filieres": filieres})
 
 
 def filiere_add(request):
@@ -37,16 +38,25 @@ def filiere_add(request):
         )
     return redirect("filiere_lmd_list")
 
+
+def filiere_delete(request, pk):
+    filiere = get_object_or_404(FiliereLMD, pk=pk)
+    filiere.delete()
+    return redirect("filiere_list")
+
+
+
 # UPDATE
 def filiere_edit(request, pk):
-    filiere = get_object_or_404(Filiere, pk=pk)
+    filiere = get_object_or_404(FiliereLMD, pk=pk)
 
     if request.method == "POST":
-        filiere.nom = request.POST.get("nom")
+        filiere.code = request.POST.get("code")
+        filiere.libelle = request.POST.get("libelle")
         filiere.save()
-        return redirect("filiere_lmd_list")
+        return redirect("filiere_list")
 
-    return render(request, "lmd/filieres/edit.html", {
+    return render(request, "lmd/filieresLMD/edit.html", {
         "filiere": filiere
     })
 
@@ -84,7 +94,7 @@ def classe_add(request):
 
     return render(request, "lmd/classes/add.html", {
         "niveaux": Niveau.objects.all(),
-        "filieres": Filiere.objects.all()
+        "filieres": FiliereLMD.objects.all()
     })
 
 
@@ -93,7 +103,7 @@ def ue_list(request):
     ues = UE.objects.select_related(
         "filiere"
     ).order_by(
-        "filiere__nom",
+        "filiere__libelle",
         "semestre",
         "code"
     )
@@ -110,50 +120,78 @@ def ue_list(request):
 def ue_add(request):
 
     if request.method == "POST":
+        try:
+            filiere_id = request.POST.get("filiere")
+            grande_unite_id = request.POST.get("grande_unite")
 
-        UE.objects.create(
-            code=request.POST.get("code"),
-            libelle=request.POST.get("libelle"),
-            credit=request.POST.get("credit"),
-            filiere_id=request.POST.get("filiere"),
-            semestre=request.POST.get("semestre")
-        )
+            # 🔥 Vérification des ForeignKey (évite FOREIGN KEY constraint failed)
+            filiere = get_object_or_404(FiliereLMD, id=filiere_id)
+            grande_unite = get_object_or_404(GrandeUnite, id=grande_unite_id)
 
-        return redirect("ue_list")
+            UE.objects.create(
+                code=request.POST.get("code"),
+                libelle=request.POST.get("libelle"),
+                credit=int(request.POST.get("credit", 0)),
+                semestre=request.POST.get("semestre"),
+                filiere=filiere,
+                grande_unite=grande_unite,
+            )
+
+            messages.success(request, "UE ajoutée avec succès.")
+            return redirect("ue_list")
+
+        except ValueError:
+            messages.error(request, "Le crédit doit être un nombre valide.")
+
+        except Exception as e:
+            messages.error(request, f"Erreur : {e}")
 
     return render(
         request,
         "lmd/ue/add.html",
         {
-            "filieres": Filiere.objects.all()
+            "filieres": FiliereLMD.objects.all(),
+            "grandes_unites": GrandeUnite.objects.all(),
         }
     )
-
 
 def ue_edit(request, pk):
 
-    ue = UE.objects.get(pk=pk)
+    ue = get_object_or_404(UE, pk=pk)
 
     if request.method == "POST":
+        try:
+            filiere_id = request.POST.get("filiere")
+            grande_unite_id = request.POST.get("grande_unite")
 
-        ue.code = request.POST.get("code")
-        ue.libelle = request.POST.get("libelle")
-        ue.credit = request.POST.get("credit")
-        ue.filiere_id = request.POST.get("filiere")
-        ue.semestre = request.POST.get("semestre")
+            # 🔥 Sécurisation ForeignKey
+            filiere = get_object_or_404(FiliereLMD, id=filiere_id)
+            grande_unite = get_object_or_404(GrandeUnite, id=grande_unite_id)
 
-        ue.save()
+            ue.code = request.POST.get("code")
+            ue.libelle = request.POST.get("libelle")
+            ue.credit = int(request.POST.get("credit", 0))
+            ue.semestre = request.POST.get("semestre")
 
-        return redirect("ue_list")
+            ue.filiere = filiere
+            ue.grande_unite = grande_unite
 
-    return render(
-        request,
-        "lmd/ue/edit.html",
-        {
-            "ue": ue,
-            "filieres": Filiere.objects.all()
-        }
-    )
+            ue.save()
+
+            messages.success(request, "UE modifiée avec succès.")
+            return redirect("ue_list")
+
+        except ValueError:
+            messages.error(request, "Le crédit doit être un nombre valide.")
+
+        except Exception as e:
+            messages.error(request, f"Erreur : {e}")
+
+    return render(request, "lmd/ue/edit.html", {
+        "ue": ue,
+        "filieres": FiliereLMD.objects.all(),
+        "grandes_unites": GrandeUnite.objects.all(),
+    })
 
 def ue_delete(request, pk):
 
@@ -288,45 +326,78 @@ def note_lmd_list(request):
         "ecues": ECUE.objects.all(),
     })
 
+
 def note_lmd_add(request):
 
     if request.method == "POST":
+        try:
+            etudiant_id = request.POST.get("etudiant")
+            ecue_id = request.POST.get("ecue")
+            semestre = request.POST.get("semestre")
+            session = request.POST.get("session")
 
-        NoteLMD.objects.create(
-            etudiant_id=request.POST.get("etudiant"),
-            ecue_id=request.POST.get("ecue"),
-            cc=request.POST.get("cc"),
-            examen=request.POST.get("examen"),
-        )
+            cc = float(request.POST.get("cc", "0").replace(",", "."))
+            examen = float(request.POST.get("examen", "0").replace(",", "."))
 
-        return redirect("note_lmd_list")
+            NoteLMD.objects.create(
+                etudiant_id=etudiant_id,
+                ecue_id=ecue_id,
+                semestre=semestre,
+                session=session,
+                cc=cc,
+                examen=examen,
+            )
 
-    return render(request, "lmd/notes/form.html", {
-        "etudiants": EtudiantLMD.objects.all(),
-        "ecues": ECUE.objects.all(),
-    })
+            messages.success(request, "La note a été enregistrée avec succès.")
+            return redirect("note_lmd_list")
+
+        except ValueError:
+            messages.error(
+                request,
+                "Les notes de CC et d'examen doivent être des nombres valides."
+            )
+
+        except Exception as e:
+            messages.error(request, f"Erreur : {e}")
+
+    return render(
+        request,
+        "lmd/notes/form.html",
+        {
+            "etudiants": EtudiantLMD.objects.all(),
+            "ecues": ECUE.objects.all(),
+        },
+    )
 
 
 def note_lmd_edit(request, pk):
 
-    note = NoteLMD.objects.get(pk=pk)
+    note = get_object_or_404(NoteLMD, pk=pk)
 
     if request.method == "POST":
+        try:
+            note.etudiant_id = request.POST.get("etudiant")
+            note.ecue_id = request.POST.get("ecue")
+            note.semestre = request.POST.get("semestre")
+            note.session = request.POST.get("session")
 
-        note.etudiant_id = request.POST.get("etudiant")
-        note.ecue_id = request.POST.get("ecue")
-        note.cc = request.POST.get("cc")
-        note.examen = request.POST.get("examen")
+            # ✅ Conversion obligatoire en float
+            note.cc = float(request.POST.get("cc", "0").replace(",", "."))
+            note.examen = float(request.POST.get("examen", "0").replace(",", "."))
 
-        note.save()
-        return redirect("note_lmd_list")
+            note.save()
+
+            messages.success(request, "Note modifiée avec succès.")
+            return redirect("note_lmd_list")
+
+        except ValueError:
+            messages.error(request, "CC et Examen doivent être des nombres valides.")
 
     return render(request, "lmd/notes/form.html", {
         "note": note,
         "etudiants": EtudiantLMD.objects.all(),
         "ecues": ECUE.objects.all(),
     })
-
 def note_lmd_delete(request, pk):
 
     note = NoteLMD.objects.get(pk=pk)
@@ -505,7 +576,7 @@ def bulletin_lmd_list(request):
     })
 
 
-def etudiant_lmd_add(request):
+def etudiant_lmd_addENC(request):
 
     if request.method == "POST":
 
@@ -529,7 +600,53 @@ def etudiant_lmd_add(request):
 
     return render(request, "lmd/etudiants/add.html", {
         "niveaux": Niveau.objects.all(),
-        "filieres": Filiere.objects.all(),
+        "filieres": FiliereLMD.objects.all(),
+        "ues": UE.objects.all(),
+        "ecues": ECUE.objects.all(),
+    })
+
+def etudiant_lmd_add(request):
+
+    if request.method == "POST":
+
+        from datetime import datetime
+
+        date_naissance = request.POST.get("date_naissance")
+
+        if date_naissance:
+            try:
+                date_naissance = datetime.strptime(date_naissance, "%Y-%m-%d").date()
+            except ValueError:
+                date_naissance = None
+        else:
+            date_naissance = None
+
+        etudiant = EtudiantLMD.objects.create(
+            matricule=request.POST.get("matricule"),
+            nom=request.POST.get("nom"),
+            prenoms=request.POST.get("prenoms"),
+            sexe=request.POST.get("sexe"),
+            date_naissance=date_naissance,
+            telephone=request.POST.get("telephone"),
+            email=request.POST.get("email"),
+            niveau=request.POST.get("niveau"),
+            filiere_id=request.POST.get("filiere"),
+            annee_academique=request.POST.get("annee_academique"),
+        )
+
+        # ✔ récupération UE / ECUE
+        ue_ids = request.POST.getlist("ue")
+        ecue_ids = request.POST.getlist("ecue")
+
+        # ✔ liaison (si ManyToMany)
+        etudiant.ues.set(UE.objects.filter(id__in=ue_ids))
+        etudiant.ecues.set(ECUE.objects.filter(id__in=ecue_ids))
+
+        return redirect("etudiant_lmd_list")
+
+    return render(request, "lmd/etudiants/add.html", {
+        "niveaux": Niveau.objects.all(),
+        "filieres": FiliereLMD.objects.all(),
         "ues": UE.objects.all(),
         "ecues": ECUE.objects.all(),
     })
@@ -579,7 +696,7 @@ def etudiant_lmd_delete(request, pk):
 
     return redirect("etudiant_lmd_list")
 
-def etudiant_lmd_update(request, pk):
+def etudiant_lmd_updateBBBBB(request, pk):
     etudiant = get_object_or_404(EtudiantLMD, pk=pk)
 
     if request.method == "POST":
@@ -591,6 +708,51 @@ def etudiant_lmd_update(request, pk):
         etudiant.annee_academique = request.POST.get("annee_academique")
         # etudiant.filiere_id = request.POST.get("filiere")
         etudiant.save()
+
+    return redirect("etudiant_lmd_list")
+
+def etudiant_lmd_update(request, pk):
+    etudiant = get_object_or_404(EtudiantLMD, pk=pk)
+
+    if request.method == "POST":
+        try:
+            matricule = request.POST.get("matricule")
+
+            if EtudiantLMD.objects.exclude(id=etudiant.id).filter(matricule=matricule).exists():
+                return redirect("etudiant_lmd_list")
+
+            etudiant.matricule = matricule or ""
+            etudiant.nom = request.POST.get("nom") or ""
+            etudiant.prenoms = request.POST.get("prenoms") or ""
+            etudiant.telephone = request.POST.get("telephone") or ""
+            etudiant.email = request.POST.get("email") or ""
+
+            etudiant.sexe = request.POST.get("sexe") or "M"
+            etudiant.niveau = request.POST.get("niveau") or "L1"
+            etudiant.statut = request.POST.get("statut") or "AF"
+            etudiant.annee_academique = request.POST.get("annee_academique") or ""
+
+            filiere_id = request.POST.get("filiere")
+            if filiere_id:
+                etudiant.filiere_id = filiere_id
+
+            date_naissance = request.POST.get("date_naissance")
+            if date_naissance:
+                etudiant.date_naissance = date_naissance
+
+            etudiant.save()
+
+            # =========================
+            # UE / ECUE
+            # =========================
+            ue_ids = request.POST.getlist("ue")
+            ecue_ids = request.POST.getlist("ecue")
+
+            etudiant.ues.set(ue_ids)
+            etudiant.ecues.set(ecue_ids)
+
+        except Exception as e:
+            print("ERROR UPDATE ETUDIANT:", e)
 
     return redirect("etudiant_lmd_list")
 
@@ -618,8 +780,6 @@ def resultat_ue(request, etudiant_id):
         "resultats": resultats
     })
 
-
-
 def bulletin_lmd_pdf(request, etudiant_id):
 
     file_path = os.path.join(
@@ -630,37 +790,6 @@ def bulletin_lmd_pdf(request, etudiant_id):
     generate_bulletin_lmd_pdf(etudiant_id, file_path)
 
     return FileResponse(open(file_path, "rb"))
-
-def etudiant_lmd_listSSS(request):
-
-    etudiants = EtudiantLMD.objects.select_related(
-        "user",
-        "filiere"
-    )
-
-    matricule = request.GET.get("matricule")
-    nom = request.GET.get("nom")
-    telephone = request.GET.get("telephone")
-    ue = request.GET.get("ue")
-
-    if matricule:
-        etudiants = etudiants.filter(matricule__icontains=matricule)
-
-    if nom:
-        etudiants = etudiants.filter(
-            Q(nom__icontains=nom) |
-            Q(prenoms__icontains=nom)
-        )
-
-    if telephone:
-        etudiants = etudiants.filter(telephone__icontains=telephone)
-
-    if ue:
-        etudiants = etudiants.filter(note_lmd__ecue__code__icontains=ue)
-
-    return render(request, "lmd/etudiants/list.html", {
-        "etudiantslmd": etudiants
-    })
 
 
 def etudiant_lmd_list(request):
@@ -710,3 +839,477 @@ def etudiant_lmd_list(request):
     })
 
 
+
+def note_lmdecue_add(request):
+
+    filieres = FiliereLMD.objects.all()
+    ecues = ECUE.objects.all()
+
+    if request.method == "POST":
+
+        filiere_id = request.POST["filiere"]
+        niveau = request.POST["niveau"]
+        semestre = request.POST["semestre"]
+        session = request.POST["session"]
+        ecue_id = request.POST["ecue"]
+
+        etudiants = (
+            EtudiantLMD.objects
+            .filter(
+                filiere_id=filiere_id,
+                niveau=niveau
+            )
+            .order_by("nom", "prenoms")
+        )
+
+        return render(request,
+            "lmd/notes/saisie_notes.html",
+            {
+                "etudiants": etudiants,
+                "ecue_id": ecue_id,
+                "semestre": semestre,
+                "session": session,
+            }
+        )
+
+    return render(
+        request,
+        "lmd/notes/choix.html",
+        {
+            "filieres": filieres,
+            "ecues": ecues,
+        }
+    )
+
+def note_lmd_save_batch(request):
+
+    if request.method == "POST":
+
+        ecue_id = request.POST.get("ecue_id")
+        semestre = request.POST.get("semestre")
+        session = request.POST.get("session")
+
+        etudiants_ids = request.POST.getlist("etudiant_id")
+
+        for etu_id in etudiants_ids:
+
+            NoteLMD.objects.update_or_create(
+                etudiant_id=etu_id,
+                ecue_id=ecue_id,
+                semestre=semestre,
+                session=session,
+                defaults={
+                    "cc": request.POST.get(f"cc_{etu_id}"),
+                    "examen": request.POST.get(f"examen_{etu_id}"),
+                }
+            )
+
+        return redirect("note_lmd_list")
+
+from django.shortcuts import render
+from .models import NoteLMD
+
+def note_lmd_listecue(request):
+
+    notes = (
+        NoteLMD.objects
+        .select_related(
+            "etudiant",
+            "ecue",
+            "etudiant__filiere",
+        )
+        .order_by(
+            "etudiant__filiere__nom",
+            "etudiant__niveau",
+            "etudiant__nom",
+        )
+    )
+
+    return render(
+        request,
+        "lmd/notes/listecue.html",
+        {
+            "notes": notes
+        }
+    )
+
+def saisie_list(request):
+    saisies = SaisieNoteLMD.objects.select_related(
+        "filiere", "ecue"
+    ).order_by("-date_creation")
+
+    return render(request, "lmd/saisies/list.html", {
+        "saisies": saisies
+    })
+
+def saisie_add(request):
+
+    filieres = FiliereLMD.objects.all()
+    niveaux = Niveau.objects.all()
+    ecues = ECUE.objects.all()
+
+    if request.method == "POST":
+        SaisieNoteLMD.objects.create(
+            filiere_id=request.POST.get("filiere"),
+            niveau=request.POST.get("niveau"),
+            ecue_id=request.POST.get("ecue"),
+            semestre=request.POST.get("semestre"),
+            session=request.POST.get("session"),
+            created_by=request.user
+        )
+
+        return redirect("saisie_list")
+
+    return render(request, "lmd/saisies/form.html", {
+        "filieres": filieres,
+        "niveaux": niveaux,
+        "ecues": ecues,
+    })
+
+
+def saisie_edit1(request, pk):
+
+    saisie = SaisieNoteLMD.objects.get(pk=pk)
+    filieres = FiliereLMD.objects.all().order_by("libelle")
+    # niveaux = Niveau.objects.all().order_by("ordre")
+    niveaux = Niveau.objects.all().order_by("nom")
+    ecues = ECUE.objects.all().order_by("libelle")
+    if request.method == "POST":
+
+        saisie.filiere_id = request.POST["filiere"]
+        saisie.niveau = request.POST["niveau"]
+        saisie.ecue_id = request.POST["ecue"]
+        saisie.semestre = request.POST["semestre"]
+        saisie.session = request.POST["session"]
+
+        saisie.save()
+
+        return redirect("saisie_list")
+
+    return render(request, "lmd/saisies/form.html", {
+        "saisie": saisie,
+        "filieres": filieres,
+        "niveaux": niveaux,
+        "ecues": ecues,
+    })
+
+from django.shortcuts import get_object_or_404, render, redirect
+from .models import SaisieNoteLMD
+
+def saisie_edit(request, pk):
+
+    saisie = get_object_or_404(SaisieNoteLMD, pk=pk)
+
+    filieres = FiliereLMD.objects.all()
+    ecues = ECUE.objects.all()
+
+    if request.method == "POST":
+
+        filiere_id = request.POST.get("filiere")
+        ecue_id = request.POST.get("ecue")
+
+        saisie.filiere = get_object_or_404(FiliereLMD, id=filiere_id)
+        saisie.ecue = get_object_or_404(ECUE, id=ecue_id)
+
+        saisie.niveau = request.POST.get("niveau")
+        saisie.semestre = request.POST.get("semestre")
+        saisie.session = request.POST.get("session")
+
+        saisie.save()
+
+        return redirect("saisie_list")
+
+    return render(request, "lmd/saisies/edit.html", {
+        "saisie": saisie,
+        "filieres": filieres,
+        "ecues": ecues
+    })
+
+def saisie_delete(request, pk):
+
+    saisie = SaisieNoteLMD.objects.get(pk=pk)
+
+    if request.method == "POST":
+        saisie.delete()
+        return redirect("saisie_list")
+
+    return render(request, "lmd/saisies/delete.html", {
+        "saisie": saisie
+    })
+
+def saisie_detail(request, pk):
+
+    saisie = SaisieNoteLMD.objects.get(pk=pk)
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=saisie.filiere,
+        niveau=saisie.niveau
+    ).order_by("nom")
+
+    return render(request, "lmd/saisies/detail.html", {
+        "saisie": saisie,
+        "etudiants": etudiants
+    })
+
+    
+
+# views.py
+
+
+
+def filiereLMD_list(request):
+    filieres = FiliereLMD.objects.all()
+    return render(request, "lmd/filieresLMD/list.html", {"filieres": filieres})
+
+
+# def filiereLMD_add(request):
+#     if request.method == "POST":
+#         code = request.POST.get("code")
+#         libelle = request.POST.get("libelle")
+
+#         # Vérification doublon
+#         if FiliereLMD.objects.filter(code=code).exists():
+#             messages.error(request, "Ce code de filière existe déjà.")
+#             return redirect("filiere_add")
+
+#         FiliereLMD.objects.create(code=code, libelle=libelle)
+#         messages.success(request, "Filière ajoutée avec succès.")
+#         return redirect("filiere_list")
+
+#     return render(request, "lmd/filieresLMD/add.html")
+def filiereLMD_add(request):
+
+    if request.method == "POST":
+        code = request.POST.get("code")
+        libelle = request.POST.get("libelle")
+
+        if not code or not libelle:
+            messages.error(request, "Tous les champs sont obligatoires.")
+            return redirect("filiere_add")
+
+        if FiliereLMD.objects.filter(code=code).exists():
+            messages.error(request, "Ce code existe déjà.")
+            return redirect("filiere_add")
+
+        FiliereLMD.objects.create(
+            code=code,
+            libelle=libelle
+        )
+
+        messages.success(request, "Filière ajoutée avec succès.")
+        return redirect("filiere_list")
+
+    return render(request, "lmd/filieresLMD/add.html")
+
+
+
+from django.db import transaction
+
+def saisie_note_etudiant(request, pk):
+
+    saisie = get_object_or_404(SaisieNoteLMD, pk=pk)
+
+    # étudiants concernés (filtre filière + niveau)
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=saisie.filiere,
+        niveau=saisie.niveau
+    ).order_by("nom", "prenoms")
+
+    if request.method == "POST":
+
+        with transaction.atomic():
+
+            for etudiant in etudiants:
+
+                note_value = request.POST.get(f"note_{etudiant.id}")
+
+                if note_value != "" and note_value is not None:
+
+                    NoteLMD.objects.update_or_create(
+                        etudiant=etudiant,
+                        ecue=saisie.ecue,
+                        semestre=saisie.semestre,
+                        session=saisie.session,
+                        defaults={
+                            "note": note_value,
+                            "saisie": saisie
+                        }
+                    )
+
+        return redirect("saisie_detail", pk=saisie.id)
+
+    # récupérer notes existantes
+    notes_existantes = {
+        n.etudiant.id: {
+        "cc": n.cc,
+        "examen": n.examen
+        }
+        # n.etudiant.id: n.note
+        for n in NoteLMD.objects.filter(
+            ecue=saisie.ecue,
+            semestre=saisie.semestre,
+            session=saisie.session
+        )
+    }
+
+    context = {
+        "saisie": saisie,
+        "etudiants": etudiants,
+        "notes_existantes": notes_existantes,
+    }
+
+    return render(request, "lmd/saisie_note_etudiant.html", context)
+    
+
+from django.db import transaction
+
+def enregistrer_notesAA(request, pk):
+
+    saisie = get_object_or_404(SaisieNoteLMD, pk=pk)
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=saisie.filiere,
+        niveau=saisie.niveau
+    )
+
+    if request.method == "POST":
+
+        with transaction.atomic():
+
+            for etudiant in etudiants:
+
+                cc = request.POST.get(f"cc_{etudiant.id}")
+                examen = request.POST.get(f"examen_{etudiant.id}")
+
+                # on ignore les lignes vides
+                if cc == "" and examen == "":
+                    continue
+
+                NoteLMD.objects.update_or_create(
+                    etudiant=etudiant,
+                    ecue=saisie.ecue,
+                    semestre=saisie.semestre,
+                    session=saisie.session,
+                    defaults={
+                        "cc": cc or 0,
+                        "examen": examen or 0,
+                        "saisie": saisie,
+                    }
+                )
+
+        return redirect("saisie_detail", pk=saisie.id)
+
+    # GET -> affichage formulaire
+    notes = {
+        n.etudiant_id: n
+        for n in NoteLMD.objects.filter(
+            ecue=saisie.ecue,
+            semestre=saisie.semestre,
+            session=saisie.session
+        )
+    }
+
+    for etudiant in etudiants:
+        etudiant.note = notes.get(etudiant.id)
+
+    return render(request, "lmd/saisie_note_etudiant.html", {
+        "saisie": saisie,
+        "etudiants": etudiants,
+    })
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.db import transaction
+
+def enregistrer_notes(request, pk):
+
+    saisie = get_object_or_404(SaisieNoteLMD, pk=pk)
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=saisie.filiere,
+        niveau=saisie.niveau
+    )
+
+    if request.method == "POST":
+
+        with transaction.atomic():
+
+            for etudiant in etudiants:
+
+                cc = request.POST.get(f"cc_{etudiant.id}")
+                examen = request.POST.get(f"examen_{etudiant.id}")
+
+                # ✅ conversion sécurisée
+                try:
+                    cc = float(cc)
+                except (TypeError, ValueError):
+                    cc = 0
+
+                try:
+                    examen = float(examen)
+                except (TypeError, ValueError):
+                    examen = 0
+
+                # on ignore totalement si vide
+                if cc == 0 and examen == 0:
+                    continue
+
+                NoteLMD.objects.update_or_create(
+                    etudiant=etudiant,
+                    ecue=saisie.ecue,
+                    semestre=saisie.semestre,
+                    session=saisie.session,
+                    defaults={
+                        "cc": cc,
+                        "examen": examen,
+                        "saisie": saisie,
+                    }
+                )
+
+        return redirect("saisie_detail", pk=saisie.id)
+
+    # GET -> affichage formulaire
+    notes = {
+        n.etudiant_id: n
+        for n in NoteLMD.objects.filter(
+            ecue=saisie.ecue,
+            semestre=saisie.semestre,
+            session=saisie.session
+        )
+    }
+
+    for etudiant in etudiants:
+        etudiant.note = notes.get(etudiant.id)
+
+    return render(request, "lmd/saisie_note_etudiant.html", {
+        "saisie": saisie,
+        "etudiants": etudiants,
+    })
+
+
+def filiereLMD_edit(request, pk):
+    filiere = get_object_or_404(FiliereLMD, pk=pk)
+
+    if request.method == "POST":
+        code = request.POST.get("code")
+        libelle = request.POST.get("libelle")
+
+        # vérification doublon (optionnel mais recommandé)
+        if FiliereLMD.objects.exclude(pk=pk).filter(code=code).exists():
+            messages.error(request, "Ce code existe déjà.")
+            return redirect("filiereLMD_edit", pk=pk)
+
+        filiere.code = code
+        filiere.libelle = libelle
+        filiere.save()
+
+        messages.success(request, "Filière modifiée avec succès.")
+        return redirect("filiereLMD_list")
+
+    return render(request, "lmd/filieresLMD/edit.html", {
+        "filiere": filiere
+    })
+
+def filiereLMD_delete(request, pk):
+    filiere = get_object_or_404(FiliereLMD, pk=pk)
+    filiere.delete()
+    return redirect("filiereLMD_list")

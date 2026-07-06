@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h3 class="fw-bold text-primary">
+            ✏️ Modifier une filière
+        </h3>
+
+        <a href="{% url 'filiere_list' %}" class="btn btn-outline-secondary">
+            ← Retour
+        </a>
+
+    </div>
+
+    <!-- FORM -->
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Code</label>
+                    <input type="text"
+                           name="code"
+                           class="form-control"
+                           value="{{ filiere.code }}"
+                           required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Libellé</label>
+                    <input type="text"
+                           name="libelle"
+                           class="form-control"
+                           value="{{ filiere.libelle }}"
+                           required>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success">
+                        💾 Enregistrer
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

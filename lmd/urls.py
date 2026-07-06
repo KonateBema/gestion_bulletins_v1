@@ -13,8 +13,8 @@ urlpatterns = [
     # FILIERES
     # =====================
     path('filieres/', views.filiere_list, name='filiere_lmd_list'),
-    path('filieres/add/', views.filiere_add, name='filiere_lmd_add'),
-     path('filieres/edit/<int:pk>/', views.filiere_edit, name='filiere_lmd_edit'),
+    # path('filieres/add/', views.filiere_add, name='filiere_lmd_add'),
+    path('filieres/edit/<int:pk>/', views.filiere_edit, name='filiere_lmd_edit'),
     path('filieres/delete/<int:pk>/', views.filiere_delete, name='filiere_lmd_delete'),
 
     # =====================
@@ -72,5 +72,66 @@ urlpatterns = [
     path('notes-lmd/add/', views.note_lmd_add, name='note_lmd_add'),
     path('notes-lmd/edit/<int:pk>/', views.note_lmd_edit, name='note_lmd_edit'),
     path('notes-lmd/delete/<int:pk>/', views.note_lmd_delete, name='note_lmd_delete'),
+
+    # path("notes/add/", note_ecue_lmd_add, name="note_ecue_lmd_add"),
+    # path("notes/save/", note_lmd_save_batch, name="note_lmd_save_batch"),
+     path(
+        "notes-lmd/saisie/",
+        views.note_lmdecue_add,
+        name="note_lmdecue_add",
+    ),
+
+    # Enregistrement des notes
+    path(
+        "notes-lmd/save/",
+        views.note_lmd_save_batch,
+        name="note_lmd_save_batch",
+    ),
+
+    path(
+    "notes/",
+    views.note_lmd_listecue,
+    name="note_lmd_listecue",
+   ),
+
+      # LISTE
+    path("saisies/", views.saisie_list, name="saisie_list"),
+
+    # CREATE
+    path("saisies/add/", views.saisie_add, name="saisie_add"),
+
+    # UPDATE
+    path("saisies/<int:pk>/edit/", views.saisie_edit, name="saisie_edit"),
+
+    # DELETE
+    path("saisies/<int:pk>/delete/", views.saisie_delete, name="saisie_delete"),
+
+    # DETAIL (voir notes des étudiants)
+    path("saisies/<int:pk>/", views.saisie_detail, name="saisie_detail"),
+
+    
+    path("filieresLMD/", views.filiereLMD_list, name="filiereLMD_list"),
+    path("filieresLMD/add/", views.filiereLMD_add, name="filiereLMD_add"),
+    path("filieres/", views.filiereLMD_list, name="filiere_list"),
+    path("filieres/add/", views.filiereLMD_add, name="filiere_add"),
+    path("filieres/", views.filiereLMD_list, name="filiereLMD_list"),
+
+    path("filieres/<int:pk>/edit/", views.filiere_edit, name="filiereLMD_edit"),
+    path("filieres/<int:pk>/delete/", views.filiere_delete, name="filiereLMD_delete"),
+
+  # =====================
+# FILIERES LMD (CLEAN)
+# =====================
+
+    path("filieres/<int:pk>/edit/", views.filiere_edit, name="filiere_edit"),
+    path("filieres/<int:pk>/delete/", views.filiere_delete, name="filiere_delete"),
+    path("filieres/add/", views.filiere_add, name="filiere_add"),
+    path("filieres/", views.filiere_list, name="filiere_list"),
+
+    path("saisies/<int:pk>/etudiants/",views.saisie_note_etudiant,name="saisie_note_etudiant"),
+    path("saisies/<int:pk>/notes/",views.saisie_note_etudiant,name="saisie_note_etudiant"),
+    # path("saisies/<int:pk>/notes/", views.saisie_note_etudiant, name="saisie_note_etudiant")
+    path("lmd/saisies/<int:pk>/notes/",views.enregistrer_notes,name="saisie_note_etudiant")
+
 
 ]

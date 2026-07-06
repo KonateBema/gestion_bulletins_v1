@@ -15,7 +15,8 @@ from reportlab.pdfgen import canvas
 # =========================================================
 # STYLES
 # =========================================================
-
+def safe_date(date):
+    return date.strftime("%d/%m/%Y") if date else "Non renseignée"
 styles = getSampleStyleSheet()
 
 TITLE = ParagraphStyle(
@@ -82,7 +83,21 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         filiere=etudiant.filiere
     ).prefetch_related("ecues")
 
-    doc = SimpleDocTemplate(file_path, pagesize=A4)
+    print("=" * 50)
+    print("ETUDIANT :", etudiant.nom)
+    print("FILIERE :", etudiant.filiere)
+    print("NB UE :", ues.count())
+
+    # doc = SimpleDocTemplate(file_path, pagesize=A4)
+    doc = SimpleDocTemplate(
+    file_path,
+    pagesize=A4,
+    leftMargin=0.6 * cm,
+    rightMargin=0.6 * cm,
+    topMargin=0.6 * cm,
+    bottomMargin=2.8 * cm,   # laisser la place au footer
+    )
+    
     from reportlab.platypus import PageTemplate, Frame
 
     frame = Frame(
@@ -170,11 +185,12 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     # =========================================================
     # CADRE UNIVERSITE DOMAINE : SCIENCES ECONOMIQUE 
     # =========================================================
-    specialite = etudiant.filiere.nom if etudiant.filiere else "TRONC COMMUN"
+    # specialite = etudiant.filiere.nom if etudiant.filiere else "TRONC COMMUN"
+    specialite = etudiant.filiere.libelle if etudiant.filiere else "TRONC COMMUN"
     cadre_universite = Table([[
         Paragraph(f"""
             <b>DOMAINE : SCIENCES ECONOMIQUE </b><br/>
-             <b>& DE GESTION</b><br/>
+             <b>& DE GESTION</b><br/><br/>
              <b>SPECIALITE :</b> {specialite}
         """, SMALL)
     ]], colWidths=[8 * cm], rowHeights=[2.5 * cm])
@@ -185,6 +201,7 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
+        ("TOPPADDING", (0, 2), (-1, 2), 8),  # espace avant SPÉCIALITÉ
     ]))
 
     elements.append(Spacer(1, 10))
@@ -202,6 +219,15 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     # =========================================================
     # ETUDIANT
     # =========================================================
+     
+    # date_naissance = (
+    # etudiant.date_naissance.strftime("%d/%m/%Y")
+    # if etudiant.date_naissance
+    # else "Non renseignée"
+    # )
+
+    # lieu = etudiant.lieu_naissance or "-"
+
 
     cadre_etudiant = Table([
         [
@@ -209,11 +235,19 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         Paragraph(f"{etudiant.nom} {etudiant.prenoms}", SMALL)],
         [
         Paragraph("<b>Date & lieu de naissance</b>", SMALL),
-        Paragraph(f"{etudiant.date_naissance.strftime('%d/%m/%Y')} à {etudiant.lieu_naissance}", SMALL)],
+        Paragraph(
+            f"{safe_date(etudiant.date_naissance)} à {etudiant.lieu_naissance or '-'}",
+            SMALL
+        )
+       ],
+
+        # lieu = etudiant.lieu_naissance or "-"
+
+        # Paragraph(f"{date_naissance} à {lieu}", SMALL)
         [Paragraph("<b>Sexe</b>", SMALL),Paragraph(etudiant.get_sexe_display(), SMALL)],
         [Paragraph("<b>Matricule</b>", SMALL), Paragraph(str(etudiant.matricule), SMALL)],
         [Paragraph("<b>Statut</b>", SMALL),Paragraph(etudiant.statut, SMALL)],
-        [Paragraph("<b>Filière</b>", SMALL), Paragraph(str(etudiant.filiere), SMALL)],
+        # [Paragraph("<b>Filière</b>", SMALL), Paragraph(str(etudiant.filiere), SMALL)],
         [Paragraph("<b>Niveau</b>", SMALL), Paragraph(str(etudiant.niveau), SMALL)],
     ], colWidths=[3 * cm, 5 * cm])
 
@@ -279,13 +313,13 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     table_style = []
     row_index_control = 0
     index = 1  # juste après header du tableau
-    # insert_index = 1  # juste après l'en-tête du tableau
+   
     def add_section(title, data, table_style):
         row_index = len(data)
         # row_index = len(data)
         data.append([
-        Paragraph(f"<b>{title}</b>", SMALL),
-        "", "", credit_ecue, credit_ue, "", "", ""
+           Paragraph(f'<para align="center" color="red"><b>{title}</b></para>', SMALL),
+        "", "",total_credit_ecue, total_credit_ue, "", "", ""
         ])
 
         table_style.append(("SPAN", (0, row_index), (2, row_index)))
@@ -296,49 +330,59 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         table_style.append(("FONTSIZE", (0, row_index), (-1, row_index), 10))
         table_style.append(("TOPPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("BOTTOMPADDING", (0, row_index), (-1, row_index), 6))
+        table_style.append(("TEXTCOLOR", (0, row_index), (-1, row_index), colors.green))
 
     compteur_ue = 0
     for ue in ues: 
         compteur_ue += 1  
-
         if compteur_ue == 5:
+            ues_fondamentales = ues[:compteur_ue-1]  # les 4 premières UE
             total_credit_ecue = sum(
                 ecue.credit
                 for ue_temp in ues[:4]
                 for ecue in ue_temp.ecues.all()
                  )
+                 
+            # total_credit_ue = sum(
+            #     getattr(ue_temp, "credit", 0)
+            #     for ue_temp in ues[:4]
+            #     ) 
             total_credit_ue = sum(
-                getattr(ue_temp, "credit", 0)
-                for ue_temp in ues[:4]
-                )   
-
+                ue.credit or 0
+                for ue_temp in ues_fondamentales
+               )  
             add_section(f"UE : UNITÉS FONDAMENTALES (ECUE={total_credit_ecue} | UE={total_credit_ue})",data,table_style)
+            # add_section(f"{ue.code} - UE : UNITÉS FONDAMENTALES (ECUE={total_credit_ecue} | UE={total_credit_ue})",data,table_style)
 
-        if compteur_ue == 8:
+        if compteur_ue == 11:
             add_section("UE: UNITES DE CULTURE GENERALES", data, table_style)
-        if compteur_ue == 10:
+        if compteur_ue == 16:
             add_section("UE: UNITES DE CSPECIALITES", data, table_style)
 
+        # ecues = ue.ecues.all()
+        # ecues = ECUE.objects.filter(ue=ue)  # SAFE à 100%
         ecues = ue.ecues.all()
+        print(len(data))
+        print(data[:3])
         somme_ue = 0
         count = 0
         lignes = []
         credit_ue = getattr(ue, "credit", 6)
         somme_ponderee = 0
         credit_total_ue = 0
-       
 
         premiere_ligne = True
-       
-
+        
         for ecue in ecues:
             ecues_total += 1
             note = NoteLMD.objects.filter(
                 etudiant=etudiant,
-                ecue=ecue
+                ecue=ecue,
+                semestre="S1",
+                session="1"
             ).first()
             row_index = len(data)
-            moy_ecue = float(note.moyenne) if note and note.moyenne is not None else 0
+            moy_ecue = float(note.moyenne) if note and note.moyenne is not None else 0.0
             # ✔ ECUE validéeCODE
             if moy_ecue >= 10:
                  ecues_validees += 1
@@ -348,6 +392,7 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
             somme_ponderee += credit_ecue * moy_ecue
             credit_total_ue += credit_ecue
             moy_ue = round(somme_ponderee / credit_total_ue, 2) if credit_total_ue else 0
+            
 
             somme_ue += moy_ecue
             count += 1
@@ -369,14 +414,14 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
             # insert_index += 1   # 🔥 chaque ECUE ajoute une ligne
 
         if count == 0:
-            continue
-
+             continue
+            
         moy_ue = round(somme_ue / count, 2)
         # decision = "VALIDÉE" if moy_ue >= 10 else "NON VALIDÉE"
         decision = (
             '<para align="center"><font color="green"><b>VALIDÉE</b></font></para>'
             if moy_ue >= 10
-            else '<para align="center"><font color="red"><b>NON VALIDÉE</b></font></para>'
+            else '<para align="center"><font color="red"><b>NON VALI</b></font></para>'
         )
 
         credits_total += credit_ue
@@ -411,7 +456,7 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         1 * cm,
         2.1 * cm
     ],
-    rowHeights=[30] + [22] * (len(data) - 1)
+    rowHeights=[30] + [15] * (len(data) - 1)
     )
 
     table.setStyle(TableStyle([
@@ -420,6 +465,8 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+        # ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("PADDING", (0, 0), (-1, -1), 4),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
       ]   + table_style))
@@ -505,7 +552,7 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     # =========================================================
     # BUILD
     # =========================================================
-
+     
     doc.build(elements)
 
     return file_path

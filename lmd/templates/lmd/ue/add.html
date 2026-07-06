@@ -77,7 +77,7 @@
                                 selected
                                 {% endif %}
                             >
-                                {{ f.nom }}
+                                {{ f.libelle }}
                             </option>
 
                             {% endfor %}
@@ -104,6 +104,25 @@
                         </select>
 
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Grande unité</label>
+                    
+                        <select name="grande_unite" class="form-select" required>
+                    
+                            <option value="">-- Choisir une grande unité --</option>
+                    
+                            {% for g in grandes_unites %}
+                            <option value="{{ g.id }}"
+                                {% if ue.grande_unite.id == g.id %}selected{% endif %}>
+                                {{ g.nom }}
+                            </option>
+                            {% endfor %}
+                    
+                        </select>
+                    </div>
+
+
+
 
                 </div>
 

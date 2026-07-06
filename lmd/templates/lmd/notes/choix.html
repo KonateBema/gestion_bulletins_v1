@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+<h3>Saisie des notes LMD</h3>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label>Filière</label>
+
+        <select name="filiere" class="form-control" required>
+            <option value="">---------</option>
+
+            {% for filiere in filieres %}
+                <option value="{{ filiere.id }}">
+                    {{ filiere.nom }}
+                </option>
+            {% endfor %}
+        </select>
+
+    </div>
+
+    <div class="mb-3">
+        <label>Niveau</label>
+
+        <select name="niveau" class="form-control" required>
+            <option value="">---------</option>
+            <option value="L1">Licence 1</option>
+            <option value="L2">Licence 2</option>
+            <option value="L3">Licence 3</option>
+        </select>
+
+    </div>
+
+    <div class="mb-3">
+        <label>Semestre</label>
+
+        <select name="semestre" class="form-control">
+            <option>S1</option>
+            <option>S2</option>
+        </select>
+
+    </div>
+
+    <div class="mb-3">
+        <label>Session</label>
+
+        <select name="session" class="form-control">
+            <option>Normale</option>
+            <option>Rattrapage</option>
+        </select>
+
+    </div>
+
+    <div class="mb-3">
+
+        <label>ECUE</label>
+
+        <select name="ecue" class="form-control" required>
+
+            {% for ecue in ecues %}
+
+                <option value="{{ ecue.id }}">
+                    {{ ecue.code }} - {{ ecue.nom }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+    </div>
+
+    <button class="btn btn-primary">
+        Continuer
+    </button>
+
+</form>
+
+</div>
+
+{% endblock %}

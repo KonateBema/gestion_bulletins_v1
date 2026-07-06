@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>Saisie des notes</h3>
+
+<form method="post" action="{% url 'note_lmd_save_batch' %}">
+
+{% csrf_token %}
+
+<input type="hidden" name="ecue_id" value="{{ ecue_id }}">
+<input type="hidden" name="semestre" value="{{ semestre }}">
+<input type="hidden" name="session" value="{{ session }}">
+
+<table class="table table-bordered">
+
+<thead>
+
+<tr>
+
+<th>Matricule</th>
+
+<th>Nom</th>
+
+<th>CC</th>
+
+<th>Examen</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for etudiant in etudiants %}
+
+<tr>
+
+<td>
+
+{{ etudiant.matricule }}
+
+<input
+type="hidden"
+name="etudiant_id"
+value="{{ etudiant.id }}">
+
+</td>
+
+<td>
+
+{{ etudiant.nom }} {{ etudiant.prenoms }}
+
+</td>
+
+<td>
+
+<input
+type="number"
+step="0.25"
+min="0"
+max="20"
+name="cc_{{ etudiant.id }}"
+class="form-control">
+
+</td>
+
+<td>
+
+<input
+type="number"
+step="0.25"
+min="0"
+max="20"
+name="examen_{{ etudiant.id }}"
+class="form-control">
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<button class="btn btn-success">
+
+Enregistrer toutes les notes
+
+</button>
+
+</form>
+
+{% endblock %}
