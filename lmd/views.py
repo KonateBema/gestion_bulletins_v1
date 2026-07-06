@@ -155,6 +155,7 @@ def ue_add(request):
         }
     )
 
+
 def ue_edit(request, pk):
 
     ue = get_object_or_404(UE, pk=pk)
@@ -192,6 +193,8 @@ def ue_edit(request, pk):
         "filieres": FiliereLMD.objects.all(),
         "grandes_unites": GrandeUnite.objects.all(),
     })
+
+
 
 def ue_delete(request, pk):
 
@@ -1220,7 +1223,7 @@ def enregistrer_notesAA(request, pk):
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
 
-def enregistrer_notes(request, pk):
+def enregistrer_notesQQQ(request, pk):
 
     saisie = get_object_or_404(SaisieNoteLMD, pk=pk)
 
@@ -1285,6 +1288,65 @@ def enregistrer_notes(request, pk):
         "etudiants": etudiants,
     })
 
+
+def enregistrer_notes(request, pk):
+    saisie = get_object_or_404(SaisieNoteLMD, pk=pk)
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=saisie.filiere,
+        niveau=saisie.niveau
+    )
+
+    if request.method == "POST":
+        with transaction.atomic():
+            for etudiant in etudiants:
+
+                cc = request.POST.get(f"cc_{etudiant.id}")
+                examen = request.POST.get(f"examen_{etudiant.id}")
+
+                try:
+                    cc = float(cc)
+                except (TypeError, ValueError):
+                    cc = 0
+
+                try:
+                    examen = float(examen)
+                except (TypeError, ValueError):
+                    examen = 0
+
+                # Ignore si aucune note
+                if cc == 0 and examen == 0:
+                    continue
+
+                NoteLMD.objects.update_or_create(
+                    etudiant=etudiant,
+                    ecue=saisie.ecue,
+                    semestre=saisie.semestre,
+                    session=saisie.session,
+                    defaults={
+                        "cc": cc,
+                        "examen": examen,
+                    }
+                )
+
+        return redirect("saisie_detail", pk=saisie.id)
+
+    notes = {
+        n.etudiant_id: n
+        for n in NoteLMD.objects.filter(
+            ecue=saisie.ecue,
+            semestre=saisie.semestre,
+            session=saisie.session
+        )
+    }
+
+    for etudiant in etudiants:
+        etudiant.note = notes.get(etudiant.id)
+
+    return render(request, "lmd/saisie_note_etudiant.html", {
+        "saisie": saisie,
+        "etudiants": etudiants,
+    })
 
 def filiereLMD_edit(request, pk):
     filiere = get_object_or_404(FiliereLMD, pk=pk)

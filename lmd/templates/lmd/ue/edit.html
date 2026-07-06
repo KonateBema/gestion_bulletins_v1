@@ -165,6 +165,32 @@
 
                             </div>
 
+                            <div class="col-md-12">
+
+                                <label class="form-label fw-bold">
+                                    📂 Grande Unité
+                                </label>
+                            
+                                <select
+                                    name="grande_unite"
+                                    class="form-select form-select-lg"
+                                    required>
+                            
+                                    {% for gu in grandes_unites %}
+                            
+                                    <option value="{{ gu.id }}"
+                                        {% if ue.grande_unite.id == gu.id %}selected{% endif %}>
+                            
+                                        {{ gu.nom }}
+                            
+                                    </option>
+                            
+                                    {% endfor %}
+                            
+                                </select>
+                            
+                            </div>
+
                         </div>
 
                         <!-- SEPARATEUR -->
