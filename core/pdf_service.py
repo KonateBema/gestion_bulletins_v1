@@ -85,6 +85,12 @@ def format_rang(r):
     return f"{r}e" if r != "-" else "-"
 
 
+science_points = 0
+science_coef = 0
+moyenne_professionnelle=0
+professionnel_points = 0
+professionnel_coef = 0
+moyenne_science =0
 # =====================================================
 # GENERATION PDF
 # =====================================================
@@ -160,11 +166,11 @@ def generate_bulletin_pdf(etudiant, classe):
         [[
             logo,
             Paragraph("""
-                <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/>
-                BP Abidjan - Côte d'Ivoire<br/>
-                Tel: +225 07 78 63 74 00<br/>
+                <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/><br/>
+                BP Abidjan - Côte d'Ivoire<br/><br/>
+                Tel: +225 07 78 63 74 00<br/><br/>
                 Email: contact@uic.ci
-                Email: contact@uic.ci
+               
             """, SMALL)
         ]],
         colWidths=[2.5 * cm, 7.5 * cm],
@@ -261,6 +267,20 @@ def generate_bulletin_pdf(etudiant, classe):
         "MATIÈRE", "MOY", "COEF", "MOY*COEF",
         "MENTION","RANG", "MIN", "MOY", "MAX"
     ]]
+    total_points = 0
+    total_coef = 0
+
+    fg_points = 0
+    fg_coef = 0
+
+    pro_points = 0
+    pro_coef = 0
+
+    tech_points = 0
+    tech_coef = 0
+
+    ang_points = 0
+    ang_coef = 0
 
     fg_row = [
     "FORMATION GÉNÉRALE",
@@ -278,6 +298,8 @@ def generate_bulletin_pdf(etudiant, classe):
     total_points = 0
     total_coef = 0
     notes_list = list(notes[:6])
+    professionnel_points = 0
+    professionnel_coef = 0
   
     for n in notes_list:
         moy = safe_round(n.moyenne)
@@ -298,6 +320,30 @@ def generate_bulletin_pdf(etudiant, classe):
         coef = safe_round(m.coefficient)
         total_points += moy * coef
         total_coef += coef
+        fg_points += moy * coef
+        fg_coef += coef
+        
+        if getattr(m, "categorie", None) == "SCIENCE":
+             tech_points += moy * coef
+             tech_coef += coef
+        elif getattr(m, "categorie", None) == "PRO":
+             pro_points += moy * coef
+             pro_coef += coef
+             
+        if "anglais" in m.libelle.lower():
+            ang_points += moy * coef
+            ang_coef += coef
+
+        formation_generale = (
+            total_points / total_coef if total_coef else 0
+         )
+        moyenne_professionnelle = (
+             professionnel_points / professionnel_coef if professionnel_coef else 0
+        )
+        
+        moyenne_professionnelle_tech = safe_round(tech_points / tech_coef if tech_coef else 0)
+        formation_ang_expr = safe_round(ang_points / ang_coef if ang_coef else 0)
+
         rang_matiere = (
           Note.objects.filter(
           etudiant__classe=classe,
@@ -319,9 +365,32 @@ def generate_bulletin_pdf(etudiant, classe):
             safe_round(stats.get("max_note")),
         ])
 
-    table_width = A4[0] - 2.4 * cm
-    table_height = 200  # ajuste selon ton contenu
- 
+    
+
+    formation_generale = safe_round(formation_generale)
+    safe_round(moyenne_science)  # noqa: F821
+    moyenne_professionnelle = safe_round(moyenne_professionnelle)
+    A4[0] - 2.4 * cm
+    
+    data.insert(2, [
+         "ANGLAIS ET TECHNIQUE D'EXPRESSION",
+          formation_ang_expr, "", "", "", "", "", "", ""
+         ])
+    data.insert(8, [
+         "FORMATION GENERALE",
+          formation_generale, "", "", "", "", "", "", ""
+       ])
+    data.insert(10, [
+        "FORMATION PROFESSIONNELLE",
+        moyenne_professionnelle, "", "", "", "", "", "", ""
+    ])
+    data.insert(17, [
+        "FORMATION TECHNIQUE et PROFESSIONNELLE",
+        moyenne_professionnelle_tech, "", "", "", "", "", "", ""
+        ])
+
+    
+    
     # table = Table(data)
     table = Table(data, colWidths=[
     6 * cm,   # MATIÈRE (plus large)
@@ -337,12 +406,26 @@ def generate_bulletin_pdf(etudiant, classe):
     ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
     ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
     ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    ("FONTSIZE", (0, 0), (-1, -1), 8),
+    # ("FONTSIZE", (0, 0), (-1, -1), 8),
     ("ALIGN", (1, 1), (-1, -1), "CENTER"),
-    ("LEFTPADDING", (0, 0), (-1, -1), 6),
-    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-    ("TOPPADDING", (0, 0), (-1, -1), 4),
-    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+     # 🔥 LIGNES INSÉRÉES EN GRIS
+    ("BACKGROUND", (0, 2), (-1, 2), colors.lightgrey),
+    # ("BACKGROUND", (0, 4), (-1, 4), colors.lightgrey),
+    ("BACKGROUND", (0, 8), (-1, 8), colors.lightgrey),
+    ("BACKGROUND", (0, 10), (-1, 10), colors.lightgrey),
+    ("BACKGROUND", (0, 17), (-1, 17), colors.lightgrey),
+    
+    # ("LEFTPADDING", (0, 0), (-1, -1), 6),
+    # ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+    # ("TOPPADDING", (0, 0), (-1, -1), 4),
+    # ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ("TOPPADDING", (0, 0), (-1, -1), 2),
+    ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+    ("LEFTPADDING", (0, 0), (-1, -1), 3),
+    ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+    ("FONTSIZE", (0, 0), (-1, -1), 7),
+    ("LEADING", (0, 0), (-1, -1), 8),
+    
     ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
    ]))
 

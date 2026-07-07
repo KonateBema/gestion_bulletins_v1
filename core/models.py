@@ -67,6 +67,12 @@ class Classe(models.Model):
 # =========================
 # 4. MATIERE
 # =========================
+class Categorie(models.Model):
+    nom = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.nom
+
 class Matiere(models.Model):
     code = models.CharField(max_length=20, unique=True)
     libelle = models.CharField(max_length=150)
@@ -75,6 +81,12 @@ class Matiere(models.Model):
     filiere_bts = models.ForeignKey(
         Filierebts,
         on_delete=models.CASCADE
+    )
+    categorie = models.ForeignKey(
+        Categorie,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
 
     def __str__(self):
