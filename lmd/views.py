@@ -1368,7 +1368,7 @@ def ajouter_etudiants_saisie(request, saisie_id):
 
     etudiants = EtudiantLMD.objects.filter(
         filiere=saisie.filiere,
-       
+        niveau=saisie.niveau
     )
 
     compteur = 0
