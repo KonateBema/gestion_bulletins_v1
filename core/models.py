@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
 # =========================
 # 1. NIVEAU
 # =========================
@@ -170,7 +169,39 @@ class Inscription(models.Model):
 # =========================
 # 9. NOTE
 # =========================
+class SaisieNotesBTS(models.Model):
+    classe = models.ForeignKey(
+        Classe,
+        on_delete=models.CASCADE,
+        related_name="saisies_notes"
+    )
+
+    matiere = models.ForeignKey(
+        Matiere,
+        on_delete=models.CASCADE
+    )
+
+    semestre = models.CharField(max_length=10)
+
+    date_saisie = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return (
+            f"{self.classe} - "
+            f"{self.matiere.libelle} - "
+            f"{self.semestre}"
+        )
+
 class Note(models.Model):
+    saisie = models.ForeignKey(
+        SaisieNotesBTS,  # noqa: F821
+        on_delete=models.CASCADE,
+        related_name="notes",
+        null=True,
+        blank=True
+    )
     etudiant = models.ForeignKey(Etudiant, on_delete=models.CASCADE)
     matiere = models.ForeignKey(Matiere, on_delete=models.CASCADE)
 
@@ -214,6 +245,5 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-
 
 

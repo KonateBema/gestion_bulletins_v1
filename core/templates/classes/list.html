@@ -83,10 +83,10 @@
 
                             <!-- ✅ SALLE CORRIGÉE -->
                             <td>
-                                {{ c.salle|default:"Non affectée" }}
+                                {{ c.salle.nom|default:"Non affectée" }}
                             </td>
 
-                            <td>{{ c.filiere.nom }}</td>
+                            <td> {{c.filiere_bts.nom|default:"Sans filière" }}</td>
 
                             <td>{{ c.niveau.nom }}</td>
 

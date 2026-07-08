@@ -5,7 +5,7 @@ from django.urls import path, include
 urlpatterns = [
     path('', views.dashboard, name='home'),
     path('lmd/', include('lmd.urls')),
-  path('lmd/', include('lmd.urls')),
+#   path('lmd/', include('lmd.urls')),
 
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
@@ -90,5 +90,11 @@ urlpatterns = [
     path('salles/add/', views.salle_create, name='salle_add'),
     path('salles/edit/<int:pk>/', views.salle_edit, name='salle_edit'),
     path('salles/delete/<int:pk>/', views.salle_delete, name='salle_delete'),
+    
+    path(
+        "saisie-groupee/",
+        views.saisie_note_groupee,
+        name="saisie_note_groupee"
+    ),
 
 ]

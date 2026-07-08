@@ -36,12 +36,10 @@
                  ADMINISTRATION
             ====================== -->
     <div class="section-title">
-        Administration
+        📊  Système BTS
     </div>
 
-    <!-- <a href="{% url 'classe_list' %}">
-        🏢 Classes
-    </a> -->
+
 
     <a href="{% url 'etudiant_list' %}">
         🎓 Étudiants
@@ -54,13 +52,20 @@
     <!-- =====================
                  SYSTEME CLASSIQUE
             ====================== -->
-    <div class="section-title">
+    <!-- <div class="section-title">
         📊 Académique Classique
-    </div>
+    </div> -->
 
     <a href="{% url 'note_list' %}">
         🧠 Notes
     </a>
+    <!-- note grouper par filieres -->
+
+
+    <a href="{% url 'saisie_note_groupee' %}">
+        📝 Saisie groupée des notes BTS
+    </a>
+
     <a href="{% url 'classe_list' %}">
         🏢 Classes
     </a>

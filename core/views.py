@@ -18,6 +18,14 @@ from django.views.generic import ListView
 from .models import Filierebts
 from django.contrib import messages
 from .models import Salle
+from .models import SaisieNotesBTS
+from .models import (
+    Classe,
+    Niveau
+)
+
+# from .models import NoteBTS
+
 
 from .models import (
     Etudiant, Professeur, Classe, Matiere, Note,
@@ -235,62 +243,6 @@ def bulletin_etudiant(request):
 # 📄 PDF BULLETIN
 # =========================
 
-# @login_required
-# def download_bulletin_pdf(request):
-
-#     # ⚠️ ton modèle n’a pas user → on prend un étudiant (exemple simple)
-#     etudiant = Etudiant.objects.first()
-
-#     if not etudiant:
-#         return HttpResponse("Aucun étudiant trouvé")
-
-#     file_path = generate_bulletin_pdf(etudiant)
-
-#     return FileResponse(open(file_path, "rb"), as_attachment=True)
-
-
-# def download_bulletin_pdf(request):
-
-#     etudiant = Etudiant.objects.first()
-
-#     if not etudiant:
-#         return HttpResponse("Aucun étudiant trouvé")
-
-#     file_path = generate_bulletin_pdf(
-#         etudiant,
-#         logo_path="static/images/logo.png",
-#         cachet_path="static/images/cachet.png"
-#     )
-
-#     return FileResponse(open(file_path, "rb"), as_attachment=True)
-
-def etudiant_listAA(request):
-    query = request.GET.get("q")
-    classe_id = request.GET.get("classe")
-    etudiants = Etudiant.objects.select_related("classe").all()
-    # 🔎 SEARCH
-    if query:
-        etudiants = etudiants.filter(
-            Q(matricule__icontains=query) |
-            Q(user__username__icontains=query) |
-            Q(prenoms__icontains=query) |
-            Q(nom__icontains=query)
-        )
-
-    # 🎯 FILTER
-    if classe_id:
-        etudiants = etudiants.filter(classe_id=classe_id)
-
-    # 📄 PAGINATION
-    paginator = Paginator(etudiants, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, "etudiants/list.html", {
-        "page_obj": page_obj,
-        "classes": Classe.objects.all()
-    })
-
 
 def etudiant_list(request):
 
@@ -368,41 +320,6 @@ def etudiant_create(request):
         'filieres_bts': filieres_bts
     })
 
-def etudiant_createMMM(request):
-
-    if request.method == "POST":
-
-        filiere_bts_id = request.POST.get('filiere_bts')
-
-        filiere_bts = None
-
-        if filiere_bts_id:
-            filiere_bts = Filierebts.objects.get(id=filiere_bts_id)
-
-        Etudiant.objects.create(
-            matricule=request.POST.get('matricule'),
-            nom=request.POST.get('nom'),
-            prenoms=request.POST.get('prenoms'),
-            date_naissance=request.POST.get('date_naissance'),
-            sexe=request.POST.get('sexe'),
-            telephone=request.POST.get('telephone'),
-            email=request.POST.get('email'),
-            classe_id=request.POST.get('classe'),
-            filiere_bts=filiere_bts
-        )
-
-        return redirect('etudiant_list')
-
-    filieres_bts = Filierebts.objects.all()
-
-    return render(
-        request,
-        'etudiants/form.html',
-        {'filieres_bts': filieres_bts,}
-    )
-
-
-from .models import Salle
 
 def etudiants_par_salle(request):
 
@@ -477,13 +394,8 @@ def etudiant_delete(request, id):
     Etudiant.objects.get(id=id).delete()
     return redirect("etudiant_list")
 
-from django.shortcuts import render, redirect
-from django.core.paginator import Paginator
-from .models import Classe
-from .forms import ClasseForm
 
-
-def classe_list(request):
+def classe_listAR(request):
 
     # 🟢 CREATE
     if request.method == "POST":
@@ -532,42 +444,110 @@ def classe_list(request):
         "form": form
     })
 
-def classe_listQQQQQ(request):
 
-    # 🟢 CREATE (IMPORTANT)
+def classe_list(request):
+
+    # ==========================
+    # CREATION CLASSE
+    # ==========================
     if request.method == "POST":
+
         form = ClasseForm(request.POST)
+
         if form.is_valid():
             form.save()
             return redirect("classe_list")
 
-    # 🟢 LIST
-    query = request.GET.get("q")
-    filiere = request.GET.get("filiere")
-    niveau = request.GET.get("niveau")
+        else:
+            print(form.errors)
 
-    classes = Classe.objects.all().order_by("-id")
+    else:
+        form = ClasseForm()
 
+
+
+    # ==========================
+    # FILTRES
+    # ==========================
+    query = request.GET.get("q", "")
+    filiere_bts = request.GET.get("filiere_bts", "")
+    niveau = request.GET.get("niveau", "")
+
+
+
+    # ==========================
+    # LISTE DES CLASSES
+    # ==========================
+    classes = Classe.objects.select_related(
+        "filiere_bts",
+        "niveau",
+        "salle"
+    ).order_by("-id")
+
+
+
+    # Recherche par nom
     if query:
-        classes = classes.filter(nom__icontains=query)
+        classes = classes.filter(
+            nom__icontains=query
+        )
 
-    if filiere:
-        classes = classes.filter(filiere__nom__icontains=filiere)
 
+    # Filtre filière BTS
+    if filiere_bts:
+        classes = classes.filter(
+            filiere_bts_id=filiere_bts
+        )
+
+
+    # Filtre niveau
     if niveau:
-        classes = classes.filter(niveau__nom__icontains=niveau)
+        classes = classes.filter(
+            niveau_id=niveau
+        )
 
-    paginator = Paginator(classes, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
 
-    form = ClasseForm()
 
-    return render(request, "classes/list.html", {
-        "page_obj": page_obj,
-        "form": form
-    })
+    # ==========================
+    # PAGINATION
+    # ==========================
+    paginator = Paginator(
+        classes,
+        10
+    )
 
+    page_number = request.GET.get(
+        "page"
+    )
+
+    page_obj = paginator.get_page(
+        page_number
+    )
+
+
+
+    # ==========================
+    # DONNEES POUR SELECTS
+    # ==========================
+    filieres = Filierebts.objects.all()
+
+    niveaux = Niveau.objects.all()  # noqa: F821
+
+
+
+    return render(
+        request,
+        "classes/list.html",
+        {
+            "page_obj": page_obj,
+            "form": form,
+            "filieres": filieres,
+            "niveaux": niveaux,
+            "query": query,
+            "filiere_selected": filiere_bts,
+            "niveau_selected": niveau,
+        }
+    )
 
 def classe_create(request):
     if request.method == "POST":
@@ -626,7 +606,7 @@ from .forms import AffectationForm
 
 def affectation_list(request):
     return render(request, "affectations/list.html", {
-        "affectations": Affectation.objects.select_related(
+        "affectations": Affectation.objects.select_related(  # noqa: F821
             "professeur", "matiere", "classe"
         )
     })
@@ -646,7 +626,7 @@ def affectation_create(request):
 
 
 def affectation_delete(request, id):
-    Affectation.objects.get(id=id).delete()
+    Affectation.objects.get(id=id).delete()  # noqa: F821
     return redirect("affectation_list")
 
 from .models import Note
@@ -843,11 +823,6 @@ def download_bulletin_pdfOOOO(request):
     )
 
 
-from django.shortcuts import get_object_or_404
-from django.http import FileResponse, HttpResponse
-from .models import Etudiant, Classe
-from .pdf_service import generate_bulletin_pdf
-
 
 def download_bulletin_pdf(request, etudiant_id, classe_id):
 
@@ -869,7 +844,7 @@ def bulletin_classe(request, classe_id):
 
     classe = Classe.objects.get(id=classe_id)
 
-    data = classement(classe)
+    data = classement(classe)  # noqa: F821
 
     return render(request, "bulletin_classe.html", {
         "classe": classe,
@@ -1019,3 +994,275 @@ def salle_delete(request, pk):
 
     messages.success(request, "Salle supprimée")
     return redirect('salle_list')
+
+
+def saisie_note_groupeeEEE(request):
+
+    classes = Classe.objects.select_related(
+        "filiere_bts",
+        "niveau",
+        "salle"
+    )
+
+    matieres = Matiere.objects.all()
+
+    etudiants = []
+    notes_existantes = {}
+
+    classe_id = request.GET.get("classe")
+    matiere_id = request.GET.get("matiere")
+    semestre = request.GET.get("semestre")
+
+
+    if classe_id and matiere_id:
+
+        classe = Classe.objects.get(id=classe_id)
+
+        etudiants = Etudiant.objects.filter(
+            classe=classe
+        )
+
+
+        notes = Note.objects.filter(
+            matiere_id=matiere_id,
+            semestre=semestre,
+            etudiant__in=etudiants
+        )
+
+
+        for note in notes:
+            notes_existantes[note.etudiant.id] = note
+
+
+
+    context = {
+
+        "classes": classes,
+
+        "matieres": matieres,
+
+        "etudiants": etudiants,
+
+        "notes_existantes": notes_existantes,
+
+    }
+
+
+    return render(
+        request,
+        "notes/saisie_groupee.html",
+        context
+    )
+     
+    
+def saisie_note_groupeeBON(request):
+
+    classes = Classe.objects.select_related(
+        "filiere_bts",
+        "niveau",
+        "salle"
+    )
+
+    matieres = Matiere.objects.all()
+
+    etudiants = []
+    notes_existantes = {}
+
+    classe_id = request.GET.get("classe")
+    matiere_id = request.GET.get("matiere")
+    semestre = request.GET.get("semestre")
+
+
+    if classe_id and matiere_id and semestre:
+
+        classe = Classe.objects.get(
+            id=classe_id
+        )
+
+
+        # Récupérer les étudiants de la classe
+        etudiants = Etudiant.objects.filter(
+            classe=classe
+        )
+
+
+        # Chercher les notes déjà saisies
+        notes = Note.objects.filter(
+            etudiant__in=etudiants,
+            matiere_id=matiere_id,
+            semestre=semestre
+        )
+
+
+        for note in notes:
+            notes_existantes[note.etudiant_id] = note
+
+
+
+        # Attacher la note directement à chaque étudiant
+        for etudiant in etudiants:
+            etudiant.note_existante = notes_existantes.get(
+                etudiant.id
+            )
+
+
+    context = {
+
+        "classes": classes,
+
+        "matieres": matieres,
+
+        "etudiants": etudiants,
+
+        "notes_existantes": notes_existantes,
+
+    }
+
+
+    return render(
+        request,
+        "notes/saisie_groupee.html",
+        context
+    )
+    
+    
+def saisie_note_groupee(request):
+
+    classes = Classe.objects.select_related(
+        "filiere_bts",
+        "niveau",
+        "salle"
+    )
+
+    matieres = Matiere.objects.all()
+
+    etudiants = []
+    notes_existantes = {}
+
+    classe_id = request.GET.get("classe")
+    matiere_id = request.GET.get("matiere")
+    semestre = request.GET.get("semestre")
+
+
+    # ==========================
+    # ENREGISTREMENT DES NOTES
+    # ==========================
+    if request.method == "POST":
+
+        classe_id = request.POST.get("classe")
+        matiere_id = request.POST.get("matiere")
+        semestre = request.POST.get("semestre")
+
+
+        classe = Classe.objects.get(id=classe_id)
+
+        etudiants = Etudiant.objects.filter(
+            classe=classe
+        )
+
+
+        # créer ou récupérer une saisie
+        saisie, created = SaisieNotesBTS.objects.get_or_create(
+            classe=classe,
+            matiere_id=matiere_id,
+            semestre=semestre
+        )
+
+
+        for etudiant in etudiants:
+
+            cc = float(
+                request.POST.get(f"cc_{etudiant.id}") or 0
+            )
+            
+            devoir = float(
+               request.POST.get(f"devoir_{etudiant.id}") or 0
+            )
+
+            examen = float(
+                request.POST.get(f"examen_{etudiant.id}") or 0
+            )
+
+
+            Note.objects.update_or_create(
+                etudiant=etudiant,
+                matiere_id=matiere_id,
+                semestre=semestre,
+                defaults={
+                    "saisie": saisie,
+                    "cc": cc,
+                    "devoir": devoir,
+                    "examen": examen,
+                }
+            )
+
+
+        messages.success(
+            request,
+            "Les notes ont été enregistrées avec succès."
+        )
+
+
+        return redirect(
+            f"{request.path}?classe={classe_id}&matiere={matiere_id}&semestre={semestre}"
+        )
+
+
+
+    # ==========================
+    # AFFICHAGE
+    # ==========================
+
+    if classe_id and matiere_id and semestre:
+
+
+        classe = Classe.objects.get(
+            id=classe_id
+        )
+
+
+        etudiants = Etudiant.objects.filter(
+            classe=classe
+        )
+
+
+        notes = Note.objects.filter(
+            etudiant__in=etudiants,
+            matiere_id=matiere_id,
+            semestre=semestre
+        )
+
+
+        for note in notes:
+
+            notes_existantes[note.etudiant_id] = note
+
+
+
+        # envoyer la note directement dans le template
+        for etudiant in etudiants:
+
+            etudiant.note_existante = notes_existantes.get(
+                etudiant.id
+            )
+
+
+
+    context = {
+
+        "classes": classes,
+
+        "matieres": matieres,
+
+        "etudiants": etudiants,
+
+        "notes_existantes": notes_existantes,
+
+    }
+
+
+    return render(
+        request,
+        "notes/saisie_groupee.html",
+        context
+    )

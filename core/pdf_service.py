@@ -401,34 +401,52 @@ def generate_bulletin_pdf(etudiant, classe):
     1.5 * cm,
     1.5 * cm,
     1.5 * cm,
+    1.2 * cm,   # MAX
   ])
-    table.setStyle(TableStyle([
-    ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
-    ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    # ("FONTSIZE", (0, 0), (-1, -1), 8),
-    ("ALIGN", (1, 1), (-1, -1), "CENTER"),
-     # 🔥 LIGNES INSÉRÉES EN GRIS
-    ("BACKGROUND", (0, 2), (-1, 2), colors.lightgrey),
-    # ("BACKGROUND", (0, 4), (-1, 4), colors.lightgrey),
-    ("BACKGROUND", (0, 8), (-1, 8), colors.lightgrey),
-    ("BACKGROUND", (0, 10), (-1, 10), colors.lightgrey),
-    ("BACKGROUND", (0, 17), (-1, 17), colors.lightgrey),
+#     table.setStyle(TableStyle([
+#     ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
+#     ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+#     ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+#     # ("FONTSIZE", (0, 0), (-1, -1), 8),
+#     ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+#      # 🔥 LIGNES INSÉRÉES EN GRIS
+#     ("BACKGROUND", (0, 2), (-1, 2), colors.lightgrey),
+#     # ("BACKGROUND", (0, 4), (-1, 4), colors.lightgrey),
+#     ("BACKGROUND", (0, 8), (-1, 8), colors.lightgrey),
+#     ("BACKGROUND", (0, 10), (-1, 10), colors.lightgrey),
+#     ("BACKGROUND", (0, 17), (-1, 17), colors.lightgrey),
     
-    # ("LEFTPADDING", (0, 0), (-1, -1), 6),
-    # ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-    # ("TOPPADDING", (0, 0), (-1, -1), 4),
-    # ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-    ("TOPPADDING", (0, 0), (-1, -1), 2),
-    ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
-    ("LEFTPADDING", (0, 0), (-1, -1), 3),
-    ("RIGHTPADDING", (0, 0), (-1, -1), 3),
-    ("FONTSIZE", (0, 0), (-1, -1), 7),
-    ("LEADING", (0, 0), (-1, -1), 8),
+#     ("TOPPADDING", (0, 0), (-1, -1), 2),
+#     ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+#     ("LEFTPADDING", (0, 0), (-1, -1), 3),
+#     ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+#     ("FONTSIZE", (0, 0), (-1, -1), 7),
+#     ("LEADING", (0, 0), (-1, -1), 8),
     
-    ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
-   ]))
+#     ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
+#    ]))
+    
+    style = [
+    ("GRID", (0,0), (-1,-1), 0.4, colors.black),
+    ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
+    ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+    ("ALIGN", (1,1), (-1,-1), "CENTER"),
 
+    ("TOPPADDING", (0,0), (-1,-1), 2),
+    ("BOTTOMPADDING", (0,0), (-1,-1), 2),
+    ("LEFTPADDING", (0,0), (-1,-1), 3),
+    ("RIGHTPADDING", (0,0), (-1,-1), 3),
+    ("FONTSIZE", (0,0), (-1,-1), 7),
+    ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
+   ]
+    
+    for ligne in [2,8,10,17]:
+        if ligne < len(data):
+            style.append(
+                 ("BACKGROUND", (0,ligne), (-1,ligne), colors.lightgrey) )
+            
+    table.setStyle(TableStyle(style)) 
+          
     elements.append(table)
     elements.append(Spacer(1, 12))
 

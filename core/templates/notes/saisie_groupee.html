@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-pencil-square"></i>
+                Saisie groupée des notes BTS
+            </h4>
+        </div>
+
+
+        <div class="card-body">
+
+
+            <!-- FILTRE -->
+            <form method="get" class="row g-3 mb-4">
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        Classe
+                    </label>
+
+                    <select name="classe" class="form-select" required>
+
+                        <option value="">
+                            -- Choisir la classe --
+                        </option>
+
+                        {% for classe in classes %}
+
+                        <option value="{{ classe.id }}"
+                        {% if request.GET.classe == classe.id|stringformat:"s" %}
+                            selected
+                        {% endif %}
+                        >
+
+                            {{ classe }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+
+                <div class="col-md-3">
+
+                    <label class="form-label fw-bold">
+                        Matière
+                    </label>
+
+                    <select name="matiere" class="form-select" required>
+
+                        <option value="">
+                            -- Choisir la matière --
+                        </option>
+
+
+                        {% for matiere in matieres %}
+
+                        <option value="{{ matiere.id }}"
+                        {% if request.GET.matiere == matiere.id|stringformat:"s" %}
+                            selected
+                        {% endif %}
+                        >
+
+                            {{ matiere.libelle }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+
+
+                <div class="col-md-2">
+
+                    <label class="form-label fw-bold">
+                        Semestre
+                    </label>
+
+                    <select name="semestre" class="form-select">
+
+                        <option value="1"
+                        {% if request.GET.semestre == "1" %}selected{% endif %}>
+                            Semestre 1
+                        </option>
+                    
+                    
+                        <option value="2"
+                        {% if request.GET.semestre == "2" %}selected{% endif %}>
+                            Semestre 2
+                        </option>
+                    
+                    </select>
+
+                </div>
+
+
+
+                <div class="col-md-2 d-flex align-items-end">
+
+                    <button class="btn btn-primary w-100">
+
+                        <i class="bi bi-search"></i>
+                        Afficher
+
+                    </button>
+
+                </div>
+
+
+            </form>
+
+
+
+            {% if etudiants %}
+
+
+            <!-- INFO -->
+            <div class="alert alert-info">
+
+                <strong>{{ etudiants|length }}</strong>
+                étudiant(s) trouvé(s)
+
+            </div>
+
+
+
+
+            <!-- RECHERCHE -->
+            <div class="mb-3">
+
+                <input 
+                    type="text"
+                    id="searchStudent"
+                    class="form-control"
+                    placeholder="Rechercher un étudiant..."
+                >
+
+            </div>
+
+
+
+
+
+            <!-- FORMULAIRE NOTES -->
+
+            <form method="post">
+
+                {% csrf_token %}
+     
+                <input type="hidden" name="classe" value="{{ request.GET.classe }}">
+                <input type="hidden" name="matiere" value="{{ request.GET.matiere }}">
+                <input type="hidden" name="semestre" value="{{ request.GET.semestre }}">
+
+                <div class="table-responsive">
+
+
+                <table class="table table-bordered table-hover align-middle"
+                       id="studentTable">
+
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>
+                                Matricule
+                            </th>
+
+                            <th>
+                                Étudiant
+                            </th>
+
+                            <th width="120">
+                                CC
+                            </th>
+
+                            <th width="120">
+                                Devoir
+                            </th>
+
+                            <th width="120">
+                                Examen
+                            </th>
+
+
+                        </tr>
+
+                    </thead>
+
+
+
+                    <tbody>
+
+
+                    {% for etudiant in etudiants %}
+
+
+                    <tr>
+
+
+                        <td>
+                            {{ etudiant.matricule }}
+                        </td>
+
+
+                        <td class="fw-bold">
+                            {{ etudiant.nom }}
+                            {{ etudiant.prenoms }}
+                        </td>
+
+
+
+                        <td>
+
+                            <input 
+                            type="number"
+                            min="0"
+                            max="20"
+                            step="0.01"
+                            name="cc_{{ etudiant.id }}"
+                            value="{{ etudiant.note_existante.cc|default:'' }}"
+                            class="form-control text-center">
+
+
+                        </td>
+
+
+
+                        <td>
+
+                            <input 
+                            type="number"
+                            min="0"
+                            max="20"
+                            step="0.01"
+                            name="devoir_{{ etudiant.id }}"
+                            value="{{ etudiant.note_existante.devoir|default:'' }}"
+                            class="form-control text-center">
+
+                        </td>
+
+
+
+                        <td>
+
+                            <input 
+                            type="number"
+                            min="0"
+                            max="20"
+                            step="0.01"
+                            name="examen_{{ etudiant.id }}"
+                            value="{{ etudiant.note_existante.examen|default:'' }}"
+                            class="form-control text-center">
+
+                        </td>
+
+
+                    </tr>
+
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+
+                </div>
+
+
+
+
+                <div class="text-end">
+
+
+                    <button class="btn btn-success btn-lg">
+
+                        <i class="bi bi-save"></i>
+
+                        Enregistrer les notes
+
+                    </button>
+
+
+                </div>
+
+
+
+            </form>
+
+
+
+            {% endif %}
+
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+document
+.getElementById("searchStudent")
+?.addEventListener("keyup", function(){
+
+    let value = this.value.toLowerCase();
+
+    document
+    .querySelectorAll("#studentTable tbody tr")
+    .forEach(function(row){
+
+        row.style.display =
+        row.innerText.toLowerCase().includes(value)
+        ? ""
+        : "none";
+
+    });
+
+});
+
+
+</script>
+
+
+{% endblock %}
