@@ -7,6 +7,7 @@ from core.models import Classe, Filiere, Niveau, Etudiant
 # =====================
 # UE (Unité d’Enseignement)
 # =====================
+
 class UE(models.Model):
     code = models.CharField(max_length=20)
     libelle = models.CharField(max_length=200)

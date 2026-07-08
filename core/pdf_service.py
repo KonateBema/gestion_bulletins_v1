@@ -166,11 +166,11 @@ def generate_bulletin_pdf(etudiant, classe):
         [[
             logo,
             Paragraph("""
-                <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/><br/>
-                BP Abidjan - Côte d'Ivoire<br/><br/>
-                Tel: +225 07 78 63 74 00<br/><br/>
+                <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/>
+                BP Abidjan - Côte d'Ivoire<br/>
+                Tel: +225 07 78 63 74 00<br/>
                 Email: contact@uic.ci
-               
+                Email: contact@uic.ci
             """, SMALL)
         ]],
         colWidths=[2.5 * cm, 7.5 * cm],

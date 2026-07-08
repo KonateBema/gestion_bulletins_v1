@@ -30,4 +30,6 @@ class EtudiantLMDForm(forms.ModelForm):
             "filiere",
             "statut",
             "annee_academique",
+            "ues",
+            "ecues",
         ]

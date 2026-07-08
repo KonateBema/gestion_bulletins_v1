@@ -131,7 +131,14 @@ urlpatterns = [
     path("saisies/<int:pk>/etudiants/",views.saisie_note_etudiant,name="saisie_note_etudiant"),
     path("saisies/<int:pk>/notes/",views.saisie_note_etudiant,name="saisie_note_etudiant"),
     # path("saisies/<int:pk>/notes/", views.saisie_note_etudiant, name="saisie_note_etudiant")
-    path("lmd/saisies/<int:pk>/notes/",views.enregistrer_notes,name="saisie_note_etudiant")
+    path("lmd/saisies/<int:pk>/notes/",views.enregistrer_notes,name="saisie_note_etudiant"),
+    
+    
+    path(
+    "saisie/<int:saisie_id>/ajouter-etudiants/",
+    views.ajouter_etudiants_saisie,
+    name="ajouter_etudiants_saisie"
+    ),
 
 
 ]
