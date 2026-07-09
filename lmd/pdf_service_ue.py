@@ -335,6 +335,16 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         table_style.append(("TOPPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("BOTTOMPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("TEXTCOLOR", (0, row_index), (-1, row_index), colors.green))
+        # premiere ligne /colonne
+        # table_style.append(("SPAN", (0, 1), (0, 2)))
+        # table_style.append(("SPAN", (0, 1), (0, 3)))
+        
+         #  ligne /colonne 2
+        table_style.append(("SPAN", (1, 1), (1, 2)))
+        table_style.append(("SPAN", (1, 4), (1, 5)))
+        table_style.append(("SPAN", (1, 7), (1, 8)))
+        table_style.append(("SPAN", (1, 9), (1, 10)))
+        table_style.append(("SPAN", (1, 12), (1, 13)))
         
 
     compteur_ue = 0
@@ -434,8 +444,8 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
                 round(total_moy_ue_culture / nb_ue_culture, 2)
                 if nb_ue_culture else 0  )
             
-            # add_section("UE: UNITES DE CULTURE GENERALES", data, table_style)
-            add_section(f"UE : UNITES DE CULTURE GENERALES "f"(ECUE={total_credit_ecue} | "f"UE={total_credit_ue_culture} | "f"MOY={moyenne_ue_culture})",data,table_style,)
+            add_section("UE: UNITES DE CULTURE GENERALES", data, table_style)
+            # add_section(f"UE : UNITES DE CULTURE GENERALES "f"(ECUE={total_credit_ecue} | "f"UE={total_credit_ue_culture} | "f"MOY={moyenne_ue_culture})",data,table_style,)
         if compteur_ue == 16:
             add_section("UE: UNITES DE CSPECIALITES", data, table_style)
 
