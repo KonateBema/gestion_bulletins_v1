@@ -17,6 +17,8 @@ from .models import Note
 from .services import calcul_moyenne_etudiant, mention
 from reportlab.platypus import Flowable
 from reportlab.lib import colors
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 
 class RoundedBackground(Flowable):
@@ -51,6 +53,7 @@ TITLE = ParagraphStyle(
     parent=styles["Heading1"],
     alignment=1,
     fontSize=15,
+    fontName="Courier-Bold",
     textColor=colors.HexColor("#b30000"),
 )
 
@@ -58,7 +61,8 @@ SMALL = ParagraphStyle(
     "SMALL",
     parent=styles["Normal"],
     fontSize=9,
-    leading=11
+    leading=11,
+    fontName="Courier",
 )
 
 # =====================================================
@@ -205,7 +209,8 @@ def generate_bulletin_pdf(etudiant, classe):
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
         ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
-        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        # ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f7f7f7")),
     ]))
@@ -429,7 +434,8 @@ def generate_bulletin_pdf(etudiant, classe):
     style = [
     ("GRID", (0,0), (-1,-1), 0.4, colors.black),
     ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
-    ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+    # ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+    ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
     ("ALIGN", (1,1), (-1,-1), "CENTER"),
 
     ("TOPPADDING", (0,0), (-1,-1), 2),
@@ -496,12 +502,14 @@ def generate_bulletin_pdf(etudiant, classe):
     # HEADER
     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1f3a5f")),
     ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+    # ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+    ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
     ("FONTSIZE", (0, 0), (-1, 0), 9),
     ("ALIGN", (0, 0), (-1, 0), "CENTER"),
 
     # CONTENU
-    ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+    # ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+    ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
     ("FONTSIZE", (0, 1), (-1, -1), 8),
     ("VALIGN", (0, 1), (-1, -1), "TOP"),
     ("LEFTPADDING", (0, 1), (-1, -1), 6),

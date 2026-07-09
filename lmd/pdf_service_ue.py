@@ -27,14 +27,15 @@ TITLE = ParagraphStyle(
     alignment=1,
     spaceAfter=10,
     textColor=colors.HexColor("#1a1a1a"),
-    fontName="Helvetica-Bold"
+    fontName="Courier-Bold",
 )
 
 SMALL = ParagraphStyle(
     "SMALL",
     parent=styles["Normal"],
     fontSize=9,
-    leading=11
+    leading=11,
+    fontName="Courier-Bold",
 )
 
 
@@ -234,9 +235,9 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         Paragraph("<b>Nom & Prénoms</b>", SMALL),
         Paragraph(f"{etudiant.nom} {etudiant.prenoms}", SMALL)],
         [
-        Paragraph("<b>Date & lieu de naissance</b>", SMALL),
+        Paragraph("<b>Date de naissance</b>", SMALL),
         Paragraph(
-            f"{safe_date(etudiant.date_naissance)} à {etudiant.lieu_naissance or '-'}",
+            f"{safe_date(etudiant.date_naissance)}",
             SMALL
         )
        ],
@@ -248,13 +249,16 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         [Paragraph("<b>Matricule</b>", SMALL), Paragraph(str(etudiant.matricule), SMALL)],
         [Paragraph("<b>Statut</b>", SMALL),Paragraph(etudiant.statut, SMALL)],
         # [Paragraph("<b>Filière</b>", SMALL), Paragraph(str(etudiant.filiere), SMALL)],
-        [Paragraph("<b>Niveau</b>", SMALL), Paragraph(str(etudiant.niveau), SMALL)],
+        # [Paragraph("<b>Niveau</b>", SMALL), Paragraph(str(etudiant.niveau), SMALL)],
+        [Paragraph("<b>Niveau</b>", SMALL), 
+         Paragraph(etudiant.get_niveau_display(), SMALL)],
     ], colWidths=[3 * cm, 5 * cm])
 
     cadre_etudiant.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
         ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
-        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        # ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("PADDING", (0, 0), (-1, -1), 6),
@@ -318,44 +322,120 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         row_index = len(data)
         # row_index = len(data)
         data.append([
-           Paragraph(f'<para align="center" color="red"><b>{title}</b></para>', SMALL),
-        "", "",total_credit_ecue, total_credit_ue, "", "", ""
+           Paragraph(f'<para align="LEFT" color="red"><b>{title}</b></para>', SMALL),
+        "", "",total_credit_ecue, total_credit_ue, total_moy_ecue, total_moy_ue , ""
         ])
 
         table_style.append(("SPAN", (0, row_index), (2, row_index)))
         table_style.append(("BACKGROUND", (0, row_index), (-1, row_index), colors.HexColor("#D9D9D9")))
         table_style.append(("ALIGN", (0, row_index), (-1, row_index), "CENTER"))
         table_style.append(("VALIGN", (0, row_index), (-1, row_index), "MIDDLE"))
-        table_style.append(("FONTNAME", (0, row_index), (-1, row_index), "Helvetica-Bold"))
+        table_style.append(("FONTNAME", (0, row_index), (-1, row_index), "Courier-Bold"))
         table_style.append(("FONTSIZE", (0, row_index), (-1, row_index), 10))
         table_style.append(("TOPPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("BOTTOMPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("TEXTCOLOR", (0, row_index), (-1, row_index), colors.green))
+        
 
     compteur_ue = 0
     for ue in ues: 
         compteur_ue += 1  
-        if compteur_ue == 5:
-            ues_fondamentales = ues[:compteur_ue-1]  # les 4 premières UE
+        if compteur_ue == 4:
+            # ues_fondamentales = ues[:compteur_ue-1]  # les 4 premières UE
+            # ues_fondamentales = ues[:4]  # les 5 premières UE
+            ues_fondamentales = ues[:5]
             total_credit_ecue = sum(
                 ecue.credit
                 for ue_temp in ues[:4]
                 for ecue in ue_temp.ecues.all()
                  )
                  
-            # total_credit_ue = sum(
-            #     getattr(ue_temp, "credit", 0)
-            #     for ue_temp in ues[:4]
-            #     ) 
             total_credit_ue = sum(
-                ue.credit or 0
-                for ue_temp in ues_fondamentales
-               )  
-            add_section(f"UE : UNITÉS FONDAMENTALES (ECUE={total_credit_ecue} | UE={total_credit_ue})",data,table_style)
+                getattr(ue_temp, "credit", 0)
+                for ue_temp in ues[:5]
+                ) 
+              # TOTAL MOYENNES ECUE
+
+            total_moy_ecue = 0
+            total_moy_ue = 0
+            for ue_temp in ues_fondamentales:
+                somme_ecue = 0
+                nombre_ecue = 0
+
+                for ecue in ue_temp.ecues.all():
+                    note = NoteLMD.objects.filter(
+                      etudiant=etudiant,
+                      ecue=ecue,
+                      semestre="S1",
+                      session="1"
+                    ).first()
+                    moy_ecue = float(note.moyenne) if note and note.moyenne else 0
+                    total_moy_ecue = moy_ecue
+                    somme_ecue += moy_ecue
+                    nombre_ecue += 1
+                # Moyenne de l'UE
+                    moy_ue = (
+                       round(somme_ecue / nombre_ecue, 2)
+                       if nombre_ecue else 0
+                      )
+                    total_moy_ue = moy_ue
+
+            # total_credit_ue = sum(
+            #      ue_temp.credit or 0
+            #     for ue_temp in ues_fondamentales total_moy_ecue
+            #    )  
+                 # Somme des crédits UE des 5 premières UE
+            add_section(f"UE : UNITÉS FONDAMENTALES ",data,table_style)
+          
             # add_section(f"{ue.code} - UE : UNITÉS FONDAMENTALES (ECUE={total_credit_ecue} | UE={total_credit_ue})",data,table_style)
 
-        if compteur_ue == 11:
-            add_section("UE: UNITES DE CULTURE GENERALES", data, table_style)
+        if compteur_ue == 6:
+            ues_culture = ues[6:9]  # 6ème à la 11ème UE
+            total_credit_ecue_culture = sum(
+                ecue.credit
+                 for ue_temp in ues_culture
+                  for ecue in ue_temp.ecues.all() )
+            total_credit_ue_culture = sum(
+                getattr(ue_temp, "credit", 0)
+                for ue_temp in ues_culture)
+            
+            total_moy_ecue_culture = 0
+            nb_ecue_culture = 0
+            total_moy_ue_culture = 0
+            nb_ue_culture = 0
+            
+            for ue_temp in ues_culture:
+                somme_ecue = 0
+                nombre_ecue = 0
+                for ecue in ue_temp.ecues.all():
+                    note = NoteLMD.objects.filter(
+                        etudiant=etudiant,
+                        ecue=ecue,
+                        semestre="S1",
+                        session="1"
+                         ).first()
+                    moy_ecue = (
+                        float(note.moyenne)
+                        if note and note.moyenne is not None 
+                         else 0 )
+                    # total_moy_ecue_culture += moy_ecue
+                    total_credit_ecue += moy_ecue
+                    nb_ecue_culture += 1
+                    somme_ecue += moy_ecue
+                    nombre_ecue += 1
+                if nombre_ecue:
+                    moy_ue = round(somme_ecue / nombre_ecue, 2)
+                    total_moy_ue_culture += moy_ue
+                    nb_ue_culture += 1
+            moyenne_ecue_culture = (
+                 round(total_moy_ecue_culture / nb_ecue_culture, 2)
+                 if nb_ecue_culture else 0   )
+            moyenne_ue_culture = (
+                round(total_moy_ue_culture / nb_ue_culture, 2)
+                if nb_ue_culture else 0  )
+            
+            # add_section("UE: UNITES DE CULTURE GENERALES", data, table_style)
+            add_section(f"UE : UNITES DE CULTURE GENERALES "f"(ECUE={total_credit_ecue} | "f"UE={total_credit_ue_culture} | "f"MOY={moyenne_ue_culture})",data,table_style,)
         if compteur_ue == 16:
             add_section("UE: UNITES DE CSPECIALITES", data, table_style)
 
@@ -462,7 +542,8 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        # ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("ALIGN", (1, 1), (-1, -1), "CENTER"),
         # ("ALIGN", (0, 0), (-1, -1), "CENTER"),
@@ -518,7 +599,8 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D9D9D9")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        # ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("ALIGN", (0, 0), (-1, 0), "CENTER"),
         ("FONTSIZE", (0, 0), (-1, 0), 11),  # 🔥 plus grand pour header

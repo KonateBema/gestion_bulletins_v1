@@ -92,6 +92,7 @@
                                class="form-control shadow-sm"
                                placeholder="Ex : INF101"
                                value="{{ ecue.code|default:'' }}"
+                               maxlength="6"
                                required>
 
                     </div>
@@ -144,6 +145,7 @@
                                class="form-control shadow-sm"
                                placeholder="Saisir le nom complet de l'ECUE"
                                value="{{ ecue.libelle|default:'' }}"
+                               maxlength="32"
                                required>
 
                     </div>
