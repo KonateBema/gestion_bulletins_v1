@@ -1,172 +1,632 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
+
 <meta charset="UTF-8">
-<title>Connexion - Gestion des Bulletins</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Connexion | Gestion des Bulletins</title>
+
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
+
+
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    height: 100vh;
-    overflow: hidden;
+
+
+*{
+    box-sizing:border-box;
 }
 
-/* LEFT SIDE */
-.left-panel {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: white;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 60px;
+
+body{
+
+    margin:0;
+    height:100vh;
+    font-family:'Segoe UI',sans-serif;
+    background:#eef2f7;
+
 }
 
-.left-panel h1 {
-    font-size: 38px;
-    font-weight: bold;
+
+/* =========================
+   LEFT PANEL
+========================= */
+
+
+.left-panel{
+
+    height:100vh;
+
+    background:
+    linear-gradient(
+        135deg,
+        rgba(15,32,39,.95),
+        rgba(32,58,67,.95)
+    ),
+    url("{% static 'background.jpg' %}");
+
+    background-size:cover;
+
+    color:white;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    padding:70px;
+
 }
 
-.left-panel p {
-    font-size: 16px;
-    opacity: 0.9;
-    margin-top: 15px;
+
+
+.logo{
+
+    width:120px;
+
+    height:120px;
+
+    object-fit:contain;
+
+    background:white;
+
+    padding:10px;
+
+    border-radius:20px;
+
+    margin-bottom:30px;
+
 }
 
-.logo {
-    width: 110px;
-    margin-bottom: 25px;
+
+
+.left-panel h1{
+
+    font-size:42px;
+
+    font-weight:800;
+
+    line-height:1.2;
+
 }
 
-/* RIGHT SIDE */
-.right-panel {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #f4f6f9;
+
+.left-panel p{
+
+    margin-top:20px;
+
+    max-width:500px;
+
+    font-size:17px;
+
+    color:#dbeafe;
+
 }
 
-.login-box {
-    width: 100%;
-    max-width: 380px;
-    background: white;
-    padding: 35px;
-    border-radius: 18px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+
+
+.features{
+
+    margin-top:35px;
+
 }
 
-.login-box h2 {
-    font-weight: bold;
-    margin-bottom: 5px;
+
+.features div{
+
+    margin-bottom:15px;
+
+    font-size:16px;
+
 }
 
-.subtitle {
-    font-size: 14px;
-    color: gray;
-    margin-bottom: 25px;
+
+.features i{
+
+    color:#38bdf8;
+
+    margin-right:10px;
+
 }
 
-.form-control {
-    border-radius: 10px;
-    padding: 12px;
+
+
+
+
+/* =========================
+ RIGHT PANEL
+========================= */
+
+
+.right-panel{
+
+    height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:30px;
+
 }
 
-.btn-login {
-    background: linear-gradient(135deg, #4facfe, #00f2fe);
-    border: none;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: bold;
-    width: 100%;
-    color: #000;
-    transition: 0.3s;
+
+
+
+.login-box{
+
+    width:100%;
+
+    max-width:420px;
+
+
+    background:white;
+
+    padding:45px;
+
+
+    border-radius:25px;
+
+
+    box-shadow:
+
+    0 20px 50px rgba(0,0,0,.12);
+
+
 }
 
-.btn-login:hover {
-    transform: scale(1.02);
+
+
+.login-header{
+
+    text-align:center;
+
+    margin-bottom:35px;
+
 }
 
-.forgot {
-    font-size: 13px;
-    text-align: right;
-    display: block;
-    margin-top: 10px;
-    color: #4facfe;
-    text-decoration: none;
+
+
+.login-header h2{
+
+    font-weight:800;
+
+    color:#0f172a;
+
 }
+
+
+.login-header p{
+
+    color:#64748b;
+
+}
+
+
+
+/* INPUT */
+
+
+.input-group-text{
+
+    background:#f8fafc;
+
+    border-right:none;
+
+}
+
+
+
+.form-control{
+
+    border-left:none;
+
+    padding:13px;
+
+}
+
+
+.form-control:focus{
+
+    box-shadow:none;
+
+    border-color:#2563eb;
+
+}
+
+
+
+/* BUTTON */
+
+
+.btn-login{
+
+
+    width:100%;
+
+    padding:14px;
+
+
+    border:none;
+
+    border-radius:12px;
+
+
+    background:
+
+    linear-gradient(
+        135deg,
+        #2563eb,
+        #06b6d4
+    );
+
+
+    color:white;
+
+    font-weight:700;
+
+    font-size:16px;
+
+
+    transition:.3s;
+
+}
+
+
+
+.btn-login:hover{
+
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 10px 20px rgba(37,99,235,.3);
+
+
+}
+
+
+
+/* FOOTER */
+
+
+.footer{
+
+    text-align:center;
+
+    color:#94a3b8;
+
+    font-size:12px;
+
+    margin-top:25px;
+
+}
+
+
+
+
+/* MOBILE */
+
+
+@media(max-width:768px){
+
+
+.left-panel{
+
+    display:none;
+
+}
+
+
+.right-panel{
+
+    height:100vh;
+
+}
+
+
+
+.login-box{
+
+    padding:30px;
+
+}
+
+
+}
+
+
+
 </style>
+
+
 </head>
+
 
 <body>
 
+
+
 <div class="container-fluid">
-    <div class="row">
 
-        <!-- LEFT -->
-        <div class="col-md-6 left-panel">
+<div class="row">
 
-            <!-- Remplace par ton logo école -->
-            <!-- <img src="https://cdn-icons-png.flaticon.com/512/167/167707.png" class="logo"> -->
-            <img src="{% static 'logo.jpeg' %}" class="logo" alt="Logo">
 
-            <h1>Gestion intelligente<br>des bulletins scolaires</h1>
 
-            <p>
-                Suivez les étudiants, notes, classes et bulletins en temps réel
-                avec une plateforme moderne, rapide et sécurisée.
-            </p>
-        </div>
+<!-- =====================
+ LEFT
+===================== -->
 
-        <!-- RIGHT -->
-        <div class="col-md-6 right-panel">
 
-            <div class="login-box">
+<div class="col-lg-6 left-panel">
 
-                <h2>Connexion</h2>
-                <div class="subtitle">Accédez à votre espace éducatif</div>
 
-                {% if error %}
-                <div class="alert alert-danger">
-                    {{ error }}
-                </div>
-                {% endif %}
+<img src="{% static 'logo.jpeg' %}"
+     class="logo"
+     alt="UIC Logo">
 
-                <form method="POST">
-                    {% csrf_token %}
 
-                    <div class="mb-3">
-                        <label>Identifiant</label>
-                        <input type="text" name="username" class="form-control" placeholder="Votre identifiant">
-                    </div>
 
-                    <div class="mb-2">
-                        <label>Mot de passe</label>
-                        <input type="password" name="password" class="form-control" placeholder="********">
-                    </div>
+<h1>
+Gestion intelligente
+<br>
+des bulletins scolaires
+</h1>
 
-                    <a href="#" class="forgot">Mot de passe oublié ?</a>
 
-                    <button type="submit" class="btn-login mt-3">
-                        Se connecter
-                    </button>
 
-                    <p class="text-center mt-3 text-muted" style="font-size:12px;">
-                        © 2026 — Gestion des Bulletins
-                    </p>
-                </form>
+<p>
 
-            </div>
+Une plateforme complète pour gérer les étudiants,
+les notes, les UE, ECUE et générer les bulletins
+académiques.
 
-        </div>
+</p>
 
-    </div>
+
+
+<div class="features">
+
+
+<div>
+<i class="bi bi-check-circle-fill"></i>
+Gestion BTS & LMD
 </div>
 
+
+<div>
+<i class="bi bi-check-circle-fill"></i>
+Saisie rapide des notes
+</div>
+
+
+<div>
+<i class="bi bi-check-circle-fill"></i>
+Génération automatique des bulletins PDF
+</div>
+
+
+<div>
+<i class="bi bi-check-circle-fill"></i>
+Accès sécurisé par rôle
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<!-- =====================
+ LOGIN
+===================== -->
+
+
+<div class="col-lg-6 right-panel">
+
+
+<div class="login-box">
+
+
+
+<div class="login-header">
+
+
+<h2>
+<i class="bi bi-mortarboard-fill text-primary"></i>
+Connexion
+</h2>
+
+
+<p>
+Accédez à votre espace académique
+</p>
+
+
+</div>
+
+
+
+
+{% if error %}
+
+<div class="alert alert-danger">
+
+<i class="bi bi-exclamation-triangle"></i>
+
+{{ error }}
+
+</div>
+
+{% endif %}
+
+
+
+
+<form method="POST">
+
+{% csrf_token %}
+
+
+
+
+<div class="mb-3">
+
+
+<label class="form-label">
+Identifiant
+</label>
+
+
+<div class="input-group">
+
+
+<span class="input-group-text">
+
+<i class="bi bi-person"></i>
+
+</span>
+
+
+<input
+
+type="text"
+
+name="username"
+
+class="form-control"
+
+placeholder="Votre identifiant"
+
+required>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="mb-3">
+
+
+<label class="form-label">
+Mot de passe
+</label>
+
+
+<div class="input-group">
+
+
+<span class="input-group-text">
+
+<i class="bi bi-lock"></i>
+
+</span>
+
+
+
+<input
+
+type="password"
+
+name="password"
+
+class="form-control"
+
+placeholder="********"
+
+required>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<div class="text-end mb-3">
+
+<a href="#"
+class="text-decoration-none">
+
+Mot de passe oublié ?
+
+</a>
+
+</div>
+
+
+
+
+
+<button class="btn-login">
+
+<i class="bi bi-box-arrow-in-right"></i>
+
+Se connecter
+
+
+</button>
+
+
+
+
+
+<div class="footer">
+
+
+© 2026 UIC-Abidjan
+
+<br>
+
+Gestion des Bulletins Académiques
+
+
+</div>
+
+
+
+</form>
+
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
 </body>
+
 </html>

@@ -23,7 +23,7 @@ from .models import (
     Classe,
     Niveau
 )
-
+from lmd.models import EtudiantLMD
 # from .models import NoteBTS
 
 
@@ -102,6 +102,9 @@ def dashboard(request):
         "classes_count": Classe.objects.count(),
         "matieres_count": Matiere.objects.count(),
         "notes_count": Note.objects.count(),
+        "l1_count": EtudiantLMD.objects.filter(niveau="L1").count(),
+        "l2_count": EtudiantLMD.objects.filter(niveau="L2").count(),"master_count": EtudiantLMD.objects.filter(niveau__in=["M1","M2"]).count(),
+        
     })
 
 
@@ -996,136 +999,6 @@ def salle_delete(request, pk):
     return redirect('salle_list')
 
 
-def saisie_note_groupeeEEE(request):
-
-    classes = Classe.objects.select_related(
-        "filiere_bts",
-        "niveau",
-        "salle"
-    )
-
-    matieres = Matiere.objects.all()
-
-    etudiants = []
-    notes_existantes = {}
-
-    classe_id = request.GET.get("classe")
-    matiere_id = request.GET.get("matiere")
-    semestre = request.GET.get("semestre")
-
-
-    if classe_id and matiere_id:
-
-        classe = Classe.objects.get(id=classe_id)
-
-        etudiants = Etudiant.objects.filter(
-            classe=classe
-        )
-
-
-        notes = Note.objects.filter(
-            matiere_id=matiere_id,
-            semestre=semestre,
-            etudiant__in=etudiants
-        )
-
-
-        for note in notes:
-            notes_existantes[note.etudiant.id] = note
-
-
-
-    context = {
-
-        "classes": classes,
-
-        "matieres": matieres,
-
-        "etudiants": etudiants,
-
-        "notes_existantes": notes_existantes,
-
-    }
-
-
-    return render(
-        request,
-        "notes/saisie_groupee.html",
-        context
-    )
-     
-    
-def saisie_note_groupeeBON(request):
-
-    classes = Classe.objects.select_related(
-        "filiere_bts",
-        "niveau",
-        "salle"
-    )
-
-    matieres = Matiere.objects.all()
-
-    etudiants = []
-    notes_existantes = {}
-
-    classe_id = request.GET.get("classe")
-    matiere_id = request.GET.get("matiere")
-    semestre = request.GET.get("semestre")
-
-
-    if classe_id and matiere_id and semestre:
-
-        classe = Classe.objects.get(
-            id=classe_id
-        )
-
-
-        # Récupérer les étudiants de la classe
-        etudiants = Etudiant.objects.filter(
-            classe=classe
-        )
-
-
-        # Chercher les notes déjà saisies
-        notes = Note.objects.filter(
-            etudiant__in=etudiants,
-            matiere_id=matiere_id,
-            semestre=semestre
-        )
-
-
-        for note in notes:
-            notes_existantes[note.etudiant_id] = note
-
-
-
-        # Attacher la note directement à chaque étudiant
-        for etudiant in etudiants:
-            etudiant.note_existante = notes_existantes.get(
-                etudiant.id
-            )
-
-
-    context = {
-
-        "classes": classes,
-
-        "matieres": matieres,
-
-        "etudiants": etudiants,
-
-        "notes_existantes": notes_existantes,
-
-    }
-
-
-    return render(
-        request,
-        "notes/saisie_groupee.html",
-        context
-    )
-    
-    
 def saisie_note_groupee(request):
 
     classes = Classe.objects.select_related(

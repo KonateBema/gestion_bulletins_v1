@@ -625,7 +625,6 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
                 Total crédits acquis : {credits_obtenus}/{credits_total}<br/>
                 Total Crédits restants : {credits_restants}/{credits_total}<br/>
                 Moyenne obtenue : {moyenne_generale}/20<br/>
-                Rang occupé : {rang}
                  </para>
                 """,
                 SMALL

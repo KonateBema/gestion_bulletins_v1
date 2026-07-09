@@ -2,174 +2,602 @@
 
 {% block title %}Dashboard Administrateur{% endblock %}
 
+
 {% block content %}
+
 
 <style>
 
+
 .dashboard-header{
-    background: linear-gradient(135deg,#0d6efd,#6610f2);
-    color:#fff;
-    padding:30px;
-    border-radius:15px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #0d6efd,
+        #6610f2
+    );
+
+    color:white;
+
+    padding:35px;
+
+    border-radius:25px;
+
     margin-bottom:30px;
+
 }
+
 
 .dashboard-header h2{
-    margin:0;
-    font-weight:700;
+
+    font-weight:800;
+
 }
 
-.dashboard-header p{
-    margin-top:10px;
-    margin-bottom:0;
-}
+
 
 .stat-card{
-    background:#fff;
-    border:none;
+
+    background:white;
+
     border-radius:20px;
+
     padding:25px;
-    text-align:center;
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
-    transition:0.3s;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.08);
+
+    transition:.3s;
+
     height:100%;
+
 }
+
 
 .stat-card:hover{
-    transform:translateY(-5px);
+
+    transform:translateY(-6px);
+
 }
 
-.stat-icon{
-    font-size:40px;
-    margin-bottom:10px;
+
+
+.icon-box{
+
+    width:60px;
+
+    height:60px;
+
+    border-radius:15px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:30px;
+
+    margin-bottom:15px;
+
 }
+
+
 
 .stat-number{
-    font-size:32px;
-    font-weight:bold;
+
+    font-size:35px;
+
+    font-weight:800;
+
 }
 
-.action-card{
-    background:#fff;
-    border:none;
-    border-radius:20px;
+
+
+.section-card{
+
+    background:white;
+
     padding:25px;
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
-    height:100%;
+
+    border-radius:20px;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.08);
+
 }
 
-.btn-action{
-    margin-bottom:10px;
+
+
+.action-btn{
+
+    padding:13px;
+
+    border-radius:12px;
+
+    margin-bottom:12px;
+
+    font-weight:600;
+
 }
+
+
+
+.system-item{
+
+    padding:12px;
+
+    border-radius:12px;
+
+    background:#f8fafc;
+
+    margin-bottom:10px;
+
+}
+
+
 
 </style>
 
+
+
+
+
 <div class="container-fluid">
 
-```
-<!-- Header -->
+
+
+<!-- HEADER -->
+
 <div class="dashboard-header">
-    <h2>👑 Dashboard Administrateur</h2>
-    <p>Bienvenue dans votre plateforme de gestion scolaire</p>
+
+
+<h2>
+
+<i class="bi bi-speedometer2"></i>
+
+Dashboard Administrateur
+
+</h2>
+
+
+<p>
+
+Gestion complète de la plateforme académique BTS & LMD
+
+</p>
+
+
 </div>
 
-<!-- Statistiques -->
+
+
+
+
+
+
+<!-- STATISTIQUES -->
+
+
 <div class="row g-4">
 
-    <div class="col-lg-4 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon">🎓</div>
-            <h5>Étudiants</h5>
-            <div class="stat-number text-primary">
-                {{ etudiants }}
-            </div>
-        </div>
-    </div>
 
-    <div class="col-lg-4 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon">👨‍🏫</div>
-            <h5>Professeurs</h5>
-            <div class="stat-number text-success">
-                {{ professeurs }}
-            </div>
-        </div>
-    </div>
 
-    <div class="col-lg-4 col-md-12">
-        <div class="stat-card">
-            <div class="stat-icon">🏫</div>
-            <h5>Classes</h5>
-            <div class="stat-number text-danger">
-                {{ classes }}
-            </div>
-        </div>
-    </div>
+<div class="col-xl-3 col-md-6">
+
+<div class="stat-card">
+
+
+<div class="icon-box bg-primary text-white">
+
+<i class="bi bi-people"></i>
 
 </div>
 
-<!-- Actions et Résumé -->
+
+<h6>
+Étudiants BTS
+</h6>
+
+
+<div class="stat-number text-primary">
+
+{{ etudiants }}
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+
+
+<div class="col-xl-3 col-md-6">
+
+<div class="stat-card">
+
+
+<div class="icon-box bg-success text-white">
+
+<i class="bi bi-mortarboard"></i>
+
+</div>
+
+
+<h6>
+Étudiants LMD
+</h6>
+
+
+<div class="stat-number text-success">
+
+{{ etudiants_lmd }}
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+
+
+<div class="col-xl-3 col-md-6">
+
+<div class="stat-card">
+
+
+<div class="icon-box bg-warning text-white">
+
+<i class="bi bi-person-workspace"></i>
+
+</div>
+
+
+<h6>
+Professeurs
+</h6>
+
+
+<div class="stat-number text-warning">
+
+{{ professeurs }}
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+<div class="col-xl-3 col-md-6">
+
+<div class="stat-card">
+
+
+<div class="icon-box bg-danger text-white">
+
+<i class="bi bi-building"></i>
+
+</div>
+
+
+<h6>
+Classes
+</h6>
+
+
+<div class="stat-number text-danger">
+
+{{ classes }}
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- ACTIONS -->
+
+
+<div class="row mt-5 g-4">
+
+
+
+<div class="col-lg-6">
+
+
+<div class="section-card">
+
+
+<h4 class="mb-4">
+
+<i class="bi bi-lightning-charge"></i>
+
+Actions rapides
+
+</h4>
+
+
+
+
+<a href="{% url 'etudiant_list' %}"
+
+class="btn btn-primary w-100 action-btn">
+
+<i class="bi bi-person-plus"></i>
+
+Gestion étudiants BTS
+
+</a>
+
+
+
+
+
+<a href="{% url 'etudiant_lmd_list' %}"
+
+class="btn btn-success w-100 action-btn">
+
+<i class="bi bi-mortarboard"></i>
+
+Gestion étudiants LMD
+
+</a>
+
+
+
+
+
+<a href="{% url 'saisie_note_groupee' %}"
+
+class="btn btn-warning w-100 action-btn">
+
+<i class="bi bi-pencil-square"></i>
+
+Saisie groupée BTS
+
+</a>
+
+
+
+
+
+<a href="{% url 'saisie_list' %}"
+
+class="btn btn-dark w-100 action-btn">
+
+<i class="bi bi-calculator"></i>
+
+Saisie notes ECUE
+
+</a>
+
+
+
+
+
+
+<a href="{% url 'bulletin_lmd_list' %}"
+
+class="btn btn-danger w-100 action-btn">
+
+<i class="bi bi-file-earmark-pdf"></i>
+
+Générer bulletins LMD
+
+</a>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- SYSTEME -->
+
+
+<div class="col-lg-6">
+
+
+<div class="section-card">
+
+
+<h4 class="mb-4">
+
+<i class="bi bi-shield-check"></i>
+
+État du système
+
+</h4>
+
+
+
+
+<div class="system-item text-success">
+
+<i class="bi bi-check-circle-fill"></i>
+
+Base de données opérationnelle
+
+</div>
+
+
+
+<div class="system-item text-primary">
+
+<i class="bi bi-check-circle-fill"></i>
+
+Authentification sécurisée
+
+</div>
+
+
+
+<div class="system-item text-info">
+
+<i class="bi bi-check-circle-fill"></i>
+
+Modules BTS actifs
+
+</div>
+
+
+
+
+<div class="system-item text-warning">
+
+<i class="bi bi-check-circle-fill"></i>
+
+Modules LMD actifs
+
+</div>
+
+
+
+<div class="system-item text-danger">
+
+<i class="bi bi-check-circle-fill"></i>
+
+Génération PDF disponible
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<!-- ACTIVITE -->
+
+
 <div class="row mt-4">
 
-    <div class="col-lg-6 mb-4">
 
-        <div class="action-card">
+<div class="col-12">
 
-            <h4 class="mb-3">⚡ Actions Rapides</h4>
 
-            <a href="{% url 'etudiant_list' %}"
-               class="btn btn-primary w-100 btn-action">
-                ➕ Gérer les étudiants
-            </a>
+<div class="section-card">
 
-            <a href="{% url 'classe_list' %}"
-               class="btn btn-success w-100 btn-action">
-                🏫 Gérer les classes
-            </a>
 
-            <a href="{% url 'matiere_list' %}"
-               class="btn btn-dark w-100 btn-action">
-                📚 Gérer les matières
-            </a>
+<h4>
 
-            <a href="{% url 'note_list' %}"
-               class="btn btn-warning w-100">
-                📝 Gérer les notes
-            </a>
+<i class="bi bi-clock-history"></i>
 
-        </div>
+Dernières activités
 
-    </div>
+</h4>
 
-    <div class="col-lg-6 mb-4">
 
-        <div class="action-card">
 
-            <h4 class="mb-3">📊 État du système</h4>
+<table class="table table-hover mt-3">
 
-            <div class="alert alert-success">
-                ✔ Base de données connectée
-            </div>
 
-            <div class="alert alert-primary">
-                ✔ Authentification active
-            </div>
+<thead class="table-dark">
 
-            <div class="alert alert-info">
-                ✔ Gestion des utilisateurs active
-            </div>
+<tr>
 
-            <div class="alert alert-warning">
-                ✔ Module bulletins disponible
-            </div>
+<th>Utilisateur</th>
 
-        </div>
+<th>Action</th>
 
-    </div>
+<th>Date</th>
+
+</tr>
+
+</thead>
+
+
+
+<tbody>
+
+
+<tr>
+
+<td>Administrateur</td>
+
+<td>Ajout d'un étudiant</td>
+
+<td>{{ today }}</td>
+
+</tr>
+
+
+<tr>
+
+<td>Professeur</td>
+
+<td>Saisie des notes ECUE</td>
+
+<td>{{ today }}</td>
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+
+
 
 </div>
-```
+
 
 </div>
+
+
+</div>
+
+
+
+
+
+</div>
+
 
 {% endblock %}
