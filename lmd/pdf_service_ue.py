@@ -479,8 +479,8 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
             
             add_section("UE: UNITES DE CULTURE GENERALES", data, table_style)
             # add_section(f"UE : UNITES DE CULTURE GENERALES "f"(ECUE={total_credit_ecue} | "f"UE={total_credit_ue_culture} | "f"MOY={moyenne_ue_culture})",data,table_style,)
-        if compteur_ue == 16:
-            add_section("UE: UNITES DE CSPECIALITES", data, table_style)
+        if compteur_ue == 7:
+            add_section("UE: UNITES DE SPECIALITES", data, table_style)
 
         # ecues = ue.ecues.all()
         # ecues = ECUE.objects.filter(ue=ue)  # SAFE à 100%
