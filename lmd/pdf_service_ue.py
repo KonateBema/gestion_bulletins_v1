@@ -8,10 +8,10 @@ from reportlab.lib.pagesizes import A4
 from django.conf import settings
 import os
 from lmd.models import EtudiantLMD
-from .models import EtudiantLMD, UE, NoteLMD
+from .models import  UE, NoteLMD
 from reportlab.platypus import HRFlowable
 from reportlab.pdfgen import canvas
-
+from .models import SaisieNoteLMD
 # =========================================================
 # STYLES
 # =========================================================
@@ -120,6 +120,9 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     # =========================================================
     # HEADER REPUBLIQUE
     # =========================================================
+    # logo_header_path = os.path.join(settings.BASE_DIR, "core/static/logo.jpeg")
+    logo_path = os.path.join(settings.BASE_DIR, "core/static/logo.jpeg")
+    logo = get_image(logo_path, 1.8* cm, 1.8 * cm, "LOGO")
 
     header_table = Table([
     [
@@ -133,37 +136,59 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         </b>
         </para>
         """, SMALL),
-
+         logo,
+        
         Paragraph("""
         <para align="center">
         <b>RÉPUBLIQUE DE CÔTE D'IVOIRE</b><br/>
         Union - Discipline - Travail
         </para>
         """, SMALL)
-      ]], colWidths=[9 * cm, 9 * cm])
+      ]], colWidths=[7 * cm,2.5 * cm,  7 * cm])
 
+    # header_table.setStyle(TableStyle([
+    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    #     ('LEFTPADDING', (0, 0), (-1, -1), 0),
+    #     ('TOPPADDING', (0, 0), (-1, -1), 0),
+    #     ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    # ]))
+    
     header_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+
+    ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+    ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+    ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+
+    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+    ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ('TOPPADDING', (0, 0), (-1, -1), 0),
+    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]))
+    
 
     elements.append(header_table)
 
-    elements.append(Spacer(1, 6))
+    elements.append(Spacer(1, 14))
+    saisie = SaisieNoteLMD.objects.filter(
+    filiere=etudiant.filiere,
+    niveau=etudiant.niveau
+   ).first()
+    semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
+    session = saisie.session if saisie else "-"
+    annee = etudiant.annee_academique
 
-    elements.append(Paragraph("""
-       <para align="center">
+    elements.append(Paragraph(f"""
+        <para align="center">
         <b>
         <font color="#B30000">RELEVE DE NOTES</font>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        SEMESTRE I - SESSION 1
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        ANNÉE SCOLAIRE : 2020 - 2021
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        SEMESTRE {semestre} - SESSION {session}
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        ANNÉE SCOLAIRE : {annee}
         </b>
-        </para>
-        """, SMALL))
+       </para>
+       """, SMALL))
 
     elements.append(HRFlowable(
          width="40%",
@@ -179,8 +204,8 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     # LOGO
     # =========================================================
 
-    logo_path = os.path.join(settings.BASE_DIR, "core/static/logo.jpeg")
-    logo = get_image(logo_path, 2 * cm, 2 * cm, "LOGO")
+    # logo_path = os.path.join(settings.BASE_DIR, "core/static/logo.jpeg")
+    # logo = get_image(logo_path, 2 * cm, 2 * cm, "LOGO")
 
 
     # =========================================================
@@ -190,9 +215,9 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     specialite = etudiant.filiere.libelle if etudiant.filiere else "TRONC COMMUN"
     cadre_universite = Table([[
         Paragraph(f"""
-            <b>DOMAINE : SCIENCES ECONOMIQUE </b><br/>
+            <b>DOMAINE : <br/> SCIENCES ECONOMIQUE </b><br/>
              <b>& DE GESTION</b><br/><br/>
-             <b>SPECIALITE :</b> {specialite}
+             <b>SPECIALITE :</b><br/> {specialite}<br/>
         """, SMALL)
     ]], colWidths=[8 * cm], rowHeights=[2.5 * cm])
 
@@ -202,7 +227,7 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
-        ("TOPPADDING", (0, 2), (-1, 2), 8),  # espace avant SPÉCIALITÉ
+        ("TOPPADDING", (0, 2), (-1, 2), 12),  # espace avant SPÉCIALITÉ
     ]))
 
     elements.append(Spacer(1, 10))
@@ -210,11 +235,11 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     # LOGO CENTER
     # =========================================================
 
-    logo_center = Table([[logo]], colWidths=[2.5 * cm])
-    logo_center.setStyle(TableStyle([
-        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    ]))
+    # logo_center = Table([[logo]], colWidths=[2.5 * cm])
+    # logo_center.setStyle(TableStyle([
+    #     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+    #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    # ]))
 
 
     # =========================================================
@@ -271,14 +296,22 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     # =========================================================
 
     header_global = Table(
-        [[cadre_universite, logo_center, cadre_etudiant]],
-        colWidths=[8 * cm, 2.5 * cm, 7 * cm],
+        [[cadre_universite, cadre_etudiant]],
+        colWidths=[12 * cm, 8 * cm],
         rowHeights=[3.5 * cm]
     )
 
+    # header_global.setStyle(TableStyle([
+    #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    # ]))
     header_global.setStyle(TableStyle([
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
     ]))
+    
+    
 
     elements.append(header_global)
     elements.append(Spacer(1, 10))
