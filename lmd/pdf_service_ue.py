@@ -372,12 +372,36 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         # table_style.append(("SPAN", (0, 1), (0, 2)))
         # table_style.append(("SPAN", (0, 1), (0, 3)))
         
-         #  ligne /colonne 2
+         #  ligne /colonne 2 (FUSION EU)
         table_style.append(("SPAN", (1, 1), (1, 2)))
-        table_style.append(("SPAN", (1, 4), (1, 5)))
-        table_style.append(("SPAN", (1, 7), (1, 8)))
-        table_style.append(("SPAN", (1, 9), (1, 10)))
-        table_style.append(("SPAN", (1, 12), (1, 13)))
+
+        table_style.append(("SPAN", (1, 3), (1, 4)))
+        table_style.append(("SPAN", (1, 6), (1, 7)))
+        table_style.append(("SPAN", (1, 8), (1, 9)))
+        table_style.append(("SPAN", (1, 11), (1, 12)))
+   #  ligne /colonne 2 (FUSION CRÉDIT UE)
+        table_style.append(("SPAN", (4, 1), (4, 2)))
+        table_style.append(("SPAN", (6, 1), (6, 2)))
+     # lignes 3 et 4
+        table_style.append(("SPAN", (4, 3), (4, 4)))
+        table_style.append(("SPAN", (6, 3), (6, 4)))
+        # lignes 6 et 7
+        table_style.append(("SPAN", (4, 6), (4, 7)))
+        table_style.append(("SPAN", (6, 6), (6, 7)))
+         # lignes 8 et 9
+        table_style.append(("SPAN", (4, 8), (4, 9)))
+        table_style.append(("SPAN", (6, 8), (6, 9)))
+         # lignes 11 et 12
+        table_style.append(("SPAN", (4, 11), (4, 12)))
+        table_style.append(("SPAN", (6, 11), (6, 12)))
+         # lignes 13 et 14
+        # table_style.append(("SPAN", (4, 13), (4, 14)))
+        # table_style.append(("SPAN", (6, 13), (6, 14)))
+
+        
+
+        # table_style.append(("SPAN", (4, 1), (4, 3)))
+        # table_style.append(("SPAN", (6, 1), (6, 2)))
         
 
     compteur_ue = 0
@@ -389,13 +413,13 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
             ues_fondamentales = ues[:5]
             total_credit_ecue = sum(
                 ecue.credit
-                for ue_temp in ues[:4]
+                for ue_temp in ues[:3]
                 for ecue in ue_temp.ecues.all()
                  )
                  
             total_credit_ue = sum(
                 getattr(ue_temp, "credit", 0)
-                for ue_temp in ues[:5]
+                for ue_temp in ues[:2]
                 ) 
               # TOTAL MOYENNES ECUE
 
@@ -433,14 +457,18 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
             # add_section(f"{ue.code} - UE : UNITÉS FONDAMENTALES (ECUE={total_credit_ecue} | UE={total_credit_ue})",data,table_style)
 
         if compteur_ue == 6:
-            ues_culture = ues[6:9]  # 6ème à la 11ème UE
-            total_credit_ecue_culture = sum(
+            ues_culture = ues[6:9]  # 6ème à la 19ème UE
+            total_credit_ecue = sum(
                 ecue.credit
-                 for ue_temp in ues_culture
+                 for ue_temp in ues[2:4]
+                #  for ue_temp in ues_culture
                   for ecue in ue_temp.ecues.all() )
-            total_credit_ue_culture = sum(
+
+            total_credit_ue = sum(
                 getattr(ue_temp, "credit", 0)
-                for ue_temp in ues_culture)
+                for ue_temp in ues[2:4]
+                # for ue_temp in ues_culture
+                )
             
             total_moy_ecue_culture = 0
             nb_ecue_culture = 0
@@ -468,18 +496,18 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
                     nombre_ecue += 1
                 if nombre_ecue:
                     moy_ue = round(somme_ecue / nombre_ecue, 2)
-                    total_moy_ue_culture += moy_ue
+                    total_moy_ue += moy_ue
                     nb_ue_culture += 1
-            moyenne_ecue_culture = (
-                 round(total_moy_ecue_culture / nb_ecue_culture, 2)
+            total_moy_ecue = (
+                 round(total_moy_ecue / nb_ecue_culture, 2)
                  if nb_ecue_culture else 0   )
-            moyenne_ue_culture = (
-                round(total_moy_ue_culture / nb_ue_culture, 2)
+            total_moy_ue = (
+                round(total_moy_ue / nb_ue_culture, 2)
                 if nb_ue_culture else 0  )
             
             add_section("UE: UNITES DE CULTURE GENERALES", data, table_style)
             # add_section(f"UE : UNITES DE CULTURE GENERALES "f"(ECUE={total_credit_ecue} | "f"UE={total_credit_ue_culture} | "f"MOY={moyenne_ue_culture})",data,table_style,)
-        if compteur_ue == 7:
+        if compteur_ue == 15:
             add_section("UE: UNITES DE SPECIALITES", data, table_style)
 
         # ecues = ue.ecues.all()
