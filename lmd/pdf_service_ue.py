@@ -395,13 +395,13 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         table_style.append(("SPAN", (4, 11), (4, 12)))
         table_style.append(("SPAN", (6, 11), (6, 12)))
          # lignes 13 et 14
-        # table_style.append(("SPAN", (4, 13), (4, 14)))
-        # table_style.append(("SPAN", (6, 13), (6, 14)))
+        table_style.append(("SPAN", (4, 13), (4, 14)))
+        table_style.append(("SPAN", (6, 13), (6, 14)))
 
         
 
-        # table_style.append(("SPAN", (4, 1), (4, 3)))
-        # table_style.append(("SPAN", (6, 1), (6, 2)))
+        table_style.append(("SPAN", (4, 1), (4, 3)))
+        table_style.append(("SPAN", (6, 1), (6, 2)))
         
 
     compteur_ue = 0
