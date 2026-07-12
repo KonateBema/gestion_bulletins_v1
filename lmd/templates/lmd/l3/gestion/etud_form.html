@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-success text-white">
+
+            <h4>
+                {% if form.instance.id %}
+                    ✏️ Modifier étudiant
+                {% else %}
+                    ➕ Ajouter étudiant L3 Sciences de Gestion
+                {% endif %}
+            </h4>
+
+        </div>
+
+
+        <div class="card-body">
+
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+
+                {{ form.as_p }}
+
+
+                <button type="submit" class="btn btn-success">
+
+                    💾 Enregistrer
+
+                </button>
+
+
+                <a href="{% url 'l3_gestion_etudiant_list' %}"
+                   class="btn btn-secondary">
+
+                    Retour
+
+                </a>
+
+
+            </form>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% endblock %}

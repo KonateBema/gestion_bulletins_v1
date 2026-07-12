@@ -1,0 +1,205 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+
+    <!-- Titre -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h3 class="fw-bold text-primary">
+                📝 Saisie des notes - L3 Sciences de Gestion
+            </h3>
+
+            <p class="text-muted">
+                Sélectionnez une ECUE pour saisir les notes des étudiants.
+            </p>
+        </div>
+
+
+        <div>
+            <span class="badge bg-success fs-6">
+                {{ ecues|length }} ECUE disponibles
+            </span>
+        </div>
+
+    </div>
+
+
+
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-header bg-primary text-white">
+
+            <h5 class="mb-0">
+                📚 Liste des ECUE
+            </h5>
+
+        </div>
+
+
+
+        <div class="card-body">
+
+
+            {% if ecues %}
+
+
+            <div class="table-responsive">
+
+
+                <table class="table table-hover align-middle">
+
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>#</th>
+
+                            <th>Unité d'enseignement (UE)</th>
+
+                            <th>ECUE</th>
+
+                            <th>Crédit</th>
+
+                            <th>Coefficient</th>
+
+                            <th class="text-center">
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+
+                    <tbody>
+
+
+                    {% for ecue in ecues %}
+
+
+                        <tr>
+
+
+                            <td>
+                                {{ forloop.counter }}
+                            </td>
+
+
+
+                            <td>
+
+                                <span class="fw-bold text-primary">
+
+                                    {{ ecue.ue.libelle }}
+
+                                </span>
+
+                            </td>
+
+
+
+                            <td>
+
+                                {{ ecue.libelle }}
+
+                            </td>
+
+
+
+                            <td>
+
+                                <span class="badge bg-info">
+
+                                    {{ ecue.credit }}
+
+                                    crédits
+
+                                </span>
+
+                            </td>
+
+
+
+                            <td>
+
+                                <span class="badge bg-secondary">
+
+                                    {{ ecue.coefficient }}
+
+                                </span>
+
+                            </td>
+
+
+
+
+                            <td class="text-center">
+
+
+                                <a href="{% url 'l3_gestion_saisie_notes' ecue.id %}"
+
+                                   class="btn btn-success btn-sm">
+
+
+                                    <i class="bi bi-pencil-square"></i>
+
+                                    Saisir les notes
+
+
+                                </a>
+
+
+                            </td>
+
+
+                        </tr>
+
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+
+            </div>
+
+
+
+            {% else %}
+
+
+                <div class="alert alert-warning text-center">
+
+                    ⚠️ Aucun ECUE trouvé pour L3 Sciences de Gestion.
+
+                </div>
+
+
+            {% endif %}
+
+
+
+        </div>
+
+
+    </div>
+
+
+
+</div>
+
+
+{% endblock %}
+

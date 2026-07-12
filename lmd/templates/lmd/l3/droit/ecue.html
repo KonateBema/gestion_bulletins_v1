@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container-fluid mt-4">
+
+
+<div class="d-flex justify-content-between mb-4">
+
+
+<div>
+
+<h2 class="fw-bold">
+
+📚 ECUE
+
+</h2>
+
+
+<p class="text-muted">
+
+UE :
+<strong>{{ ue.libelle }}</strong>
+
+</p>
+
+</div>
+
+
+
+<a href="{% url 'l3_droit_ecue_add' ue.id %}"
+class="btn btn-success">
+
+<i class="bi bi-plus-circle"></i>
+
+Ajouter ECUE
+
+</a>
+
+
+</div>
+
+
+
+
+
+<div class="card shadow border-0">
+
+
+<table class="table table-hover mb-0">
+
+
+<thead class="table-dark">
+
+
+<tr>
+
+<th>
+Code
+</th>
+
+<th>
+Matière
+</th>
+
+<th>
+Coefficient
+</th>
+
+<th>
+Crédit
+</th>
+
+<th>
+Actions
+</th>
+
+</tr>
+
+
+</thead>
+
+
+
+<tbody>
+
+
+
+{% for e in ecues %}
+
+
+<tr>
+
+
+<td>
+{{ e.code }}
+</td>
+
+
+<td>
+{{ e.libelle }}
+</td>
+
+
+<td>
+{{ e.coefficient }}
+</td>
+
+
+<td>
+{{ e.credit }}
+</td>
+
+
+
+<td>
+
+
+<a href="#"
+class="btn btn-sm btn-warning">
+
+<i class="bi bi-pencil"></i>
+
+</a>
+
+
+
+<a href="{% url 'l3_droit_ecue_delete' e.id %}"
+class="btn btn-sm btn-danger">
+
+<i class="bi bi-trash"></i>
+
+</a>
+
+
+</td>
+
+
+</tr>
+
+
+
+{% empty %}
+
+
+<tr>
+
+<td colspan="5"
+class="text-center">
+
+Aucune ECUE
+
+</td>
+
+</tr>
+
+
+{% endfor %}
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+</div>
+
+
+
+</div>
+
+
+
+{% endblock %}

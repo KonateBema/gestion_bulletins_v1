@@ -1,0 +1,113 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-8">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-success text-white">
+
+                    <h4 class="mb-0">
+
+                        {% if form.instance.pk %}
+
+                            ✏️ Modifier une UE
+
+                        {% else %}
+
+                            ➕ Nouvelle UE - L3 Sciences de Gestion
+
+                        {% endif %}
+
+                    </h4>
+
+                </div>
+
+                <div class="card-body">
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+
+                        <div class="alert alert-danger">
+
+                            <strong>Veuillez corriger les erreurs suivantes :</strong>
+
+                            {{ form.errors }}
+
+                        </div>
+
+                        {% endif %}
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Code UE
+
+                            </label>
+
+                            {{ form.code }}
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Libellé
+
+                            </label>
+
+                            {{ form.libelle }}
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Nombre de crédits
+
+                            </label>
+
+                            {{ form.credit }}
+
+                        </div>
+
+                        <hr>
+
+                        <button type="submit" class="btn btn-success">
+
+                            💾 Enregistrer
+
+                        </button>
+
+                        <a href="{% url 'l3_gestion_ue_list' %}" class="btn btn-secondary">
+
+                            ↩ Retour
+
+                        </a>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

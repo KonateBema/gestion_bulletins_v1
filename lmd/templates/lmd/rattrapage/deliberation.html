@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Délibération Rattrapage
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="container-fluid mt-4">
+
+
+    <!-- Header -->
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-body">
+
+            <h3 class="fw-bold text-primary mb-2">
+
+                <i class="bi bi-clipboard-check"></i>
+
+                Délibération Rattrapage
+
+            </h3>
+
+
+            <p class="text-muted mb-0">
+
+                Validation des résultats de la session de rattrapage
+
+            </p>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Tableau -->
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-body">
+
+
+            <div class="table-responsive">
+
+
+                <table class="table table-hover align-middle">
+
+
+                    <thead class="table-primary">
+
+
+                        <tr>
+
+                            <th>
+                                Matricule
+                            </th>
+
+                            <th>
+                                Étudiant
+                            </th>
+
+                            <th>
+                                ECUE
+                            </th>
+
+                            <th>
+                                Ancienne note
+                            </th>
+
+                            <th>
+                                Nouvelle note
+                            </th>
+
+                            <th>
+                                Décision
+                            </th>
+
+
+                        </tr>
+
+
+                    </thead>
+
+
+
+                    <tbody>
+
+
+                    {% for c in candidatos %}
+
+                    <tr>
+
+
+                        <td>
+
+                            <span class="fw-semibold">
+
+                                {{ c.etudiant.matricule }}
+
+                            </span>
+
+                        </td>
+
+
+
+
+                        <td>
+
+
+                            <div class="fw-bold">
+
+                                {{ c.etudiant.nom }}
+                                {{ c.etudiant.prenoms }}
+
+                            </div>
+
+
+                            <small class="text-muted">
+
+                                {{ c.etudiant.filiere.libelle }}
+
+                            </small>
+
+
+                        </td>
+
+
+
+
+                        <td>
+
+
+                            <span class="badge bg-light text-dark">
+
+                                {{ c.ecue.code }}
+
+                            </span>
+
+
+                            <br>
+
+
+                            {{ c.ecue.libelle }}
+
+
+                        </td>
+
+
+
+
+                        <td>
+
+
+                            <span class="text-danger fw-bold">
+
+                                {{ c.ancienne_note }}/20
+
+                            </span>
+
+
+                        </td>
+
+
+
+
+                        <td>
+
+
+                            {% if c.nouvelle_note %}
+
+
+                                <span class="text-success fw-bold">
+
+                                    {{ c.nouvelle_note }}/20
+
+                                </span>
+
+
+                            {% else %}
+
+
+                                <span class="text-muted">
+
+                                    Non disponible
+
+                                </span>
+
+
+                            {% endif %}
+
+
+
+                        </td>
+
+
+
+
+
+                        <td>
+
+
+
+                            {% if c.statut == "VALIDE" %}
+
+
+                                <span class="badge rounded-pill bg-success">
+
+                                    <i class="bi bi-check-circle"></i>
+
+                                    Validé
+
+                                </span>
+
+
+
+                            {% elif c.statut == "ECHEC" %}
+
+
+
+                                <span class="badge rounded-pill bg-danger">
+
+                                    <i class="bi bi-x-circle"></i>
+
+                                    Échec
+
+                                </span>
+
+
+
+                            {% else %}
+
+
+
+                                <span class="badge rounded-pill bg-warning text-dark">
+
+                                    <i class="bi bi-hourglass-split"></i>
+
+                                    En attente
+
+                                </span>
+
+
+
+                            {% endif %}
+
+
+
+                        </td>
+
+
+
+                    </tr>
+
+
+
+                    {% empty %}
+
+
+
+                    <tr>
+
+                        <td colspan="6" class="text-center py-5">
+
+
+                            <div class="text-muted">
+
+
+                                <i class="bi bi-inbox fs-1"></i>
+
+
+                                <p class="mt-2">
+
+                                    Aucun candidat en session de rattrapage
+
+                                </p>
+
+
+                            </div>
+
+
+                        </td>
+
+
+                    </tr>
+
+
+
+                    {% endfor %}
+
+
+
+                    </tbody>
+
+
+                </table>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+
+{% block extra_css %}
+
+<style>
+    .notes-card {
+        border-radius: 18px;
+        overflow: hidden;
+    }
+
+
+    .notes-header {
+        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        padding: 25px;
+    }
+
+
+    .student-row {
+        transition: .25s ease;
+    }
+
+
+    .student-row:hover {
+        background-color: #f8f9fa;
+        transform: translateX(6px);
+    }
+
+
+    .matricule-badge {
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: .85rem;
+    }
+
+
+    .note-input {
+        border-radius: 12px;
+        text-align: center;
+        font-weight: 600;
+        height: 42px;
+    }
+
+
+    .note-input:focus {
+
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25);
+
+    }
+
+
+    .input-group-text {
+
+        background: #e9ecef;
+        font-weight: bold;
+    }
+
+
+    .save-btn {
+
+        border-radius: 30px;
+        padding: 12px 40px;
+        font-weight: 600;
+
+    }
+
+
+    .table thead th {
+
+        text-align: center;
+        vertical-align: middle;
+
+    }
+</style>
+
+{% endblock %}
+
+
+
+
+{% block content %}
+
+
+<div class="container-fluid mt-4">
+
+
+    <div class="card shadow-lg border-0 notes-card">
+
+
+        <div class="notes-header text-white">
+
+
+            <h4 class="mb-1">
+
+                📝 Saisie des notes
+
+            </h4>
+
+
+            <p class="mb-0 opacity-75">
+
+                ECUE :
+                <strong>
+                    {{ ecue.libelle }}
+                </strong>
+
+            </p>
+
+
+        </div>
+
+
+
+        <div class="card-body p-4">
+
+
+
+            <form method="post">
+
+
+                {% csrf_token %}
+
+
+                <!-- ECUE obligatoire pour NoteLMD -->
+
+                <input type="hidden" name="ecue_id" value="{{ ecue.id }}">
+
+
+
+
+                <div class="table-responsive">
+
+
+                    <table class="table table-hover align-middle">
+
+
+                        <thead class="table-dark">
+
+
+                            <tr>
+
+                                <th>
+                                    Matricule
+                                </th>
+
+
+                                <th>
+                                    Nom
+                                </th>
+
+
+                                <th>
+                                    Prénoms
+                                </th>
+
+
+                                <th>
+                                    CC /20
+                                </th>
+
+
+                                <th>
+                                    Examen /20
+                                </th>
+
+
+                            </tr>
+
+
+                        </thead>
+
+
+
+                        <tbody>
+
+
+
+                            {% for e in etudiants %}
+
+
+
+                            <tr class="student-row">
+
+
+
+                                <td>
+
+
+                                    <span class="badge bg-primary matricule-badge">
+
+                                        {{ e.matricule }}
+
+                                    </span>
+
+
+                                </td>
+
+
+
+                                <td class="fw-bold">
+
+                                    {{ e.nom }}
+
+                                </td>
+
+
+
+                                <td>
+
+                                    {{ e.prenoms }}
+
+                                </td>
+
+
+
+
+                                <td>
+
+
+                                    <div class="input-group">
+
+
+                                        <input type="number" min="0" max="20" step="0.01" name="cc_{{ e.id }}"
+                                            class="form-control note-input" placeholder="0.00">
+
+
+                                        <span class="input-group-text">
+
+                                            /20
+
+                                        </span>
+
+
+                                    </div>
+
+
+                                </td>
+
+
+
+
+
+                                <td>
+
+
+                                    <div class="input-group">
+
+
+                                        <input type="number" min="0" max="20" step="0.01" name="examen_{{ e.id }}"
+                                            class="form-control note-input" placeholder="0.00">
+
+
+                                        <span class="input-group-text">
+
+                                            /20
+
+                                        </span>
+
+
+                                    </div>
+
+
+                                </td>
+
+
+
+                            </tr>
+
+
+
+                            {% empty %}
+
+
+
+                            <tr>
+
+                                <td colspan="5">
+
+
+                                    <div class="alert alert-warning text-center mb-0">
+
+
+                                        ⚠️ Aucun étudiant trouvé pour cette classe
+
+
+                                    </div>
+
+
+                                </td>
+
+
+                            </tr>
+
+
+
+                            {% endfor %}
+
+
+
+                        </tbody>
+
+
+
+                    </table>
+
+
+                </div>
+
+
+
+
+                <!-- <div class="text-end mt-4">
+
+
+                <button 
+                    type="submit"
+                    class="btn btn-success save-btn shadow"
+                >
+
+                    💾 Enregistrer les notes
+
+                </button>
+
+
+            </div> -->
+
+                <div class="d-flex justify-content-between mt-4">
+
+                    <a href="{% url 'l3_droit_prive_notes_detail' %}" class="btn btn-primary save-btn shadow">
+                        👁️ Voir les notes enregistrées
+                    </a>
+
+                    <button type="submit" class="btn btn-success save-btn shadow">
+                        💾 Enregistrer les notes
+                    </button>
+
+                </div>
+
+            </form>
+
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-danger text-white">
+
+            <h4>
+                🗑️ Suppression d'une UE
+            </h4>
+
+        </div>
+
+
+        <div class="card-body text-center">
+
+            <p class="fs-5">
+                Voulez-vous vraiment supprimer cette UE ?
+            </p>
+
+
+            <div class="alert alert-warning">
+
+                <strong>
+                    {{ ue.code }}
+                </strong>
+                -
+                {{ ue.libelle }}
+
+            </div>
+
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+
+                <button type="submit"
+                        class="btn btn-danger">
+
+                    🗑️ Oui, supprimer
+
+                </button>
+
+
+                <a href="{% url 'l3_gestion_ue' %}"
+                   class="btn btn-secondary">
+
+                    ↩️ Annuler
+
+                </a>
+
+
+            </form>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% endblock %}

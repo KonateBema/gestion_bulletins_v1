@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-primary text-white">
+
+            <h4>
+                📄 Bulletins - Sciences de Gestion
+            </h4>
+
+            <p class="mb-0">
+                Filière : {{ filiere.libelle }}
+            </p>
+
+        </div>
+
+
+        <div class="card-body">
+
+
+            <table class="table table-bordered table-hover">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>Matricule</th>
+                        <th>Nom</th>
+                        <th>Prénoms</th>
+                        <th>Niveau</th>
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% for etudiant in etudiants %}
+
+                    <tr>
+
+                        <td>
+                            {{ etudiant.matricule }}
+                        </td>
+
+
+                        <td>
+                            {{ etudiant.nom }}
+                        </td>
+
+
+                        <td>
+                            {{ etudiant.prenoms }}
+                        </td>
+
+
+                        <td>
+                            {{ etudiant.niveau }}
+                        </td>
+
+
+                        <td>
+
+                            <a href="{% url 'bulletin_gestion_lmd_pdf' etudiant.id %}"
+                               class="btn btn-success btn-sm"
+                               target="_blank">
+
+                                🖨️ Imprimer bulletin
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="5" class="text-center">
+
+                            Aucun étudiant trouvé
+
+                        </td>
+
+                    </tr>
+
+
+                {% endfor %}
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% endblock %}

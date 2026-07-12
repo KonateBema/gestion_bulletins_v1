@@ -76,9 +76,7 @@ def add_footer(canvas, doc):
 # GENERATION PDF
 # =========================================================
 
-def generate_bulletin_lmd_pdf(etudiant_id, file_path):
-
-    etudiant = EtudiantLMD.objects.get(id=etudiant_id)
+def generer_bulletin_droit_prive_pdf(etudiant, file_path):
 
     ues = UE.objects.filter(
         filiere=etudiant.filiere
@@ -146,13 +144,6 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         """, SMALL)
       ]], colWidths=[7 * cm,2.5 * cm,  7 * cm])
 
-    # header_table.setStyle(TableStyle([
-    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    #     ('LEFTPADDING', (0, 0), (-1, -1), 0),
-    #     ('TOPPADDING', (0, 0), (-1, -1), 0),
-    #     ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-    # ]))
-    
     header_table.setStyle(TableStyle([
     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
 
@@ -204,22 +195,18 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     # LOGO
     # =========================================================
 
-    # logo_path = os.path.join(settings.BASE_DIR, "core/static/logo.jpeg")
-    # logo = get_image(logo_path, 2 * cm, 2 * cm, "LOGO")
-
-
     # =========================================================
     # CADRE UNIVERSITE DOMAINE : SCIENCES ECONOMIQUE 
     # =========================================================
     # specialite = etudiant.filiere.nom if etudiant.filiere else "TRONC COMMUN"
-    specialite = etudiant.filiere.libelle if etudiant.filiere else "TRONC COMMUN"
+    specialite = etudiant.filiere.libelle if etudiant.filiere else " DROIT PRIVE"
     cadre_universite = Table([[
         Paragraph(f"""
-            <b>DOMAINE : <br/> SCIENCES ECONOMIQUE </b><br/>
-             <b>& DE GESTION</b><br/><br/>
+            <b>DOMAINE : <br/> DROIT PRIVE </b><br/>
+             <b></b><br/><br/>
              <b>SPECIALITE :</b><br/> {specialite}<br/>
         """, SMALL)
-    ]], colWidths=[8 * cm], rowHeights=[2.5 * cm])
+    ]], colWidths=[8 * cm], rowHeights=[3.7 * cm])
 
     cadre_universite.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
@@ -257,7 +244,7 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
 
     cadre_etudiant = Table([
         [
-        Paragraph("<b>Nom & Prénoms</b>", SMALL),
+        Paragraph("<b>Nom et Prénoms</b>", SMALL),
         Paragraph(f"{etudiant.nom} {etudiant.prenoms}", SMALL)],
         [
         Paragraph("<b>Date de naissance</b>", SMALL),
@@ -277,7 +264,7 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
         # [Paragraph("<b>Niveau</b>", SMALL), Paragraph(str(etudiant.niveau), SMALL)],
         [Paragraph("<b>Niveau</b>", SMALL), 
          Paragraph(etudiant.get_niveau_display(), SMALL)],
-    ], colWidths=[3 * cm, 5 * cm])
+    ], colWidths=[5 * cm, 3.5 * cm])
 
     cadre_etudiant.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
@@ -350,7 +337,10 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
     table_style = []
     row_index_control = 0
     index = 1  # juste après header du tableau
-   
+    ecues_non_validees = 0
+    credits_ecue_total = 0
+    credits_ecue_acquis = 0
+     
     def add_section(title, data, table_style):
         row_index = len(data)
         # row_index = len(data)
@@ -535,8 +525,14 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
             row_index = len(data)
             moy_ecue = float(note.moyenne) if note and note.moyenne is not None else 0.0
             # ✔ ECUE validéeCODE
+            credits_ecue_total += ecue.credit
+            ecues_total += 1
+            
             if moy_ecue >= 10:
                  ecues_validees += 1
+                 credits_ecue_acquis += ecue.credit
+            else:
+                  ecues_non_validees += 1  
                  
             credit_ecue = ecue.credit
              # ✔ pondération correcte
@@ -625,17 +621,32 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
 
     elements.append(table)
     elements.append(Spacer(1, 10))
-     
-
+    credits_ue_total = credits_total
+    credits_ue_acquis = credits_obtenus
+    credits_ue_restants = credits_ue_total - credits_ue_acquis
+    credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
+    
+    
     # =========================================================
     # RECAP TABLE (TA DEMANDE EXACTE)
     # =========================================================
     rang = "-"
-    decision_globale = (
-    '<para align="center"><font color="green"><b>ADMIS</b></font></para>'
-    if moyenne_generale >= 10
-    else '<para align="center"><font color="red"><b>AJOURNÉ</b></font></para>'
-    )
+
+    
+    if credits_ue_restants == 0 and credits_ecue_restants == 0:
+        decision_globale = (
+             '<para align="center">'
+              '<font color="green"><b>ADMIS</b></font>'
+             '</para>'
+          )
+    else:
+         decision_globale = (
+              '<para align="center">'
+              '<font color="red"><b>SESSION DE RATTRAPAGE</b></font>'
+               '</para>'
+        )
+         
+         
 
     recap_final_table = Table([
         [
@@ -657,8 +668,10 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
                 """,
                 SMALL
             ),
-            Paragraph("Dr.JERRY TAFOTIE", SMALL),
-            Paragraph("2025 - 2026", SMALL),
+            # Paragraph("Dr.JERRY TAFOTIE", SMALL),
+            Paragraph("""Dr.JERRY TAFOTIE<br/><br/>M. N'GORAN CELESTIN""",SMALL),
+            # Paragraph("2025 - 2026", SMALL),
+            Paragraph(f"ANNÉE SCOLAIRE : {annee}", SMALL),
             Paragraph(decision_globale, SMALL),
         ]
     ], colWidths=[8.5 * cm, 4 * cm, 4 * cm, 4 * cm], # ✅ IMPORTANT : 2 lignes = 2 hauteurs
@@ -687,7 +700,9 @@ def generate_bulletin_lmd_pdf(etudiant_id, file_path):
 
     signature_table = Table([[
         Paragraph("<b>RESPONSABLE</b><br/>", styles["Normal"]),
-        Paragraph("<b>VISA</b><br/>", styles["Normal"]),
+        # Paragraph("<b>VISA</b><br/>", styles["Normal"]),
+        # Paragraph("<b>VISA</b><br/><br/>""M. N'GORAN CELESTIN",styles["Normal"]),
+        Paragraph("<b>VISA</b><br/><br/>""Dr.JERRY TAFOTIE<br/><br/>M. N'GORAN CELESTIN""",styles["Normal"]),
     ]], colWidths=[8 * cm, 8 * cm], rowHeights=[3 * cm])
 
     signature_table.setStyle(TableStyle([

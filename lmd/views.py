@@ -1,17 +1,20 @@
-from django.shortcuts import render, redirect
-from .models import *
 from django.shortcuts import render, redirect, get_object_or_404
-# from .models import ECUE, UE
-# from .pdf_service_ue import bulletin_lmd_pdf
+from .models import *
 import os
 from django.conf import settings
 from django.http import FileResponse
-from .pdf_service_ue import generate_bulletin_lmd_pdf
-from .forms import EtudiantLMDForm
 from django.db.models import Sum
-from .pdf_service_ue import generate_bulletin_lmd_pdf
+from .pdf_tc_service_ue import generate_bulletin_lmd_pdf
 from django.core.paginator import Paginator
 from django.contrib import messages
+from .models import CandidatRattrapage
+from django.contrib.auth.decorators import login_required
+from .forms import EtudiantDroitForm ,UEDroitForm,EtudiantLMDForm,EtudiantGestionForm,UEForm,ECUEForm
+# from .pdf_gestion_service import generer_bulletin_pdf
+from .pdf_gestion_service import generer_bulletin_gestion_pdf
+from .pdf_droit_prive_service import generer_bulletin_droit_prive_pdf
+from .pdf_tronc_commun_service import generer_bulletin_tronc_commun_pdf
+from .forms import QHSEEtudiantForm,QHSEECUEForm
 
 def niveau_list(request):
     niveaux = Niveau.objects.all()
@@ -600,7 +603,7 @@ def etudiant_lmd_addENC(request):
         "ecues": ECUE.objects.all(),
     })
 
-def etudiant_lmd_add(request):
+def etudiant_lmd_addens(request):
 
     if request.method == "POST":
 
@@ -645,7 +648,112 @@ def etudiant_lmd_add(request):
         "ues": UE.objects.all(),
         "ecues": ECUE.objects.all(),
     })
+def etudiant_lmd_add(request):
 
+    if request.method == "POST":
+
+        from datetime import datetime
+
+        matricule = request.POST.get("matricule")
+        annee_academique = request.POST.get("annee_academique")
+
+
+        # ==========================
+        # Vérification doublon
+        # ==========================
+        if EtudiantLMD.objects.filter(
+            matricule=matricule
+        ).exists():
+
+            messages.error(
+                request,
+                "Ce matricule existe déjà."
+            )
+
+            return redirect("etudiant_lmd_add")
+
+
+        # ==========================
+        # Conversion date naissance
+        # ==========================
+        date_naissance = request.POST.get("date_naissance")
+
+        if date_naissance:
+            try:
+                date_naissance = datetime.strptime(
+                    date_naissance,
+                    "%Y-%m-%d"
+                ).date()
+
+            except ValueError:
+                date_naissance = None
+
+        else:
+            date_naissance = None
+
+
+
+        # ==========================
+        # Création étudiant
+        # ==========================
+        EtudiantLMD.objects.create(
+
+            matricule=matricule,
+
+            nom=request.POST.get("nom"),
+
+            prenoms=request.POST.get("prenoms"),
+
+            sexe=request.POST.get("sexe"),
+
+            statut=request.POST.get("statut", "NF"),
+
+            date_naissance=date_naissance,
+
+            lieu_naissance=request.POST.get(
+                "lieu_naissance"
+            ),
+
+            telephone=request.POST.get(
+                "telephone"
+            ),
+
+            email=request.POST.get(
+                "email"
+            ),
+
+            niveau=request.POST.get(
+                "niveau"
+            ),
+
+            filiere_id=request.POST.get(
+                "filiere"
+            ),
+
+            annee_academique=annee_academique,
+
+        )
+
+
+        messages.success(
+            request,
+            "Étudiant ajouté avec succès."
+        )
+
+
+        return redirect(
+            "etudiant_lmd_list"
+        )
+
+
+    return render(
+        request,
+        "lmd/etudiants/add.html",
+        {
+            "niveaux": NiveauLMD.objects.all(),
+            "filieres": FiliereLMD.objects.all(),
+        }
+    )
 def calcul_moyenne_ecue(note):
     if not note:
         return 0
@@ -1406,60 +1514,3135 @@ def ajouter_etudiants_saisie(request, saisie_id):
         "saisie_detail",
          pk=saisie.id
     )
+def filiere_l3_detail(request, id):
 
-def ajouter_etudiants_saisieQS(request, saisie_id):
+    filiere = FiliereLMD.objects.get(id=id)
 
-    saisie = get_object_or_404(
-        SaisieNoteLMD,
-        id=saisie_id
+    ues = UE.objects.filter(
+        filiere=filiere
     )
-
-
-    # récupération des étudiants concernés
 
     etudiants = EtudiantLMD.objects.filter(
-        filiere=saisie.filiere,
-        niveau=saisie.niveau
+        filiere=filiere,
+        niveau="L3"
+    )
+
+    return render(
+        request,
+        "lmd/l3_detail.html",
+        {
+            "filiere":filiere,
+            "ues":ues,
+            "etudiants":etudiants
+        }
+    )
+    
+@login_required
+def filiere_master_detail(request,id):
+
+    filiere = FiliereLMD.objects.get(id=id)
+
+
+    ues = UE.objects.filter(
+        filiere=filiere
     )
 
 
-    compteur = 0
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau__in=["M1","M2"]
+    )
 
 
-    for etudiant in etudiants:
+    return render(
+        request,
+        "lmd/master_detail.html",
+        {
+            "filiere":filiere,
+            "ues":ues,
+            "etudiants":etudiants
+        }
+    )
+    
+def generer_rattrapages(etudiant):
 
-        # éviter les doublons
+    notes = NoteLMD.objects.filter(
+        etudiant=etudiant,
+        session="1"
+    )
 
-        existe = NoteLMD.objects.filter(
-            etudiant=etudiant,
-            ecue=saisie.ecue,
-            semestre=saisie.semestre,
-            session=saisie.session
-        ).exists()
+    for note in notes:
+        
+        if note.moyenne < 10:
 
+            CandidatRattrapage.objects.create(
 
-        if not existe:
-
-            NoteLMD.objects.create(
                 etudiant=etudiant,
-                ecue=saisie.ecue,
-                semestre=saisie.semestre,
-                session=saisie.session,
-                cc=0,
-                examen=0
+
+                ecue=note.ecue,
+
+                ancienne_note=note.moyenne
+
+            )
+            
+def meilleure_note(note1,note2):
+
+    return max(
+        note1,
+        note2
+    )
+    
+
+@login_required
+def liste_rattrapage(request):
+
+    candidats = CandidatRattrapage.objects.select_related(
+        "etudiant",
+        "ecue"
+    )
+
+    return render(
+        request,
+        "lmd/rattrapage/liste.html",
+        {
+            "candidats": candidats
+        }
+    )   
+    
+
+
+def saisie_rattrapage(request):
+
+    candidats = CandidatRattrapage.objects.select_related(
+        "etudiant",
+        "ecue",
+        "session"
+    )
+
+
+    if request.method == "POST":
+
+        with transaction.atomic():
+
+            for candidat in candidats:
+
+                note = request.POST.get(
+                    f"note_{candidat.id}"
+                )
+
+
+                if note:
+
+                    note = float(note)
+
+
+                    candidat.nouvelle_note = note
+
+
+                    # meilleure note
+                    if note > candidat.ancienne_note:
+
+                        candidat.statut = "VALIDE"
+
+                    else:
+
+                        candidat.statut = "ECHEC"
+
+
+                    candidat.save()
+
+
+        messages.success(
+            request,
+            "Notes de rattrapage enregistrées."
+        )
+
+
+        return redirect(
+            "liste_rattrapage"
+        )
+
+
+    return render(
+        request,
+        "lmd/rattrapage/saisie.html",
+        {
+            "candidats": candidats
+        }
+    )
+
+def deliberation_rattrapage(request):
+
+    candidats = CandidatRattrapage.objects.select_related(
+        "etudiant",
+        "ecue",
+        "session"
+    ).all()
+
+
+    return render(
+        request,
+        "lmd/rattrapage/deliberation.html",
+        {
+            "candidats": candidats
+        }
+    )
+    
+def bulletin_rattrapage_list(request):
+
+    candidats = CandidatRattrapage.objects.select_related(
+        "etudiant",
+        "ecue",
+        "session"
+    ).all()
+
+
+    return render(
+        request,
+        "lmd/rattrapage/bulletins.html",
+        {
+            "candidats": candidats
+        }
+    )
+
+from django.shortcuts import render
+
+
+def l3_droit_dashboard(request):
+
+    filiere = FiliereLMD.objects.get(
+        code="L3-DROIT-PRIVE"
+    )
+
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau="L3"
+    )
+
+
+    context = {
+
+        "total_etudiants": etudiants.count(),
+
+        "total_ue": UE.objects.filter(
+            filiere=filiere
+        ).count(),
+
+        "total_notes": NoteLMD.objects.filter(
+            etudiant__filiere=filiere
+        ).count()
+
+    }
+
+
+    return render(
+        request,
+        "lmd/l3/droit/dashboard.html",
+        context
+    )
+
+
+
+def l3_gestion_dashboard(request):
+
+    return render(
+        request,
+        "lmd/l3/gestion/dashboard.html"
+    )
+
+# def l3_droit_etudiants(request):
+
+#     return render(
+#         request,
+#         "lmd/l3/droit/etudiants.html"
+#     )
+
+def l3_droit_etudiants(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau="L3",
+        actif=True
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+
+    context = {
+        "filiere": filiere,
+        "etudiants": etudiants,
+        "total_etudiants": etudiants.count(),
+    }
+
+
+    return render(
+        request,
+        "lmd/l3/droit/etudiants.html",
+        context
+    )
+
+def l3_droit_etudiant_add(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+
+    if request.method=="POST":
+
+        form = EtudiantDroitForm(request.POST)
+
+
+        if form.is_valid():
+
+            etudiant=form.save(commit=False)
+
+
+            etudiant.filiere=filiere
+
+            etudiant.niveau="L3"
+
+            etudiant.statut="AF"
+
+
+            etudiant.save()
+
+
+            return redirect(
+                "l3_droit_etudiants"
             )
 
-            compteur += 1
+
+    else:
+
+        form=EtudiantDroitForm()
 
 
 
-    messages.success(
+    return render(
         request,
-        f"{compteur} étudiant(s) ajouté(s) avec succès."
+        "lmd/l3/droit/etudiant_form.html",
+        {
+            "form":form,
+            "titre":"Ajouter étudiant L3 Droit Privé"
+        }
     )
+
+def l3_droit_etudiant_update(request,pk):
+
+    etudiant=get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+
+    form=EtudiantDroitForm(
+        request.POST or None,
+        instance=etudiant
+    )
+
+
+    if form.is_valid():
+
+        form.save()
+
+        return redirect(
+            "l3_droit_etudiants"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/etudiant_form.html",
+        {
+            "form":form,
+            "titre":"Modifier étudiant"
+        }
+    )
+
+def l3_droit_etudiant_delete(request,pk):
+
+    etudiant=get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+
+    if request.method=="POST":
+
+        etudiant.delete()
+
+        return redirect(
+            "l3_droit_etudiants"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/delete.html",
+        {
+            "etudiant":etudiant
+        }
+    )
+
+# def l3_droit_ue(request):
+
+#     return render(
+#         request,
+#         "lmd/l3/droit/ue.html"
+#     )
+
+def l3_droit_ue(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+
+    ues = UE.objects.filter(
+        filiere=filiere
+    ).prefetch_related(
+        "ecues"
+    )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/ue.html",
+        {
+            "filiere": filiere,
+            "ues": ues
+        }
+    )
+
+def l3_droit_ue_add(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+
+    if request.method == "POST":
+
+        UE.objects.create(
+
+            code=request.POST.get("code"),
+
+            libelle=request.POST.get("libelle"),
+
+            credit=request.POST.get("credit"),
+
+            semestre=request.POST.get("semestre"),
+
+            filiere=filiere
+
+        )
+
+
+        return redirect(
+            "l3_droit_ue"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/ue_form.html",
+        {
+            "titre":"Ajouter une UE - L3 Droit Privé"
+        }
+    )
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import UE
+
+def l3_droit_ue_update(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        pk=pk
+    )
+
+
+    if request.method == "POST":
+
+        ue.code = request.POST.get("code")
+        ue.libelle = request.POST.get("libelle")
+        ue.credit = request.POST.get("credit")
+        ue.semestre = request.POST.get("semestre")
+
+        ue.save()
+
+
+        return redirect(
+            "l3_droit_ue"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/ue_form.html",
+        {
+            "titre":"Modifier UE",
+            "ue":ue
+        }
+    )
+
+def l3_droit_ue_delete(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        pk=pk
+    )
+
+
+    ue.delete()
 
 
     return redirect(
-        "detail_saisie_note",
-        saisie_id=saisie.id
+        "l3_droit_ue"
+    )
+
+
+from .models import NoteLMD
+
+def l3_droit_prive_notes(request):
+
+    notes = (
+        NoteLMD.objects
+        .filter(etudiant__filiere__libelle="Droit Privé")
+        .select_related("etudiant", "ecue")
+        .order_by(
+            "etudiant__nom",
+            "etudiant__prenoms",
+            "ecue__code"
+        )
+    )
+
+    return render(
+        request,
+        "lmd/l3/droit/notes.html",
+        {
+            "notes": notes
+        }
+    )
+
+from django.shortcuts import render
+from .models import NoteLMD
+
+def l3_droit_prive_notes_detail(request):
+
+    notes = (
+        NoteLMD.objects
+        .filter(etudiant__filiere__libelle="Droit Privé")
+        .select_related("etudiant", "ecue")
+        .order_by(
+            "etudiant__nom",
+            "etudiant__prenoms",
+            "ecue__code"
+        )
+    )
+
+    return render(
+        request,
+        "lmd/l3/droit/detail_notes.html",
+        {
+            "notes": notes,
+        }
+    )
+
+
+def l3_droit_notes(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle__icontains="Droit",
+        niveau__icontains="L3"
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+    notes = NoteLMD.objects.filter(
+        etudiant__in=etudiants
+    ).select_related(
+        "etudiant",
+        "ecue"
+    )
+
+    return render(
+        request,
+        "lmd/l3/droit/notes.html",
+        {
+            "etudiants": etudiants,
+            "notes": notes
+        }
+    )
+
+# def l3_droit_bulletins(request):
+
+#     return render(
+#         request,
+#         "lmd/l3/droit/bulletins.html"
+#     )
+def l3_droit_bulletins(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau="L3"
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+    return render(
+        request,
+        "lmd/l3/droit/bulletins.html",
+        {
+            "etudiants": etudiants,
+            "filiere": filiere
+        }
+    )
+
+
+
+
+def l3_gestion_etudiants(request):
+
+    return render(
+        request,
+        "lmd/l3/gestion/etudiants.html"
+    )
+
+
+# def l3_gestion_ue(request):
+
+#     return render(
+#         request,
+#         "lmd/l3/gestion/ue/list.html"
+#     )
+def l3_gestion_ue(request):
+
+    ues = UE.objects.filter(
+        filiere__libelle__icontains="Sciences de Gestion"
+    ).order_by("code")
+
+    return render(
+        request,
+        "lmd/l3/gestion/ue/list.html",
+        {
+            "ues": ues
+        }
+    )
+
+def l3_gestion_noteseee(request):
+
+    return render(
+        request,
+        "lmd/l3/gestion/notes/saisie.html"
+    )
+
+def l3_gestion_notesAA(request, ecue_id):
+
+    # Récupérer l'ECUE concerné
+    ecue = get_object_or_404(
+        ECUE,
+        id=ecue_id
+    )
+
+
+    # Récupérer les étudiants L3 Sciences de Gestion
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle__icontains="Sciences de Gestion",
+        niveau="L3"
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+
+    # Enregistrement des notes
+    if request.method == "POST":
+
+        with transaction.atomic():
+
+            for etudiant in etudiants:
+
+                cc = request.POST.get(
+                    f"cc_{etudiant.id}"
+                )
+
+                examen = request.POST.get(
+                    f"examen_{etudiant.id}"
+                )
+
+
+                if cc == "" and examen == "":
+                    continue
+
+
+                try:
+                    cc = float(cc or 0)
+                except:
+                    cc = 0
+
+
+                try:
+                    examen = float(examen or 0)
+                except:
+                    examen = 0
+
+
+
+                NoteLMD.objects.update_or_create(
+
+                    etudiant=etudiant,
+
+                    ecue=ecue,
+
+                    defaults={
+
+                        "cc": cc,
+
+                        "examen": examen,
+
+                    }
+
+                )
+
+
+        return redirect(
+            "l3_gestion_ecue_list",
+            ecue.ue.id
+        )
+
+
+
+    # Charger les notes déjà existantes
+    notes = {}
+
+    for note in NoteLMD.objects.filter(
+        ecue=ecue
+    ):
+
+        notes[note.etudiant_id] = note
+
+
+
+    return render(
+
+        request,
+
+        "lmd/l3/gestion/notes/saisie.html",
+
+        {
+
+            "ecue": ecue,
+
+            "etudiants": etudiants,
+
+            "notes": notes
+
+        }
+
+    )
+
+
+def l3_gestion_notes(request, ecue_id):
+
+    ecue = get_object_or_404(
+        ECUE,
+        id=ecue_id
+    )
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle__icontains="Sciences de Gestion",
+        niveau="L3"
+    )
+
+
+    if request.method == "POST":
+
+        for e in etudiants:
+
+            cc = request.POST.get(
+                f"cc_{e.id}"
+            )
+
+            examen = request.POST.get(
+                f"examen_{e.id}"
+            )
+
+
+            if cc or examen:
+
+                NoteLMD.objects.update_or_create(
+                    etudiant=e,
+                    ecue=ecue,
+                    defaults={
+                        "cc": float(cc or 0),
+                        "examen": float(examen or 0),
+                    }
+                )
+
+
+        return redirect(
+            "l3_gestion_ecue_list",
+            ecue.ue.id
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/notes/saisie.html",
+        {
+            "ecue": ecue,
+            "etudiants": etudiants,
+        }
+    )
+
+def l3_gestion_bulletins(request):
+
+    return render(
+        request,
+        "lmd/l3/gestion/bulletins.html"
+    )
+
+
+def l3_gestion_notes_selection(request):
+
+    ecues = ECUE.objects.filter(
+        ue__filiere__libelle__icontains="Sciences de Gestion"
+    )
+
+    return render(
+        request,
+        "lmd/l3/gestion/notes/ecue_list.html",
+        {
+            "ecues": ecues
+        }
+    )
+# ================= MASTER =================
+
+def master_dashboard(request):
+
+    return render(
+        request,
+        "lmd/master/dashboard.html"
+    )
+
+def master_filiere_list(request):
+
+    return render(
+        request,
+        "lmd/master/filieres.html"
+    )
+
+
+
+def master_etudiant_list(request):
+
+    return render(
+        request,
+        "lmd/master/etudiants.html"
+    )
+
+
+
+def master_ue_list(request):
+
+    return render(
+        request,
+        "lmd/master/ue.html"
+    )
+
+
+
+def master_saisie_notes(request):
+
+    return render(
+        request,
+        "lmd/master/notes.html"
+    )
+
+
+
+def master_bulletin_list(request):
+
+    return render(
+        request,
+        "lmd/master/bulletins.html"
+    )
+
+
+def l3_droit_ecue_add(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        pk=pk
+    )
+
+
+    if request.method=="POST":
+
+        ECUE.objects.create(
+
+            ue=ue,
+
+            code=request.POST.get("code"),
+
+            libelle=request.POST.get("libelle"),
+
+            coefficient=request.POST.get("coefficient"),
+
+            credit=request.POST.get("credit")
+
+        )
+
+
+        return redirect(
+            "l3_droit_ecue",
+            pk=ue.id
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/ecue_form.html",
+        {
+            "ue":ue
+        }
+    )
+
+def l3_droit_saisie_notes(request, ecue_id):
+
+    ecue = get_object_or_404(
+        ECUE,
+        id=ecue_id
+    )
+
+
+    # étudiants L3 Droit Privé
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle="Droit Privé",
+        niveau="L3",
+        actif=True
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+
+
+    if request.method == "POST":
+
+
+        with transaction.atomic():
+
+
+            for etudiant in etudiants:
+
+
+                cc = request.POST.get(
+                    f"cc_{etudiant.id}"
+                )
+
+
+                examen = request.POST.get(
+                    f"examen_{etudiant.id}"
+                )
+
+
+                if cc == "":
+                    cc = 0
+
+                if examen == "":
+                    examen = 0
+
+
+
+                NoteLMD.objects.update_or_create(
+
+                    etudiant=etudiant,
+
+                    ecue=ecue,
+
+                    semestre=ecue.ue.semestre,
+
+                    session="1",
+
+                    defaults={
+
+                        "cc": float(cc),
+
+                        "examen": float(examen)
+
+                    }
+
+                )
+
+
+
+        return redirect(
+            "l3_droit_ue"
+        )
+
+
+
+
+    notes = {
+
+        n.etudiant_id:n
+
+        for n in NoteLMD.objects.filter(
+            ecue=ecue,
+            session="1"
+        )
+
+    }
+
+
+
+    context={
+
+        "ecue":ecue,
+
+        "etudiants":etudiants,
+
+        "notes":notes
+
+    }
+
+
+
+    return render(
+        request,
+        "lmd/l3/droit/saisie_notes.html",
+        context
+    )
+
+from .forms import ECUEForm
+
+# ==============================
+# Liste des ECUE d'une UE
+# ==============================
+
+def l3_droit_ecue(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        id=pk
+    )
+
+    ecues = ECUE.objects.filter(
+        ue=ue
+    )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/ecue.html",
+        {
+            "ue": ue,
+            "ecues": ecues
+        }
+    )
+
+
+
+# ==============================
+# Ajouter ECUE
+# ==============================
+
+def l3_droit_ecue_add(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        id=pk
+    )
+
+
+    if request.method == "POST":
+
+        form = ECUEForm(request.POST)
+
+        if form.is_valid():
+
+            ecue = form.save(commit=False)
+
+            ecue.ue = ue
+
+            ecue.save()
+
+            return redirect(
+                "l3_droit_ecue",
+                pk=ue.id
+            )
+
+    else:
+
+        form = ECUEForm()
+
+
+
+    return render(
+        request,
+        "lmd/l3/droit/ecue_form.html",
+        {
+            "form": form,
+            "ue": ue,
+            "titre": "Ajouter un ECUE"
+        }
+    )
+
+
+
+# ==============================
+# Modifier ECUE
+# ==============================
+
+def l3_droit_ecue_update(request, pk):
+
+    ecue = get_object_or_404(
+        ECUE,
+        id=pk
+    )
+
+
+    if request.method == "POST":
+
+        form = ECUEForm(
+            request.POST,
+            instance=ecue
+        )
+
+        if form.is_valid():
+
+            form.save()
+
+            return redirect(
+                "l3_droit_ecue",
+                pk=ecue.ue.id
+            )
+
+
+    else:
+
+        form = ECUEForm(
+            instance=ecue
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/ecue_form.html",
+        {
+            "form":form,
+            "titre":"Modifier ECUE",
+            "ue":ecue.ue
+        }
+    )
+
+
+
+# ==============================
+# Supprimer ECUE
+# ==============================
+
+def l3_droit_ecue_delete(request, pk):
+
+    ecue = get_object_or_404(
+        ECUE,
+        id=pk
+    )
+
+    ue_id = ecue.ue.id
+
+    ecue.delete()
+
+
+    return redirect(
+        "l3_droit_ecue",
+        pk=ue_id
+    )
+
+
+# def bulletin_l3_droit_prive(request):
+
+#     etudiants = EtudiantLMD.objects.filter(
+#         filiere__libelle__icontains="Droit Privé",
+#         niveau="L3"
+#     ).order_by(
+#         "nom",
+#         "prenoms"
+#     )
+
+#     return render(
+#         request,
+#         "lmd/l3/droit/bulletins.html",
+#         {
+#             "etudiants": etudiants
+#         }
+#     )
+
+def l3_sciences_gestion_etudiants(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle__icontains="Sciences de Gestion",
+        niveau="L3"
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+    return render(
+        request,
+        "lmd/l3/gestion/etudiants.html",
+        {
+            "etudiants": etudiants
+        }
+    )
+
+
+from django.http import HttpResponse
+
+
+
+def imprimer_bulletin_l3_droit_priveAAAAAA(request, pk):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=pk
+    )
+
+
+    filename = f"bulletin_{etudiant.matricule}.pdf"
+
+
+    filepath = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins",
+        filename
+    )
+
+
+    os.makedirs(
+        os.path.dirname(filepath),
+        exist_ok=True
+    )
+
+
+    generer_bulletin_droit_prive_pdf(
+        etudiant,
+        filepath
+    )
+
+
+    return FileResponse(
+        open(filepath, "rb"),
+        content_type="application/pdf"
+    )
+
+def imprimer_bulletin_l3_droit_prive(request, pk):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=pk
+    )
+
+    # dossier temporaire PDF
+    pdf_dir = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins"
+    )
+
+    os.makedirs(
+        pdf_dir,
+        exist_ok=True
+    )
+
+    file_path = os.path.join(
+        pdf_dir,
+        f"bulletin_{etudiant.matricule}.pdf"
+    )
+
+
+    generer_bulletin_droit_prive_pdf(
+        etudiant,
+        file_path
+    )
+
+
+    return FileResponse(
+        open(file_path, "rb"),
+        content_type="application/pdf"
+    )
+
+
+def liste_bulletins_l3_droit_prive(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau="L3"
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+    return render(
+        request,
+        "lmd/l3/droit/bulletins.html",
+        {
+            "etudiants": etudiants,
+            "filiere": filiere
+        }
+    )
+
+
+def l3_gestion_etudiant_list(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle__icontains="Sciences de Gestion",
+        niveau="L3"
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/list.html",
+        {
+            "etudiants": etudiants
+        }
+    )
+
+
+def l3_gestion_etudiant_add(request):
+
+    if request.method == "POST":
+
+        form = EtudiantGestionForm(request.POST)
+
+        print("=== POST RECU ===")
+        print(request.POST)
+
+        if form.is_valid():
+
+            print("=== FORMULAIRE VALIDE ===")
+
+            etudiant = form.save(commit=False)
+
+            etudiant.niveau = "L3"
+
+            etudiant.filiere = FiliereLMD.objects.get(
+                libelle__icontains="Sciences de Gestion"
+            )
+
+            etudiant.save()
+
+            print("=== ETUDIANT ENREGISTRE ===")
+
+            return redirect(
+                "l3_gestion_etudiant_list"
+            )
+
+        else:
+
+            print("=== ERREURS FORMULAIRE ===")
+            print(form.errors)
+
+    else:
+
+        form = EtudiantGestionForm()
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/etud_form.html",
+        {
+            "form": form
+        }
+    )
+
+def l3_gestion_etudiant_edit(request, pk):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+
+    form = EtudiantGestionForm(
+        request.POST or None,
+        instance=etudiant
+    )
+
+
+    if form.is_valid():
+
+        form.save()
+
+        return redirect(
+            "l3_gestion_etudiant_list"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/etud_form.html",
+        {
+            "form":form
+        }
+    )
+
+def l3_gestion_etudiant_delete(request, pk):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+
+    if request.method == "POST":
+
+        etudiant.delete()
+
+        return redirect(
+            "l3_gestion_etudiant_list"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/delete.html",
+        {
+            "etudiant":etudiant
+        }
+    )
+
+def l3_gestion_ue_list(request):
+
+    ues = UE.objects.filter(
+        filiere__libelle__icontains="Sciences de Gestion"
+    ).order_by("code")
+
+    return render(
+        request,
+        "lmd/l3/gestion/ue/list.html",
+        {
+            "ues": ues
+        }
+    )
+
+
+def l3_gestion_ue_add(request):
+
+    if request.method == "POST":
+
+        form = UEForm(request.POST)
+
+        if form.is_valid():
+
+            ue = form.save(commit=False)
+
+            ue.filiere = FiliereLMD.objects.get(
+                libelle__icontains="Sciences de Gestion"
+            )
+
+            ue.save()
+
+            return redirect("l3_gestion_ue")
+
+    else:
+
+        form = UEForm()
+
+    return render(
+        request,
+        "lmd/l3/gestion/ue/form.html",
+        {
+            "form": form
+        }
+    )
+    
+def l3_gestion_ecue_list(request, ue_id):
+
+    ue = get_object_or_404(UE, pk=ue_id)
+
+    ecues = ue.ecues.all().order_by("code")
+
+    return render(
+        request,
+        "lmd/l3/gestion/ecue/list.html",
+        {
+            "ue": ue,
+            "ecues": ecues
+        }
+    )
+
+def l3_gestion_ecue_add(request, ue_id):
+
+    ue = get_object_or_404(UE, pk=ue_id)
+
+    if request.method == "POST":
+
+        form = ECUEForm(request.POST)
+
+        if form.is_valid():
+
+            ecue = form.save(commit=False)
+
+            ecue.ue = ue
+
+            ecue.save()
+
+            return redirect(
+                "l3_gestion_ecue_list",
+                ue.id
+            )
+
+    else:
+
+        form = ECUEForm()
+
+    return render(
+        request,
+        "lmd/l3/gestion/ecue/form.html",
+        {
+            "form": form,
+            "ue": ue
+        }
+    )
+
+
+def l3_gestion_saisie_notesSSS(request, ecue_id):
+
+    ecue = get_object_or_404(
+        ECUE,
+        id=ecue_id
+    )
+
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle__icontains="Sciences de Gestion",
+        niveau="L3"
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+
+    if request.method == "POST":
+
+        with transaction.atomic():
+
+            for etudiant in etudiants:
+
+                cc = request.POST.get(
+                    f"cc_{etudiant.id}"
+                )
+
+                examen = request.POST.get(
+                    f"examen_{etudiant.id}"
+                )
+
+
+                if cc == "" and examen == "":
+                    continue
+
+
+                NoteLMD.objects.update_or_create(
+
+                    etudiant=etudiant,
+
+                    ecue=ecue,
+
+                    defaults={
+
+                        "cc": float(cc or 0),
+
+                        "examen": float(examen or 0),
+
+                    }
+
+                )
+
+
+        return redirect(
+            "l3_gestion_ecue_list",
+            ecue.ue.id
+        )
+
+
+    notes = {
+        n.etudiant_id:n
+        for n in NoteLMD.objects.filter(
+            ecue=ecue
+        )
+    }
+
+
+    return render(
+
+        request,
+
+        "lmd/l3/gestion/notes/saisie.html",
+
+        {
+            "ecue":ecue,
+            "etudiants":etudiants,
+            "notes":notes
+        }
+
+    )
+
+def l3_gestion_saisie_notes(request, ecue_id):
+
+    ecue = get_object_or_404(
+        ECUE,
+        id=ecue_id
+    )
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle="Sciences de Gestion",
+        niveau="L3"
+    )
+
+
+    if request.method == "POST":
+
+        for etudiant in etudiants:
+
+            cc = request.POST.get(
+                f"cc_{etudiant.id}"
+            )
+
+            examen = request.POST.get(
+                f"examen_{etudiant.id}"
+            )
+
+
+            NoteLMD.objects.update_or_create(
+                etudiant=etudiant,
+                ecue=ecue,
+                defaults={
+                    "cc": float(cc or 0),
+                    "examen": float(examen or 0)
+                }
+            )
+
+
+        return redirect(
+            "l3_gestion_notes"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/notes/saisie.html",
+        {
+            "ecue": ecue,
+            "etudiants": etudiants
+        }
+    )
+
+def l3_gestion_ue_edit(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        id=pk
+    )
+
+    if request.method == "POST":
+
+        form = UEForm(
+            request.POST,
+            instance=ue
+        )
+
+        if form.is_valid():
+
+            form.save()
+
+            return redirect(
+                "l3_gestion_ue"
+            )
+
+    else:
+
+        form = UEForm(
+            instance=ue
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/ue/form.html",
+        {
+            "form": form
+        }
+    )
+
+def l3_gestion_ue_delete(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        id=pk
+    )
+
+    if request.method == "POST":
+
+        ue.delete()
+
+        return redirect(
+            "l3_gestion_ue"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/ue/delete.html",
+        {
+            "ue": ue
+        }
+    )
+
+def l3_gestion_ecue_add(request, ue_id):
+
+    ue = get_object_or_404(
+        UE,
+        id=ue_id
+    )
+
+
+    if request.method == "POST":
+
+        form = ECUEForm(request.POST)
+
+        if form.is_valid():
+
+            ecue = form.save(commit=False)
+
+            ecue.ue = ue
+
+            ecue.save()
+
+            return redirect(
+                "l3_gestion_ecue_list",
+                ue.id
+            )
+
+    else:
+
+        form = ECUEForm()
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/ecue/form.html",
+        {
+            "form": form,
+            "ue": ue
+        }
+    )
+
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import ECUE
+
+
+def l3_gestion_ecue_edit(request, pk):
+
+    ecue = get_object_or_404(
+        ECUE,
+        id=pk
+    )
+
+
+    if request.method == "POST":
+
+        ecue.code = request.POST.get("code")
+        ecue.libelle = request.POST.get("libelle")
+        ecue.coefficient = request.POST.get("coefficient")
+        ecue.credit = request.POST.get("credit")
+
+        ecue.save()
+
+        return redirect(
+            "l3_gestion_ecue_list",
+            ecue.ue.id
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/ecue/edit.html",
+        {
+            "ecue": ecue
+        }
+    )
+
+def l3_gestion_ecue_delete(request, pk):
+
+    ecue = get_object_or_404(
+        ECUE,
+        id=pk
+    )
+
+    ue_id = ecue.ue.id
+
+
+    if request.method == "POST":
+
+        ecue.delete()
+
+        return redirect(
+            "l3_gestion_ecue_list",
+            ue_id
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/gestion/ecue/delete.html",
+        {
+            "ecue": ecue
+        }
+    )
+
+def liste_bulletins_gestion(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Sciences de Gestion"
+    )
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere
+    ).order_by("nom", "prenoms")
+
+    print("========== TEST ==========")
+    print("Filière :", filiere.libelle)
+    print("Nombre d'étudiants :", etudiants.count())
+
+    for e in etudiants:
+        print(e.matricule, e.nom, e.prenoms)
+
+    return render(
+        request,
+        "lmd/l3/gestion/bulletins.html",
+        {
+            "etudiants": etudiants,
+            "filiere": filiere
+        }
+    )
+
+def bulletin_gestion_lmd_pdf(request, etudiant_id):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=etudiant_id
+    )
+
+    filename = f"bulletin_{etudiant.matricule}.pdf"
+
+    filepath = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins",
+        filename
+    )
+
+    os.makedirs(
+        os.path.dirname(filepath),
+        exist_ok=True
+    )
+
+
+    generer_bulletin_gestion_pdf(
+        etudiant,
+        filepath
+    )
+
+
+    return FileResponse(
+        open(filepath, "rb"),
+        content_type="application/pdf"
+    )
+
+def liste_bulletins_tronc_communFFFF(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        niveau__in=[
+            "L1",
+            "L2"
+        ],
+        filiere__libelle__in=[
+            "Droit",
+            "Gestion"
+        ]
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+
+    return render(
+        request,
+        "lmd/trom_commun/bulletins.html",
+        {
+            "etudiants": etudiants
+        }
+    )
+
+def liste_bulletins_tronc_commun(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle="Gestion et Droit",
+        niveau__in=["L1", "L2"]
+    ).order_by(
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+    return render(
+        request,
+        "lmd/trom_commun/bulletins.html",
+        {
+            "etudiants": etudiants,
+            "titre": "Bulletins Tronc Commun L1 - L2"
+        }
+    )
+
+
+def imprimer_bulletin_tronc_commun(request, pk):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+
+    pdf_dir = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins"
+    )
+
+
+    os.makedirs(
+        pdf_dir,
+        exist_ok=True
+    )
+
+
+    file_path = os.path.join(
+        pdf_dir,
+        f"tronc_commun_{etudiant.matricule}.pdf"
+    )
+
+
+    generer_bulletin_tronc_commun_pdf(
+        etudiant,
+        file_path
+    )
+
+
+    return FileResponse(
+        open(file_path,"rb"),
+        content_type="application/pdf"
+    )
+
+
+def ajouter_etudiant_tronc_commun(request):
+
+    if request.method == "POST":
+
+        matricule = request.POST.get("matricule")
+        nom = request.POST.get("nom")
+        prenoms = request.POST.get("prenoms")
+        niveau_id = request.POST.get("niveau")
+
+
+        filiere = FiliereLMD.objects.get(
+            code="TC-DG"
+        )
+
+
+        EtudiantLMD.objects.create(
+            matricule=matricule,
+            nom=nom,
+            prenoms=prenoms,
+            filiere=filiere,
+            niveau_id=niveau_id
+        )
+
+
+        return redirect(
+            "liste_etudiants_tronc_commun"
+        )
+
+
+    niveaux = NiveauLMD.objects.filter(
+        code__in=["L1","L2"]
+    )
+
+
+    return render(
+        request,
+        "lmd/add_etudiant_tc.html",
+        {
+            "niveaux": niveaux
+        }
+    )
+
+def tronc_commun_etudiants(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        niveau__in=["L1", "L2"],
+        filiere__libelle__in=[
+            "Droit",
+            "Gestion"
+        ]
+    ).select_related(
+        "filiere"
+    ).order_by(
+        "filiere__libelle",
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+
+    filiere = request.GET.get("filiere")
+    niveau = request.GET.get("niveau")
+
+
+    if filiere:
+        etudiants = etudiants.filter(
+            filiere_id=filiere
+        )
+
+
+    if niveau:
+        etudiants = etudiants.filter(
+            niveau=niveau
+        )
+
+
+    context = {
+
+        "etudiants": etudiants,
+
+
+        "filieres": [
+            {
+                "id": f.id,
+                "libelle": f.libelle
+            }
+            for f in FiliereLMD.objects.filter(
+                libelle__in=[
+                    "Droit",
+                    "Gestion"
+                ]
+            )
+        ],
+
+
+        "niveaux":[
+            "L1",
+            "L2"
+        ]
+
+    }
+
+
+    return render(
+        request,
+        "lmd/tronc_commun_etudiants.html",
+        context
+    )
+
+def tronc_commun_ueJJJ(request):
+
+    ues = UE.objects.filter(
+         filiere__libelle="Gestion et Droit"
+    ).order_by(
+        "code"
+    ).prefetch_related(
+       "ecues"
+    )
+
+
+    return render(
+        request,
+        "lmd/trom_commun/ue.html",
+        {
+            "ues": ues,
+            "titre": "UE / ECUE Tronc Commun L1-L2 Droit & Gestion"
+        }
+    )
+def tronc_commun_ue(request):
+
+    ues = UE.objects.filter(
+        filiere__libelle="Gestion et Droit"
+    ).prefetch_related(
+        "ecues"
+    ).order_by(
+        "code"
+    )
+
+    return render(
+        request,
+        "lmd/trom_commun/ue.html",
+        {
+            "ues": ues,
+            "titre": "UE / ECUE Tronc Commun L1-L2 Droit & Gestion"
+        }
+    )
+
+def tronc_commun_notesEEE(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        niveau__in=["L1", "L2"],
+        filiere__libelle__in=[
+            "Droit",
+            "Gestion"
+        ]
+    ).order_by(
+        "niveau",
+        "filiere",
+        "nom"
+    )
+
+
+    return render(
+        request,
+        "lmd/tronc_commun/notes.html",
+        {
+            "etudiants": etudiants
+        })
+
+def tronc_commun_notesAE(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle="Gestion et Droit",
+        niveau__in=["L1", "L2"]
+    ).order_by(
+        "niveau",
+        "nom"
+    )
+
+
+    ecues = ECUE.objects.filter(
+        ue__filiere__libelle="Gestion et Droit"
+    ).order_by(
+        "code"
+    )
+
+
+    return render(
+        request,
+        "lmd/trom_commun/notes.html",
+        {
+            "etudiants": etudiants,
+            "ecues": ecues
+        }
+    )
+
+
+
+def tronc_commun_notesAAS(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle="Gestion et Droit",
+        niveau__in=["L1", "L2"]
+    ).order_by(
+        "niveau",
+        "nom"
+    )
+
+
+    ecues = ECUE.objects.filter(
+        ue__filiere__libelle="Gestion et Droit"
+    ).order_by(
+        "code"
+    )
+
+
+    if request.method == "POST":
+
+
+        with transaction.atomic():
+
+            for etudiant in etudiants:
+
+                for ecue in ecues:
+
+
+                    valeur = request.POST.get(
+                        f"note_{etudiant.id}_{ecue.id}"
+                    )
+
+
+                    if valeur != "":
+
+
+                        NoteLMD.objects.update_or_create(
+
+                            etudiant=etudiant,
+
+                            ecue=ecue,
+
+                            defaults={
+
+                                "moyenne": float(valeur)
+
+                            }
+
+                        )
+
+
+        return redirect(
+            "trom_commun_notes"
+        )
+
+
+    return render(
+        request,
+        "lmd/trom_commun/notes.html",
+        {
+            "etudiants": etudiants,
+            "ecues": ecues
+        }
+    )
+
+def tronc_commun_notes(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle="Gestion et Droit",
+        niveau__in=["L1", "L2"]
+    ).order_by(
+        "niveau",
+        "nom"
+    )
+
+
+    ecues = ECUE.objects.filter(
+        ue__filiere__libelle="Gestion et Droit"
+    ).order_by(
+        "code"
+    )
+
+
+    semestre = "S1"
+    session = "1"
+
+
+    if request.method == "POST":
+
+        with transaction.atomic():
+
+            for etudiant in etudiants:
+
+                for ecue in ecues:
+
+
+                    cc = request.POST.get(
+                        f"cc_{etudiant.id}_{ecue.id}"
+                    )
+
+                    examen = request.POST.get(
+                        f"examen_{etudiant.id}_{ecue.id}"
+                    )
+
+
+                    # ignorer les cellules vides
+                    if cc == "" and examen == "":
+                        continue
+
+
+                    try:
+                        cc = float(cc or 0)
+                    except:
+                        cc = 0
+
+
+                    try:
+                        examen = float(examen or 0)
+                    except:
+                        examen = 0
+
+
+
+                    NoteLMD.objects.update_or_create(
+
+                        etudiant=etudiant,
+
+                        ecue=ecue,
+
+                        semestre=semestre,
+
+                        session=session,
+
+
+                        defaults={
+
+                            "cc": cc,
+
+                            "examen": examen,
+
+                        }
+
+                    )
+
+
+        return redirect(
+            "tronc_commun_notes"
+        )
+
+
+
+    return render(
+
+        request,
+
+        "lmd/trom_commun/notes.html",
+
+        {
+
+            "etudiants": etudiants,
+
+            "ecues": ecues,
+
+        }
+
+    )
+
+# =====================================================
+# TRONC COMMUN L1/L2 - DROIT + GESTION
+# =====================================================
+def liste_etudiants_tronc_commun(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        Q(filiere__libelle__icontains="Droit")
+        |
+        Q(filiere__libelle__icontains="Gestion"),
+        niveau__in=[
+            "L1",
+            "L2",
+            "Licence 1",
+            "Licence 2"
+        ]
+    ).order_by(
+        "niveau",
+        "nom"
+    )
+
+
+    return render(
+        request,
+        "lmd/tronc_commun/etudiants.html",
+        {
+            "etudiants": etudiants,
+            "titre":"Tronc Commun Droit & Gestion L1-L2"
+        }
+    )
+# Vue spéciale Droit
+def tronc_commun_droit(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        niveau__in=["L1","L2"],
+        filiere__libelle__icontains="Droit"
+    )
+
+    return render(
+        request,
+        "lmd/tronc_commun/etudiants.html",
+        {
+            "etudiants":etudiants,
+            "titre":"Tronc Commun Droit L1-L2"
+        }
+    )
+
+
+
+# Vue spéciale Gestion
+def tronc_commun_gestion(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        niveau__in=["L1","L2"],
+        filiere__libelle__icontains="Gestion"
+    )
+
+
+    return render(
+        request,
+        "lmd/tronc_commun/etudiants.html",
+        {
+            "etudiants":etudiants,
+            "titre":"Tronc Commun Gestion L1-L2"
+        }
+    )
+
+
+
+# =====================================================
+# UE TRONC COMMUN
+# =====================================================
+
+# =====================================================
+# LISTE BULLETINS
+# =====================================================
+
+def bulletin_tronc_commun_list(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        niveau__in=["L1","L2"]
+    )
+
+
+    return render(
+        request,
+        "lmd/tronc_commun/bulletins.html",
+        {
+            "etudiants":etudiants
+        }
+    )    
+
+def liste_etudiants_tronc_commun(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle="Gestion et Droit",
+        niveau__in=["L1", "L2"]
+    ).order_by(
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+
+    return render(
+        request,
+        "lmd/trom_commun/etudiants.html",
+        {
+            "etudiants": etudiants,
+            "titre": "Étudiants Tronc Commun Gestion et Droit L1-L2"
+        }
+    )
+
+def liste_etudiants_tronc_communAAAAZ(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle="Gestion et Droit",
+        niveau__in=["L1", "L2"]
+    ).order_by(
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+
+    return render(
+        request,
+        "lmd/tronc_commun/etudiants.html",
+        {
+            "etudiants": etudiants,
+            "titre": "Tronc Commun Gestion et Droit L1-L2"
+        }
+    )
+
+from .pdf_tronc_commun_service import generer_bulletin_tronc_commun_pdf
+
+
+def bulletin_tronc_commun_pdf(request, pk):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=pk
+    )
+
+
+    pdf_dir = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins"
+    )
+
+    os.makedirs(
+        pdf_dir,
+        exist_ok=True
+    )
+
+
+    fichier = os.path.join(
+        pdf_dir,
+        f"bulletin_{etudiant.matricule}.pdf"
+    )
+
+
+    generer_bulletin_tronc_commun_pdf(
+        etudiant,
+        fichier
+    )
+
+
+    return FileResponse(
+        open(fichier, "rb"),
+        content_type="application/pdf"
+    )
+
+from .forms import TroncCommunEtudiantForm
+
+
+
+def tronc_commun_add(request):
+
+    if request.method == "POST":
+
+        form = TroncCommunEtudiantForm(request.POST)
+
+
+        if form.is_valid():
+
+            etudiant = form.save()
+
+            messages.success(
+                request,
+                "Étudiant ajouté avec succès"
+            )
+
+            return redirect(
+                "liste_bulletins_tronc_commun"
+            )
+
+
+    else:
+
+        form = TroncCommunEtudiantForm()
+
+
+
+    return render(
+        request,
+        "lmd/trom_commun/form.html",
+        {
+            "form":form,
+            "titre":"Ajouter étudiant tronc commun"
+        }
+    )
+
+
+
+
+def tronc_commun_update(request, pk):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+    if request.method == "POST":
+
+        form = TroncCommunEtudiantForm(
+            request.POST,
+            request.FILES,
+            instance=etudiant
+        )
+
+        if form.is_valid():
+
+            form.save()
+
+            messages.success(
+                request,
+                "Modification de l'étudiant effectuée avec succès."
+            )
+
+            return redirect(
+                "liste_bulletins_tronc_commun"
+            )
+
+    else:
+
+        form = TroncCommunEtudiantForm(
+            instance=etudiant
+        )
+
+
+    context = {
+        "form": form,
+        "titre": "Modifier étudiant"
+    }
+
+
+    return render(
+        request,
+        "lmd/trom_commun/form.html",
+        context
+    )
+
+def tronc_commun_updatezea(request,pk):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+
+    if request.method=="POST":
+
+        form = TroncCommunEtudiantForm(
+            request.POST,
+            instance=etudiant
+        )
+
+
+        if form.is_valid():
+
+            form.save()
+
+
+            messages.success(
+                request,
+                "Modification effectuée"
+            )
+
+
+            return redirect(
+                "liste_bulletins_tronc_commun"
+            )
+
+
+    else:
+
+        form = TroncCommunEtudiantForm(
+            instance=etudiant
+        )
+
+
+    return render(
+        request,
+        "lmd/tronc_commun/form.html",
+        {
+            "form":form,
+            "titre":"Modifier étudiant"
+        }
+    )
+
+from django.shortcuts import render, get_object_or_404
+from .models import (
+    EtudiantLMD,
+    UE,
+    ECUE,
+    FiliereLMD,
+    NoteLMD
+)
+
+
+# =====================================================
+# DASHBOARD QHSE L3
+# =====================================================
+
+def l3_qhse_dashboard(request):
+
+    filiere = FiliereLMD.objects.filter(
+        code="QHSE"
+    ).first()
+
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau="L3"
+    ).count()
+
+
+    ues = UE.objects.filter(
+        filiere=filiere
+    ).count()
+
+
+
+    context = {
+
+        "filiere": filiere,
+
+        "nb_etudiants": etudiants,
+
+        "nb_ues": ues,
+
+    }
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/dashboard.html",
+        context
+    )
+
+
+
+# =====================================================
+# ETUDIANTS QHSE
+# =====================================================
+
+def l3_qhse_etudiantsDDDEE(request):
+
+    filiere = FiliereLMD.objects.filter(
+        code="QHSE"
+    ).first()
+
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau="L3"
+    ).order_by(
+        "nom"
+    )
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/etudiants.html",
+        {
+            "etudiants": etudiants,
+            "filiere": filiere
+        }
+    )
+
+def l3_qhse_etudiants(request):
+
+    filiere = FiliereLMD.objects.get(
+        libelle="Management de la Qualité, Hygiène, Sécurité et Environnement"
+    )
+
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau="L3"
+    )
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/etudiants.html",
+        {
+            "etudiants":etudiants
+        }
+    )
+
+def l3_qhse_etudiant_add(request):
+
+    filiere = FiliereLMD.objects.get(
+        libelle="Management de la Qualité, Hygiène, Sécurité et Environnement"
+    )
+
+
+    if request.method=="POST":
+
+        form = QHSEEtudiantForm(request.POST)
+
+
+        if form.is_valid():
+
+            etudiant=form.save(commit=False)
+
+            etudiant.filiere=filiere
+            etudiant.niveau="L3"
+
+            etudiant.save()
+
+
+            messages.success(
+                request,
+                "Étudiant QHSE ajouté"
+            )
+
+
+            return redirect(
+                "l3_qhse_etudiants"
+            )
+
+
+    else:
+
+        form=QHSEEtudiantForm()
+
+
+
+    return render(
+        request,
+        "lmd/qhse/etudiant_form.html",
+        {
+            "form":form,
+            "titre":"Ajouter étudiant L3 QHSE"
+        }
+    )
+
+def l3_qhse_etudiant_update(request,pk):
+
+    etudiant=get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+
+    if request.method=="POST":
+
+        form=QHSEEtudiantForm(
+            request.POST,
+            instance=etudiant
+        )
+
+
+        if form.is_valid():
+
+            form.save()
+
+            messages.success(
+                request,
+                "Modification effectuée"
+            )
+
+            return redirect(
+                "l3_qhse_etudiants"
+            )
+
+
+    else:
+
+        form=QHSEEtudiantForm(
+            instance=etudiant
+        )
+
+
+    return render(
+        request,
+        "lmd/qhse/etudiant_form.html",
+        {
+            "form":form,
+            "titre":"Modifier étudiant QHSE"
+        }
+    )
+
+def l3_qhse_etudiant_delete(request,pk):
+
+    etudiant=get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+
+    if request.method=="POST":
+
+        etudiant.delete()
+
+        messages.success(
+            request,
+            "Étudiant supprimé"
+        )
+
+
+        return redirect(
+            "l3_qhse_etudiants"
+        )
+
+
+    return render(
+        request,
+        "lmd/qhse/etudiant_delete.html",
+        {
+            "etudiant":etudiant
+        }
+    )
+# =====================================================
+# UE / ECUE QHSE
+# =====================================================
+
+def l3_qhse_ue(request):
+
+    filiere = FiliereLMD.objects.filter(
+        code="QHSE"
+    ).first()
+
+
+    ues = UE.objects.filter(
+        filiere=filiere
+    ).prefetch_related(
+        "ecues"
+    )
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/ue.html",
+        {
+            "ues": ues,
+            "filiere": filiere
+        }
+    )
+
+
+
+# =====================================================
+# SAISIE NOTES QHSE
+# =====================================================
+
+def l3_qhse_notes(request):
+
+    filiere = FiliereLMD.objects.filter(
+        code="QHSE"
+    ).first()
+
+
+    notes = NoteLMD.objects.filter(
+        etudiant__filiere=filiere
+    ).select_related(
+        "etudiant",
+        "ecue"
+    )
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/notes.html",
+        {
+            "notes": notes,
+            "filiere": filiere
+        }
+    )
+
+
+
+# =====================================================
+# BULLETINS QHSE
+# =====================================================
+
+def l3_qhse_bulletins(request):
+
+    filiere = FiliereLMD.objects.filter(
+        code="QHSE"
+    ).first()
+
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau="L3"
+    )
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/bulletins.html",
+        {
+            "etudiants": etudiants,
+            "filiere": filiere
+        }
+    )
+
+def l3_qhse_ecue_add(request, ue_id):
+
+    ue = get_object_or_404(
+        UE,
+        id=ue_id
+    )
+
+
+    if request.method == "POST":
+
+        form = QHSEECUEForm(request.POST)
+
+
+        if form.is_valid():
+
+            ecue = form.save(commit=False)
+
+            # rattachement automatique
+            ecue.ue = ue
+
+            ecue.save()
+
+
+            messages.success(
+                request,
+                "ECUE ajouté avec succès"
+            )
+
+
+            return redirect(
+                "l3_qhse_ue"
+            )
+
+
+    else:
+
+        form = QHSEECUEForm()
+
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/ecue_form.html",
+        {
+            "form":form,
+            "ue":ue,
+            "titre":"Ajouter un ECUE"
+        }
+    )
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import UE, ECUE
+
+
+def l3_qhse_ecue_update(request, pk):
+
+    ecue = get_object_or_404(ECUE, pk=pk)
+
+
+    if request.method == "POST":
+
+        ecue.code = request.POST.get("code")
+        ecue.libelle = request.POST.get("libelle")
+        ecue.coefficient = request.POST.get("coefficient")
+        ecue.credit = request.POST.get("credit")
+
+        ecue.save()
+
+        return redirect("l3_qhse_ue")
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/ecue_update.html",
+        {
+            "ecue": ecue
+        }
+    )
+
+
+
+def l3_qhse_ecue_delete(request, pk):
+
+    ecue = get_object_or_404(
+        ECUE,
+        pk=pk
+    )
+
+
+    if request.method == "POST":
+
+        ue = ecue.ue
+
+        ecue.delete()
+
+        return redirect(
+            "l3_qhse_ue"
+        )
+
+
+    return redirect(
+        "l3_qhse_ue"
+    )
+
+
+
+
+def l3_qhse_ue_add(request):
+
+    filiere = FiliereLMD.objects.get(
+        libelle="Management de la Qualité, Hygiène, Sécurité et Environnement"
+    )
+
+
+    if request.method == "POST":
+
+        UE.objects.create(
+
+            code=request.POST.get("code"),
+
+            libelle=request.POST.get("libelle"),
+
+            credit=request.POST.get("credit"),
+
+            filiere=filiere
+        )
+
+
+        return redirect(
+            "l3_qhse_ue"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/ue_add.html"
+    )
+
+def l3_qhse_ue_update(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        pk=pk
+    )
+
+
+    if request.method == "POST":
+
+        ue.code = request.POST.get("code")
+        ue.libelle = request.POST.get("libelle")
+        ue.credit = request.POST.get("credit")
+
+        ue.save()
+
+        return redirect(
+            "l3_qhse_ue"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3_qhse/ue_update.html",
+        {
+            "ue": ue
+        }
+    )
+
+def l3_qhse_ue_delete(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        pk=pk
+    )
+
+
+    if request.method == "POST":
+
+        ue.delete()
+
+        return redirect(
+            "l3_qhse_ue"
+        )
+
+
+    return redirect(
+        "l3_qhse_ue"
     )

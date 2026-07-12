@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container mt-4">
+
+
+<div class="card shadow">
+
+
+<div class="card-header bg-primary text-white">
+
+<h4>
+Modifier ECUE QHSE
+</h4>
+
+</div>
+
+
+
+<div class="card-body">
+
+
+<form method="POST">
+
+{% csrf_token %}
+
+
+
+<div class="mb-3">
+
+<label>Code ECUE</label>
+
+<input 
+type="text"
+name="code"
+class="form-control"
+value="{{ecue.code}}">
+
+</div>
+
+
+
+<div class="mb-3">
+
+<label>Libellé ECUE</label>
+
+<input 
+type="text"
+name="libelle"
+class="form-control"
+value="{{ecue.libelle}}">
+
+</div>
+
+
+
+<div class="mb-3">
+
+<label>Coefficient</label>
+
+<input 
+type="number"
+name="coefficient"
+class="form-control"
+value="{{ecue.coefficient}}">
+
+</div>
+
+
+
+<div class="mb-3">
+
+<label>Crédit</label>
+
+<input 
+type="number"
+name="credit"
+class="form-control"
+value="{{ecue.credit}}">
+
+</div>
+
+
+
+<button class="btn btn-success">
+
+💾 Enregistrer
+
+</button>
+
+
+<a href="{% url 'l3_qhse_ue' %}" class="btn btn-secondary">
+
+Retour
+
+</a>
+
+
+</form>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+{% endblock %}

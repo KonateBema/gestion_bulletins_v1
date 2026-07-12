@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container mt-4">
+
+
+    <div class="card shadow">
+
+
+        <div class="card-header bg-primary text-white">
+
+            <h4>
+                📝 Saisie des notes : {{ ecue.libelle }}
+            </h4>
+
+        </div>
+
+
+
+        <div class="card-body">
+
+            
+            <form method="POST" action="{% url 'l3_gestion_notes' ecue.id %}">
+            
+                {% csrf_token %}
+
+
+                <table class="table table-bordered">
+
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>Matricule</th>
+
+                            <th>Nom</th>
+
+                            <th>Prénoms</th>
+
+                            <th>CC /20</th>
+
+                            <th>Examen /20</th>
+
+                        </tr>
+
+                    </thead>
+
+
+
+                    <tbody>
+
+
+                        {% for e in etudiants %}
+
+
+                        <tr>
+
+                            <td>{{e.matricule}}</td>
+
+                            <td>{{e.nom}}</td>
+
+                            <td>{{e.prenoms}}</td>
+
+
+                            <td>
+
+                                <input type="number" step="0.01" class="form-control" name="cc_{{e.id}}"
+                                    value="{{ notes.e.id.cc|default:'' }}">
+
+                            </td>
+
+
+                            <td>
+
+                                <input type="number" step="0.01" class="form-control" name="examen_{{e.id}}">
+
+                            </td>
+
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+
+                <button class="btn btn-success">
+
+                    💾 Enregistrer les notes
+
+                </button>
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

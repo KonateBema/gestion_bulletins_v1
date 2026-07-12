@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container mt-4">
+
+
+<div class="card shadow">
+
+
+<div class="card-header bg-primary text-white">
+
+<h4>
+➕ Ajouter une UE QHSE
+</h4>
+
+</div>
+
+
+
+<div class="card-body">
+
+
+<form method="POST">
+
+{% csrf_token %}
+
+
+
+<div class="mb-3">
+
+<label>
+Code UE
+</label>
+
+<input 
+type="text"
+name="code"
+class="form-control"
+placeholder="Ex: QHSE301"
+required>
+
+</div>
+
+
+
+<div class="mb-3">
+
+<label>
+Libellé UE
+</label>
+
+<input 
+type="text"
+name="libelle"
+class="form-control"
+placeholder="Nom de l'UE"
+required>
+
+</div>
+
+
+
+<div class="mb-3">
+
+<label>
+Crédit
+</label>
+
+<input 
+type="number"
+name="credit"
+class="form-control"
+value="6">
+
+</div>
+
+
+
+<button class="btn btn-success">
+
+💾 Enregistrer
+
+</button>
+
+
+<a href="{% url 'l3_qhse_ue' %}" 
+class="btn btn-secondary">
+
+Retour
+
+</a>
+
+
+
+</form>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+{% endblock %}

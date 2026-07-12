@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container mt-4">
+
+
+<h3>
+📊 L3 Sciences de Gestion
+</h3>
+
+
+<a href="{% url 'l3_gestion_etudiant_add' %}"
+class="btn btn-success mb-3">
+
+➕ Ajouter étudiant
+
+</a>
+
+
+<table class="table table-bordered">
+
+
+<tr class="table-dark">
+
+<th>Matricule</th>
+<th>Nom</th>
+<th>Prénoms</th>
+<th>Actions</th>
+
+</tr>
+
+
+{% for e in etudiants %}
+
+
+<tr>
+
+<td>{{e.matricule}}</td>
+
+<td>{{e.nom}}</td>
+
+<td>{{e.prenoms}}</td>
+
+
+<td>
+
+
+<a class="btn btn-warning btn-sm"
+href="{% url 'l3_gestion_etudiant_edit' e.id %}">
+
+Modifier
+
+</a>
+
+
+<a class="btn btn-danger btn-sm"
+href="{% url 'l3_gestion_etudiant_delete' e.id %}">
+
+Supprimer
+
+</a>
+
+
+</td>
+
+
+</tr>
+
+
+{% empty %}
+
+<tr>
+
+<td colspan="4">
+
+Aucun étudiant.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+
+</table>
+
+
+</div>
+
+
+{% endblock %}

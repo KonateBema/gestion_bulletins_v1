@@ -1,211 +1,782 @@
 {% load static %}
 
+<style>
+    .accordion-button {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background: rgba(255, 255, 255, .08);
+        color: #fff;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+    }
+
+    .menu-subtitle {
+        color: #adb5bd;
+        font-size: 13px;
+        padding: 8px 15px;
+        font-weight: 600;
+    }
+</style>
+
+
 <div class="sidebar">
 
-    <!-- LOGO -->
+
+    <!-- ================= LOGO ================= -->
+
     <div class="sidebar-brand">
-        <img src="{% static 'logo.jpeg' %}" alt="UIC" class="logo-sidebar">
+
+        <img src="{% static 'logo.jpeg' %}" class="logo-sidebar" alt="UIC">
 
         <div>
             <h5>UIC-Abidjan</h5>
             <small>Gestion Académique</small>
         </div>
+
     </div>
 
 
-    <!-- DASHBOARD -->
-    <a href="{% url 'dashboard' %}" 
-       class="menu-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+
+    <!-- ================= DASHBOARD ================= -->
+
+    <a href="{% url 'dashboard' %}" class="menu-link">
+
         <i class="bi bi-speedometer2"></i>
         Dashboard
+
     </a>
 
 
 
-{% if request.user.is_authenticated %}
 
+    {% if request.user.is_authenticated %}
 
 
-{% if request.user.profile.role == "ADMIN" %}
+    {% if request.user.profile.role == "ADMIN" %}
 
 
-<!-- ================= BTS ================= -->
 
-<div class="menu-title">
-    <i class="bi bi-mortarboard"></i>
-    Système BTS
-</div>
 
 
-<a href="{% url 'etudiant_list' %}" class="menu-link">
-    <i class="bi bi-people"></i>
-    Étudiants
-</a>
+    <!-- ================================================= -->
+    <!-- ===================== BTS ======================= -->
+    <!-- ================================================= -->
 
 
-<a href="{% url 'matiere_list' %}" class="menu-link">
-    <i class="bi bi-book"></i>
-    Matières
-</a>
+    <div class="menu-title mt-3">
 
+        <i class="bi bi-mortarboard"></i>
 
-<a href="{% url 'note_list' %}" class="menu-link">
-    <i class="bi bi-pencil-square"></i>
-    Notes
-</a>
+        Système BTS
 
+    </div>
 
-<a href="{% url 'saisie_note_groupee' %}" class="menu-link">
-    <i class="bi bi-grid"></i>
-    Saisie groupée
-</a>
 
 
-<a href="{% url 'classe_list' %}" class="menu-link">
-    <i class="bi bi-building"></i>
-    Classes
-</a>
+    <a href="{% url 'etudiant_list' %}" class="menu-link">
+        <i class="bi bi-people"></i>
+        Étudiants
+    </a>
 
 
-<a href="{% url 'salle_list' %}" class="menu-link">
-    <i class="bi bi-door-open"></i>
-    Salles
-</a>
+    <a href="{% url 'matiere_list' %}" class="menu-link">
+        <i class="bi bi-book"></i>
+        Matières
+    </a>
 
 
-<a href="{% url 'liste_filieres_bts' %}" class="menu-link">
-    <i class="bi bi-diagram-3"></i>
-    Filières BTS
-</a>
+    <a href="{% url 'note_list' %}" class="menu-link">
+        <i class="bi bi-pencil-square"></i>
+        Notes
+    </a>
 
 
-<a href="{% url 'bulletin_list' %}" class="menu-link">
-    <i class="bi bi-file-earmark-pdf"></i>
-    Bulletins BTS
-</a>
+    <a href="{% url 'saisie_note_groupee' %}" class="menu-link">
 
+        <i class="bi bi-grid"></i>
 
+        Saisie groupée
 
+    </a>
 
-<!-- ================= LMD ================= -->
 
 
-<div class="menu-title mt-3">
-    <i class="bi bi-mortarboard-fill"></i>
-    Système LMD
-</div>
+    <a href="{% url 'classe_list' %}" class="menu-link">
 
+        <i class="bi bi-building"></i>
 
+        Classes
 
-<a href="{% url 'filiereLMD_list' %}" class="menu-link">
-    <i class="bi bi-bank"></i>
-    Filières LMD
-</a>
+    </a>
 
 
-<a href="{% url 'etudiant_lmd_list' %}" class="menu-link">
-    <i class="bi bi-person-badge"></i>
-    Étudiants LMD
-</a>
+    <a href="{% url 'salle_list' %}" class="menu-link">
 
+        <i class="bi bi-door-open"></i>
 
-<a href="{% url 'ue_list' %}" class="menu-link">
-    <i class="bi bi-journal-text"></i>
-    UE
-</a>
+        Salles
 
+    </a>
 
-<a href="{% url 'ecue_list' %}" class="menu-link">
-    <i class="bi bi-journals"></i>
-    ECUE
-</a>
 
+    <a href="{% url 'liste_filieres_bts' %}" class="menu-link">
 
-<a href="{% url 'note_lmd_list' %}" class="menu-link">
-    <i class="bi bi-pencil"></i>
-    Notes LMD
-</a>
+        <i class="bi bi-diagram-3"></i>
 
+        Filières BTS
 
-<a href="{% url 'saisie_list' %}" class="menu-link">
-    <i class="bi bi-calculator"></i>
-    Saisie notes ECUE
-</a>
+    </a>
 
 
-<a href="{% url 'bulletin_lmd_list' %}" class="menu-link">
-    <i class="bi bi-file-earmark-check"></i>
-    Bulletins LMD
-</a>
 
+    <a href="{% url 'bulletin_list' %}" class="menu-link">
 
+        <i class="bi bi-file-earmark-pdf"></i>
 
-{% elif request.user.profile.role == "PROF" %}
+        Bulletins BTS
 
+    </a>
 
 
-<div class="menu-title">
-    <i class="bi bi-person-workspace"></i>
-    Professeur
-</div>
 
 
-<a href="{% url 'note_list' %}" class="menu-link">
-    <i class="bi bi-pencil"></i>
-    Saisie Notes
-</a>
 
 
-<a href="{% url 'note_lmd_list' %}" class="menu-link">
-    <i class="bi bi-journal"></i>
-    Notes LMD
-</a>
+    <!-- ================================================= -->
+    <!-- ===================== LMD ======================= -->
+    <!-- ================================================= -->
 
+    <!-- ================================================= -->
+    <!-- ===================== LMD ======================= -->
+    <!-- ================================================= -->
 
 
-{% elif request.user.profile.role == "ETUD" %}
+    <div class="accordion accordion-flush mt-4" id="accordionSidebar">
 
 
+        <div class="accordion-item bg-transparent border-0">
 
-<div class="menu-title">
-    <i class="bi bi-person"></i>
-    Étudiant
-</div>
 
+            <h2 class="accordion-header">
 
-<a href="{% url 'dashboard_etudiant' %}" class="menu-link">
-    <i class="bi bi-house"></i>
-    Tableau de bord
-</a>
+                <button class="accordion-button collapsed bg-transparent text-white shadow-none p-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#lmd">
 
+                    <i class="bi bi-bank me-2"></i>
 
-<a href="{% url 'bulletin_etudiant' %}" class="menu-link">
-    <i class="bi bi-file-pdf"></i>
-    Mes bulletins
-</a>
+                    Formation LMD
 
+                </button>
 
+            </h2>
 
-{% endif %}
 
 
+            <div id="lmd" class="accordion-collapse collapse">
 
-<!-- COMPTE -->
 
-<div class="menu-title mt-3">
-    <i class="bi bi-gear"></i>
-    Compte
-</div>
+                <div class="accordion-body p-0">
 
 
-<a href="{% url 'logout' %}" class="menu-link logout">
-    <i class="bi bi-box-arrow-right"></i>
-    Déconnexion
-</a>
+                    <!-- ================================= -->
+                    <!-- LICENCE GENERALE L1-L2 -->
+                    <!-- ================================= -->
 
 
+                    <div class="menu-subtitle">
 
-{% endif %}
+                        📖 Licence Générale (L1 - L2)
+
+                    </div>
+
+
+
+                    <a href="{% url 'filiereLMD_list' %}" class="menu-link">
+
+                        <i class="bi bi-diagram-3"></i>
+
+                        Filières L1-L2
+
+                    </a>
+
+
+
+                    <a href="{% url 'etudiant_lmd_list' %}" class="menu-link">
+
+                        <i class="bi bi-person-badge"></i>
+
+                        Étudiants L1-L2
+
+                    </a>
+
+
+
+                    <a href="{% url 'ue_list' %}" class="menu-link">
+
+                        <i class="bi bi-journal-text"></i>
+
+                        UE / ECUE
+
+                    </a>
+
+
+
+                    <a href="{% url 'saisie_list' %}" class="menu-link">
+
+                        <i class="bi bi-calculator"></i>
+
+                        Saisie Notes L1-L2
+
+                    </a>
+
+
+
+                    <a href="{% url 'bulletin_lmd_list' %}" class="menu-link">
+
+                        <i class="bi bi-file-earmark-pdf"></i>
+
+                        Bulletins L1-L2
+
+                    </a>
+
+                    <!-- ================================= -->
+                    <!-- TRONC COMMUN L1-L2 -->
+                    <!-- ================================= -->
+
+
+                    <div class="menu-subtitle mt-3">
+
+                        🏛️ Tronc Commun L1 - L2
+
+                    </div>
+
+
+
+                    <a href="{% url 'tronc_commun_etudiants' %}" class="menu-link">
+
+                        <i class="bi bi-people-fill"></i>
+
+                        Étudiants Tronc Commun
+
+                    </a>
+
+                    <a href="{% url 'tronc_commun_ue' %}" class="menu-link">
+
+                        <i class="bi bi-journal-text"></i>
+
+                        UE / ECUE Tronc Commun
+
+                    </a>
+
+
+                    <a href="{% url 'tronc_commun_notes' %}" class="menu-link">
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        Saisie Notes Tronc Commun
+
+                    </a>
+
+
+
+                    <a href="{% url 'bulletin_tronc_commun_list' %}" class="menu-link">
+
+                        <i class="bi bi-file-earmark-pdf"></i>
+
+                        Bulletins Tronc Commun
+
+                    </a>
+
+
+
+
+
+                    <!-- ================================= -->
+                    <!-- LICENCE PROFESSIONNELLE L3 -->
+                    <!-- ================================= -->
+
+
+                    <!-- ================================= -->
+                    <!-- LICENCE PROFESSIONNELLE L3 -->
+                    <!-- ================================= -->
+
+
+                    <div class="menu-subtitle mt-3">
+
+                        🎓 Licence Professionnelle (L3)
+
+                    </div>
+
+
+
+                    <!-- =============== DROIT PRIVE =============== -->
+
+
+                    <div class="menu-subtitle">
+
+                        ⚖️ Droit Privé
+
+                    </div>
+
+
+                    <a href="{% url 'l3_droit_dashboard' %}" class="menu-link">
+
+                        <i class="bi bi-speedometer2"></i>
+
+                        Tableau de bord
+
+                    </a>
+
+
+                    <a href="{% url 'l3_droit_etudiants' %}" class="menu-link">
+
+                        <i class="bi bi-people"></i>
+
+                        Étudiants
+
+                    </a>
+
+
+                    <a href="{% url 'l3_droit_ue' %}" class="menu-link">
+
+                        <i class="bi bi-journal-text"></i>
+
+                        UE / ECUE
+
+                    </a>
+
+
+                    <a href="{% url 'l3_droit_notes' %}" class="menu-link">
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        Saisie Notes
+
+                    </a>
+
+
+                    <a href="{% url 'l3_droit_bulletins' %}" class="menu-link">
+
+                        <i class="bi bi-file-earmark-pdf"></i>
+
+                        Bulletins
+
+                    </a>
+
+
+
+
+
+                    <!-- =============== SCIENCES DE GESTION =============== -->
+
+
+                    <div class="menu-subtitle mt-3">
+
+                        📊 Sciences de Gestion
+
+                    </div>
+
+
+                    <a href="{% url 'l3_gestion_dashboard' %}" class="menu-link">
+
+                        <i class="bi bi-speedometer2"></i>
+
+                        Tableau de bord
+
+                    </a>
+
+
+                    <a href="{% url 'l3_gestion_etudiants' %}" class="menu-link">
+
+                        <i class="bi bi-people"></i>
+
+                        Étudiants
+
+                    </a>
+
+
+                    <a href="{% url 'l3_gestion_ue_list' %}" class="menu-link">
+
+                        <i class="bi bi-journal-text"></i>
+
+                        UE / ECUE
+
+                    </a>
+
+                    <a href="{% url 'l3_gestion_notes' %}" class="menu-link">
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        Saisie Notes
+
+                    </a>
+
+                    <a href="{% url 'liste_bulletins_gestion' %}" class="btn btn-primary">
+
+                        📑 Bulletins Sciences de Gestion
+
+                    </a>
+
+                    <!-- =============== MANAGEMENT QHSE =============== -->
+
+
+                    <div class="menu-subtitle mt-3">
+
+                        🦺 Management QHSE
+
+                    </div>
+
+
+
+                    <a href="{% url 'l3_qhse_dashboard' %}" class="menu-link">
+
+                        <i class="bi bi-speedometer2"></i>
+
+                        Tableau de bord
+
+                    </a>
+
+
+
+                    <a href="{% url 'l3_qhse_etudiants' %}" class="menu-link">
+
+                        <i class="bi bi-people"></i>
+
+                        Étudiants
+
+                    </a>
+
+
+
+                    <a href="{% url 'l3_qhse_ue' %}" class="menu-link">
+
+                        <i class="bi bi-journal-text"></i>
+
+                        UE / ECUE
+
+                    </a>
+
+
+
+                    <a href="{% url 'l3_qhse_notes' %}" class="menu-link">
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        Saisie Notes
+
+                    </a>
+
+
+
+                    <a href="{% url 'l3_qhse_bulletins' %}" class="menu-link">
+
+                        <i class="bi bi-file-earmark-pdf"></i>
+
+                        Bulletins QHSE
+
+                    </a>
+
+
+
+
+
+                    <!-- ================================= -->
+                    <!-- MASTER M1-M2 -->
+                    <!-- ================================= -->
+
+
+                    <div class="menu-subtitle mt-3">
+
+                        🎓 Master (M1 - M2)
+
+                    </div>
+
+
+
+                    <a href="{% url 'master_dashboard' %}" class="menu-link">
+
+
+                        <i class="bi bi-bank"></i>
+
+                        Tableau de bord Master
+
+
+                    </a>
+
+
+
+                    <a href="{% url 'master_filiere_list' %}" class="menu-link">
+
+
+                        <i class="bi bi-diagram-3"></i>
+
+                        Filières Master
+
+
+                    </a>
+
+
+
+                    <a href="{% url 'master_etudiant_list' %}" class="menu-link">
+
+
+                        <i class="bi bi-people"></i>
+
+                        Étudiants Master
+
+
+                    </a>
+
+
+
+                    <a href="{% url 'master_ue_list' %}" class="menu-link">
+
+
+                        <i class="bi bi-journal-text"></i>
+
+                        UE / ECUE Master
+
+
+                    </a>
+
+
+
+                    <a href="{% url 'master_saisie_notes' %}" class="menu-link">
+
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        Saisie Notes Master
+
+
+                    </a>
+
+
+
+                    <a href="{% url 'master_bulletin_list' %}" class="menu-link">
+
+
+                        <i class="bi bi-file-earmark-pdf"></i>
+
+                        Bulletins Master
+
+
+                    </a>
+
+
+
+
+
+
+
+                    <!-- ================================= -->
+                    <!-- RATTRAPAGE -->
+                    <!-- ================================= -->
+
+
+                    <div class="menu-subtitle mt-4">
+
+                        🔄 Gestion des Rattrapages
+
+                    </div>
+
+
+
+                    <a href="{% url 'rattrapage_liste' %}" class="menu-link">
+
+
+                        <i class="bi bi-list-check"></i>
+
+                        Candidats rattrapage
+
+
+                    </a>
+
+
+
+                    <a href="{% url 'saisie_rattrapage' %}" class="menu-link">
+
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        Saisie rattrapage
+
+
+                    </a>
+
+
+
+                    <a href="{% url 'deliberation_rattrapage' %}" class="menu-link">
+
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Délibération
+
+
+                    </a>
+
+
+
+                    <a href="{% url 'bulletin_rattrapage_list' %}" class="menu-link">
+
+
+                        <i class="bi bi-file-earmark-pdf"></i>
+
+                        Bulletins rattrapage
+
+
+                    </a>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- ================================================= -->
+    <!-- ===================== PROF ====================== -->
+    <!-- ================================================= -->
+
+
+    {% elif request.user.profile.role == "PROF" %}
+
+
+
+    <div class="menu-title">
+
+        <i class="bi bi-person-workspace"></i>
+
+        Professeur
+
+    </div>
+
+
+
+    <a href="{% url 'note_list' %}" class="menu-link">
+
+        <i class="bi bi-pencil"></i>
+
+        Saisie Notes BTS
+
+    </a>
+
+
+
+    <a href="{% url 'note_lmd_list' %}" class="menu-link">
+
+        <i class="bi bi-journal"></i>
+
+        Notes LMD
+
+    </a>
+
+
+
+    <a href="{% url 'saisie_rattrapage' %}" class="menu-link">
+
+        <i class="bi bi-arrow-repeat"></i>
+
+        Rattrapage
+
+    </a>
+
+
+
+
+    <!-- ================================================= -->
+    <!-- ===================== ETUDIANT ================== -->
+    <!-- ================================================= -->
+
+
+    {% elif request.user.profile.role == "ETUD" %}
+
+
+
+    <div class="menu-title">
+
+        <i class="bi bi-person"></i>
+
+        Étudiant
+
+    </div>
+
+
+
+
+    <a href="{% url 'dashboard_etudiant' %}" class="menu-link">
+
+        <i class="bi bi-house"></i>
+
+        Tableau de bord
+
+    </a>
+
+
+
+
+    <a href="{% url 'bulletin_etudiant' %}" class="menu-link">
+
+        <i class="bi bi-file-pdf"></i>
+
+        Mes bulletins
+
+    </a>
+
+
+
+
+    {% endif %}
+
+
+
+
+
+
+    <!-- ================= COMPTE ================= -->
+
+
+    <div class="menu-title mt-4">
+
+        <i class="bi bi-gear"></i>
+
+        Compte
+
+    </div>
+
+
+
+
+    <a href="{% url 'logout' %}" class="menu-link logout">
+
+
+        <i class="bi bi-box-arrow-right"></i>
+
+        Déconnexion
+
+
+    </a>
+
+
+
+
+    {% endif %}
+
 
 
 </div>

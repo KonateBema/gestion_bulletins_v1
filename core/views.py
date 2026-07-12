@@ -25,7 +25,7 @@ from .models import (
 )
 from lmd.models import EtudiantLMD
 # from .models import NoteBTS
-
+from lmd.models import EtudiantLMD, FiliereLMD
 
 from .models import (
     Etudiant, Professeur, Classe, Matiere, Note,
@@ -93,20 +93,77 @@ def logout_view(request):
 # =========================
 # 🏠 HOME / DASHBOARD GLOBAL
 # =========================
+# @login_required
+# def dashboard(request):
+
+#     return render(request, "dashboard.html", {
+#         "etudiants_count": Etudiant.objects.count(),
+#         "professeurs_count": Professeur.objects.count(),
+#         "classes_count": Classe.objects.count(),
+#         "matieres_count": Matiere.objects.count(),
+#         "notes_count": Note.objects.count(),
+#         "l1_count": EtudiantLMD.objects.filter(niveau="L1").count(),
+#         "l2_count": EtudiantLMD.objects.filter(niveau="L2").count(),"master_count": EtudiantLMD.objects.filter(niveau__in=["M1","M2"]).count(),
+        
+#     })
 @login_required
 def dashboard(request):
 
-    return render(request, "dashboard.html", {
+    filieres_l3 = FiliereLMD.objects.filter(
+        niveau_formation="L3"
+    )
+
+    filieres_master = FiliereLMD.objects.filter(
+        niveau_formation="M1-M2"
+    )
+
+    context = {
+
+        # =====================
+        # BTS
+        # =====================
         "etudiants_count": Etudiant.objects.count(),
         "professeurs_count": Professeur.objects.count(),
         "classes_count": Classe.objects.count(),
         "matieres_count": Matiere.objects.count(),
         "notes_count": Note.objects.count(),
-        "l1_count": EtudiantLMD.objects.filter(niveau="L1").count(),
-        "l2_count": EtudiantLMD.objects.filter(niveau="L2").count(),"master_count": EtudiantLMD.objects.filter(niveau__in=["M1","M2"]).count(),
-        
-    })
 
+
+        # =====================
+        # LMD
+        # =====================
+        "l1_count": EtudiantLMD.objects.filter(
+            niveau="L1"
+        ).count(),
+
+        "l2_count": EtudiantLMD.objects.filter(
+            niveau="L2"
+        ).count(),
+
+        "l3_count": EtudiantLMD.objects.filter(
+            niveau="L3"
+        ).count(),
+
+        "master_count": EtudiantLMD.objects.filter(
+            niveau__in=["M1", "M2"]
+        ).count(),
+
+
+        # =====================
+        # MENU DYNAMIQUE
+        # =====================
+        "filieres_l3": filieres_l3,
+
+        "filieres_master": filieres_master,
+
+    }
+
+
+    return render(
+        request,
+        "dashboard.html",
+        context
+    )
 
 # =========================
 # 🧑‍💼 ADMIN

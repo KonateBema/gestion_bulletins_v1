@@ -22,3 +22,41 @@ def calcul_moyenne_ue(etudiant, ue):
 
 def statut_ue(moyenne):
     return "VALIDÉE" if moyenne >= 10 else "NON VALIDÉE"
+
+from .models import (
+    NoteLMD,
+    CandidatRattrapage
+)
+
+
+def creer_candidats_rattrapage(etudiant):
+
+    notes = NoteLMD.objects.filter(
+        etudiant=etudiant,
+        session="1"
+    )
+
+
+    for note in notes:
+
+        if note.moyenne < 10:
+
+            CandidatRattrapage.objects.get_or_create(
+
+                etudiant=etudiant,
+
+                ecue=note.ecue,
+
+                semestre=note.semestre,
+
+                annee_academique=etudiant.annee_academique,
+
+                defaults={
+
+                    "ancienne_note": note.moyenne,
+
+                    "session":"2"
+
+                }
+
+            )

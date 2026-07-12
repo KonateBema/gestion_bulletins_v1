@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container-fluid mt-4">
+
+
+    <!-- HEADER -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+
+        <div>
+
+            <h2 class="fw-bold">
+                ⚖️ UE - L3 Droit Privé
+            </h2>
+
+
+            <p class="text-muted">
+                Gestion des unités d'enseignement -
+                <strong>{{ filiere.libelle }}</strong>
+            </p>
+
+        </div>
+
+
+
+        <a href="{% url 'l3_droit_ue_add' %}"
+           class="btn btn-primary shadow-sm">
+
+
+            <i class="bi bi-plus-circle"></i>
+
+            Nouvelle UE
+
+
+        </a>
+
+
+    </div>
+
+
+
+
+
+    <!-- TABLE UE -->
+
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-header bg-dark text-white">
+
+
+            <h5 class="mb-0">
+
+                Liste des UE
+
+            </h5>
+
+
+        </div>
+
+
+
+        <div class="card-body p-0">
+
+
+            <div class="table-responsive">
+
+
+                <table class="table table-hover align-middle mb-0">
+
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>
+                                Code
+                            </th>
+
+                            <th>
+                                Libellé
+                            </th>
+
+
+                            <th>
+                                Crédit
+                            </th>
+
+
+                            <th>
+                                Semestre
+                            </th>
+
+
+                            <th>
+                                ECUE
+                            </th>
+
+
+                            <th>
+                                Actions
+                            </th>
+
+
+                        </tr>
+
+                    </thead>
+
+
+
+
+                    <tbody>
+
+
+                    {% for ue in ues %}
+
+
+                    <tr>
+
+
+                        <td class="fw-bold">
+
+                            {{ ue.code }}
+
+                        </td>
+
+
+
+                        <td>
+
+                            {{ ue.libelle }}
+
+                        </td>
+
+
+
+                        <td>
+
+                            <span class="badge bg-success">
+
+                                {{ ue.credit }} crédits
+
+                            </span>
+
+                        </td>
+
+
+
+                        <td>
+
+                            <span class="badge bg-primary">
+
+                                {{ ue.semestre }}
+
+                            </span>
+
+                        </td>
+
+
+
+                        <td>
+
+
+                            <a href="{% url 'l3_droit_ecue' ue.id %}"
+                               class="btn btn-sm btn-outline-info">
+
+
+                                <i class="bi bi-book"></i>
+
+                                {{ ue.ecues.count }}
+
+                            </a>
+
+
+                        </td>
+
+
+
+
+                        <td>
+
+
+                            <a href="{% url 'l3_droit_ue_update' ue.id %}"
+                               class="btn btn-sm btn-warning">
+
+                                <i class="bi bi-pencil"></i>
+
+                            </a>
+
+
+
+
+                            <a href="{% url 'l3_droit_ue_delete' ue.id %}"
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Supprimer cette UE ?')">
+
+                                <i class="bi bi-trash"></i>
+
+                            </a>
+
+
+
+                        </td>
+
+
+                    </tr>
+
+
+
+                    {% empty %}
+
+
+                    <tr>
+
+                        <td colspan="6"
+                            class="text-center py-4">
+
+
+                            <i class="bi bi-inbox fs-3"></i>
+
+                            <br>
+
+                            Aucune UE enregistrée
+
+
+                        </td>
+
+                    </tr>
+
+
+                    {% endfor %}
+
+
+
+                    </tbody>
+
+
+                </table>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+</div>
+
+
+
+{% endblock %}

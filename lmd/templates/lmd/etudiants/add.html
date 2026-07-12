@@ -3,319 +3,489 @@
 {% block content %}
 
 <div class="container-fluid py-4">
-<div class="row justify-content-center">
-    <div class="col-xl-10 col-lg-11">
 
-        <div class="card shadow-lg border-0 rounded-4">
+    <div class="row justify-content-center">
 
-            <!-- HEADER -->
-            <div class="card-header bg-primary text-white py-3 rounded-top-4">
-                <h3 class="mb-0 fw-bold">🎓 Inscription Étudiant LMD</h3>
-                <small class="opacity-75">Création du dossier académique</small>
-            </div>
+        <div class="col-xl-9 col-lg-10">
 
-            <div class="card-body p-4">
+            <div class="card shadow-lg border-0 rounded-4">
 
-                <form method="post">
-                    {% csrf_token %}
 
-                    <!-- ===================== INFORMATIONS PERSONNELLES ===================== -->
-                    <div class="mb-5">
-                        <h5 class="fw-bold text-primary">
-                            👤 Informations personnelles
-                        </h5>
-                        <div class="border-bottom mb-3"></div>
+                <!-- HEADER -->
 
-                        <div class="row g-3">
+                <div class="card-header bg-primary text-white rounded-top-4 py-4">
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">
-                                    Matricule
-                                </label>
-                                <input type="text"
-                                       name="matricule"
-                                       class="form-control"
-                                       placeholder="Ex : LMD2026001"
-                                       required>
-                            </div>
+                    <h3 class="mb-1 fw-bold">
+                        🎓 Inscription Étudiant LMD
+                    </h3>
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">
-                                    Nom
-                                </label>
-                                <input type="text"
-                                       name="nom"
-                                       class="form-control"
-                                       required>
-                            </div>
+                    <p class="mb-0 opacity-75">
+                        Création du dossier académique étudiant
+                    </p>
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">
-                                    Prénoms
-                                </label>
-                                <input type="text"
-                                       name="prenoms"
-                                       class="form-control"
-                                       required>
-                            </div>
+                </div>
 
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">
-                                    Sexe
-                                </label>
-                                <select name="sexe" class="form-select">
-                                    <option value="M">Masculin</option>
-                                    <option value="F">Féminin</option>
-                                </select>
-                            </div>
 
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">
-                                    Date de naissance
-                                </label>
-                                <input type="date"
-                                       name="date_naissance"
-                                       class="form-control">
-                            </div>
 
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">
-                                    Lieu de naissance
-                                </label>
-                                <input type="text"
-                                       name="lieu_naissance"
-                                       class="form-control"
-                                       placeholder="Ex : Abidjan">
-                            </div>
+                <div class="card-body p-4">
 
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">
-                                    Téléphone
-                                </label>
-                                <input type="text"
-                                       name="telephone"
-                                       class="form-control"
-                                       placeholder="+225 XX XX XX XX XX">
-                            </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">
-                                    Adresse email
-                                </label>
-                                <input type="email"
-                                       name="email"
-                                       class="form-control"
-                                       placeholder="etudiant@email.com">
-                            </div>
+                    <form method="post">
 
-                        </div>
-                    </div>
+                        {% csrf_token %}
 
-                    <!-- ===================== INFORMATIONS ACADÉMIQUES ===================== -->
-                    <div class="mb-5">
-                        <h5 class="fw-bold text-primary">
-                            🎓 Informations académiques
-                        </h5>
-                        <div class="border-bottom mb-3"></div>
 
-                        <div class="row g-3">
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">
-                                    Niveau
-                                </label>
-                                <select name="niveau"
-                                        class="form-select"
-                                        required>
-                                    <option value="">-- Choisir --</option>
-                                    <option value="L1">Licence 1</option>
-                                    <option value="L2">Licence 2</option>
-                                    <option value="M1">Master 1</option>
-                                    <option value="M2">Master 2</option>
-                                    <option value="DOC">Doctorat</option>
-                                </select>
-                            </div>
+                        <!-- =====================
+                             INFORMATIONS PERSONNELLES
+                        ====================== -->
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">
-                                    Filière
-                                </label>
-                                <select name="filiere"
-                                        class="form-select"
-                                        required>
-                                    <option value="">-- Choisir --</option>
 
-                                    {% for f in filieres %}
-                                        <option value="{{ f.id }}">
-                                            {{ f.libelle}}
+                        <div class="mb-5">
+
+
+                            <h5 class="fw-bold text-primary">
+
+                                👤 Informations personnelles
+
+                            </h5>
+
+
+                            <hr>
+
+
+
+                            <div class="row g-3">
+
+
+                                <div class="col-md-4">
+
+                                    <label class="form-label fw-semibold">
+                                        Matricule
+                                    </label>
+
+
+                                    <input type="text"
+                                           name="matricule"
+                                           class="form-control"
+                                           placeholder="Ex : LMD2026001"
+                                           required>
+
+                                </div>
+
+
+
+
+                                <div class="col-md-4">
+
+                                    <label class="form-label fw-semibold">
+                                        Nom
+                                    </label>
+
+
+                                    <input type="text"
+                                           name="nom"
+                                           class="form-control"
+                                           required>
+
+                                </div>
+
+
+
+
+                                <div class="col-md-4">
+
+                                    <label class="form-label fw-semibold">
+                                        Prénoms
+                                    </label>
+
+
+                                    <input type="text"
+                                           name="prenoms"
+                                           class="form-control"
+                                           required>
+
+                                </div>
+
+
+
+
+
+                                <div class="col-md-3">
+
+
+                                    <label class="form-label fw-semibold">
+                                        Sexe
+                                    </label>
+
+
+                                    <select name="sexe"
+                                            class="form-select">
+
+                                        <option value="M">
+                                            Masculin
                                         </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">
-                                    Statut
-                                </label>
-                            
-                           
-                            <select name="statut" class="form-select">
-                                <option value="AF">Affecté (AF)</option>
-                                <option value="NF">Non Affecté (NF)</option>
-                            </select>
-                           
-                            
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">
-                                    Année académique
-                                </label>
-                                <input type="text"
-                                       name="annee_academique"
-                                       class="form-control"
-                                       placeholder="2026-2027"
-                                       required>
-                            </div>
 
-                        </div>
-                    </div>
+                                        <option value="F">
+                                            Féminin
+                                        </option>
 
-                    <!-- ===================== UE ===================== -->
-                    <div class="mb-5">
-                        <h5 class="fw-bold text-primary">
-                            📚 Unités d'Enseignement (UE)
-                        </h5>
 
-                        <div class="border-bottom mb-3"></div>
+                                    </select>
 
-                        <div class="row g-3">
 
-                            {% for ue in ues %}
-                            <div class="col-md-4">
-
-                                <div class="card shadow-sm border-0 h-100">
-                                    <div class="card-body">
-
-                                        <div class="form-check">
-
-                                            <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                                name="ue"
-                                                value="{{ ue.id }}"
-                                                id="ue{{ ue.id }}"
-                                            >
-
-                                            <label
-                                                class="form-check-label"
-                                                for="ue{{ ue.id }}"
-                                            >
-                                                <strong>{{ ue.code }}</strong>
-                                                <br>
-                                                {{ ue.libelle }}
-                                            </label>
-
-                                        </div>
-
-                                    </div>
                                 </div>
 
-                            </div>
-                            {% empty %}
-                            <div class="col-12">
-                                <div class="alert alert-warning">
-                                    Aucune UE disponible.
-                                </div>
-                            </div>
-                            {% endfor %}
 
-                        </div>
-                    </div>
 
-                    <!-- ===================== ECUE ===================== -->
-                    <div class="mb-5">
 
-                        <h5 class="fw-bold text-primary">
-                            📖 Éléments Constitutifs (ECUE)
-                        </h5>
 
-                        <div class="border-bottom mb-3"></div>
+                                <div class="col-md-3">
 
-                        <div class="row g-3">
+                                    <label class="form-label fw-semibold">
+                                        Date naissance
+                                    </label>
 
-                            {% for ecue in ecues %}
-                            <div class="col-md-6">
 
-                                <div class="card shadow-sm border-0 h-100">
-                                    <div class="card-body">
+                                    <input type="date"
+                                           name="date_naissance"
+                                           class="form-control">
 
-                                        <div class="form-check">
 
-                                            <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                                name="ecue"
-                                                value="{{ ecue.id }}"
-                                                id="ecue{{ ecue.id }}"
-                                            >
-
-                                            <label
-                                                class="form-check-label"
-                                                for="ecue{{ ecue.id }}"
-                                            >
-                                                <strong>{{ ecue.code }}</strong>
-                                                - {{ ecue.libelle }}
-
-                                                <br>
-
-                                                <small class="text-muted">
-                                                    UE : {{ ecue.ue.code }}
-                                                </small>
-                                            </label>
-
-                                        </div>
-
-                                    </div>
                                 </div>
 
-                            </div>
-                            {% empty %}
-                            <div class="col-12">
-                                <div class="alert alert-warning">
-                                    Aucun ECUE disponible.
+
+
+
+
+                                <div class="col-md-3">
+
+
+                                    <label class="form-label fw-semibold">
+                                        Lieu naissance
+                                    </label>
+
+
+                                    <input type="text"
+                                           name="lieu_naissance"
+                                           class="form-control"
+                                           placeholder="Abidjan">
+
+
                                 </div>
+
+
+
+
+
+                                <div class="col-md-3">
+
+
+                                    <label class="form-label fw-semibold">
+                                        Téléphone
+                                    </label>
+
+
+                                    <input type="text"
+                                           name="telephone"
+                                           class="form-control">
+
+
+                                </div>
+
+
+
+
+
+                                <div class="col-md-6">
+
+
+                                    <label class="form-label fw-semibold">
+                                        Email
+                                    </label>
+
+
+                                    <input type="email"
+                                           name="email"
+                                           class="form-control">
+
+
+                                </div>
+
+
                             </div>
-                            {% endfor %}
+
 
                         </div>
 
-                    </div>
 
-                    <!-- ===================== ACTIONS ===================== -->
-                    <div class="d-flex justify-content-between mt-4">
 
-                        <a href="{% url 'etudiant_lmd_list' %}"
-                           class="btn btn-outline-secondary btn-lg">
-                            ↩ Retour à la liste
-                        </a>
 
-                        <button type="submit"
-                                class="btn btn-success btn-lg px-5">
-                            💾 Enregistrer l'étudiant
-                        </button>
 
-                    </div>
 
-                </form>
+                        <!-- =====================
+                             INFORMATIONS ACADEMIQUES
+                        ====================== -->
+
+
+                        <div class="mb-5">
+
+
+                            <h5 class="fw-bold text-primary">
+
+                                🎓 Informations académiques
+
+                            </h5>
+
+
+                            <hr>
+
+
+
+                            <div class="row g-3">
+
+
+
+
+
+                                <div class="col-md-4">
+
+
+                                    <label class="form-label fw-semibold">
+                                        Niveau
+                                    </label>
+
+
+                                    <select name="niveau"
+                                            class="form-select"
+                                            required>
+
+
+                                        <option value="">
+                                            -- Choisir --
+                                        </option>
+
+
+                                        <option value="L1">
+                                            Licence 1
+                                        </option>
+
+
+                                        <option value="L2">
+                                            Licence 2
+                                        </option>
+
+
+                                        <option value="L3">
+                                            Licence 3
+                                        </option>
+
+
+                                        <option value="M1">
+                                            Master 1
+                                        </option>
+
+
+                                        <option value="M2">
+                                            Master 2
+                                        </option>
+
+
+                                        <option value="DOC">
+                                            Doctorat
+                                        </option>
+
+
+                                    </select>
+
+
+                                </div>
+
+
+
+
+
+
+                                <div class="col-md-4">
+
+
+                                    <label class="form-label fw-semibold">
+                                        Filière
+                                    </label>
+
+
+                                    <select name="filiere"
+                                            class="form-select"
+                                            required>
+
+
+                                        <option value="">
+                                            -- Choisir --
+                                        </option>
+
+
+
+                                        {% for f in filieres %}
+
+
+                                        <option value="{{ f.id }}">
+
+                                            {{ f.libelle }}
+
+                                        </option>
+
+
+                                        {% endfor %}
+
+
+
+                                    </select>
+
+
+                                </div>
+
+
+
+
+
+
+
+                                <div class="col-md-4">
+
+
+                                    <label class="form-label fw-semibold">
+                                        Statut
+                                    </label>
+
+
+                                    <select name="statut"
+                                            class="form-select">
+
+
+                                        <option value="AF">
+                                            Affecté (AF)
+                                        </option>
+
+
+                                        <option value="NF">
+                                            Non Affecté (NF)
+                                        </option>
+
+
+                                    </select>
+
+
+                                </div>
+
+
+
+
+
+
+
+                                <div class="col-md-4">
+
+
+                                    <label class="form-label fw-semibold">
+                                        Année académique
+                                    </label>
+
+
+                                    <input type="text"
+                                           name="annee_academique"
+                                           class="form-control"
+                                           placeholder="2026-2027"
+                                           required>
+
+
+                                </div>
+
+
+
+
+                            </div>
+
+
+                        </div>
+
+
+
+
+
+
+
+
+
+                        <!-- INFORMATION AUTOMATIQUE -->
+
+                        <div class="alert alert-info d-flex align-items-center">
+
+                            <i class="bi bi-info-circle-fill me-2"></i>
+
+
+                            Les UE et ECUE seront automatiquement associées
+                            selon la filière et le niveau de l'étudiant.
+
+
+                        </div>
+
+
+
+
+
+
+
+                        <!-- ACTIONS -->
+
+
+                        <div class="d-flex justify-content-between mt-4">
+
+
+
+                            <a href="{% url 'etudiant_lmd_list' %}"
+                               class="btn btn-outline-secondary btn-lg">
+
+                                <i class="bi bi-arrow-left"></i>
+                                Retour
+
+                            </a>
+
+
+
+
+
+                            <button type="submit"
+                                    class="btn btn-success btn-lg px-5">
+
+                                <i class="bi bi-save"></i>
+
+                                Enregistrer
+
+                            </button>
+
+
+
+                        </div>
+
+
+
+                    </form>
+
+
+                </div>
+
 
             </div>
+
 
         </div>
 
+
     </div>
-</div>
+
 
 </div>
+
 
 {% endblock %}

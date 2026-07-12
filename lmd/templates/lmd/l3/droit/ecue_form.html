@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container mt-5">
+
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-header bg-success text-white">
+
+
+            <h4>
+
+                <i class="bi bi-book"></i>
+
+                Ajouter ECUE
+
+            </h4>
+
+
+        </div>
+
+
+
+
+        <div class="card-body">
+
+
+            <form method="post">
+
+
+                {% csrf_token %}
+
+
+
+                <label>
+                    Code ECUE
+                </label>
+
+                <input name="code" class="form-control mb-3" required>
+
+
+
+
+                <label>
+                    Libellé
+                </label>
+
+
+                <input name="libelle" class="form-control mb-3" required>
+
+
+
+
+                <label>
+                    Coefficient
+                </label>
+
+
+                <input type="number" name="coefficient" class="form-control mb-3" value="1">
+
+
+
+
+                <label>
+                    Crédit
+                </label>
+
+
+                <input type="number" name="credit" class="form-control mb-3" value="1">
+
+
+
+                <button class="btn btn-success">
+
+                    <i class="bi bi-save"></i>
+
+                    Enregistrer
+
+                </button>
+
+
+
+                <a href="{% url 'l3_droit_ecue' ue.id %}" class="btn btn-secondary">
+
+                    Retour
+
+                </a>
+
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Saisie des notes - Tronc Commun{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <!-- En-tête -->
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+
+            <div>
+
+                <h3 class="fw-bold text-success mb-1">
+                    <i class="bi bi-journal-check"></i>
+                    Saisie des Notes - Tronc Commun L1 / L2
+                </h3>
+
+                <p class="text-muted mb-0">
+                    Filière <strong>Gestion et Droit</strong> • Contrôle Continu & Examen
+                </p>
+
+            </div>
+
+            <span class="badge bg-success fs-6">
+                {{ etudiants|length }} étudiants
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <form method="POST" action="{% url 'tronc_commun_notes' %}">
+
+        {% csrf_token %}
+
+        <div class="card shadow border-0">
+
+            <div class="card-header bg-success text-white">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil-square"></i>
+                    Notes des étudiants
+                </h5>
+
+            </div>
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive">
+
+                    <table class="table table-bordered table-hover align-middle mb-0">
+
+                        <thead class="table-dark text-center">
+
+                            <tr>
+
+                                <th style="min-width:120px;">Matricule</th>
+                                <th style="min-width:180px;">Nom</th>
+                                <th style="min-width:220px;">Prénoms</th>
+                                <th style="min-width:80px;">Niveau</th>
+
+                                {% for ecue in ecues %}
+
+                                <th style="min-width:170px;">
+
+                                    <span class="badge bg-primary">
+                                        {{ ecue.code }}
+                                    </span>
+
+                                    <br>
+
+                                    <small class="fw-bold">
+                                        {{ ecue.libelle }}
+                                    </small>
+
+                                </th>
+
+                                {% endfor %}
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for e in etudiants %}
+
+                            <tr>
+
+                                <td class="fw-bold">
+                                    {{ e.matricule }}
+                                </td>
+
+                                <td>
+                                    {{ e.nom }}
+                                </td>
+
+                                <td>
+                                    {{ e.prenoms }}
+                                </td>
+
+                                <td class="text-center">
+
+                                    <span class="badge bg-primary">
+
+                                        {{ e.niveau }}
+
+                                    </span>
+
+                                </td>
+
+                                {% for ecue in ecues %}
+
+                                <td>
+
+                                    <div class="d-grid gap-2">
+
+                                        <input
+                                            type="number"
+                                            class="form-control form-control-sm"
+                                            name="cc_{{ e.id }}_{{ ecue.id }}"
+                                            min="0"
+                                            max="20"
+                                            step="0.01"
+                                            placeholder="CC">
+
+                                        <input
+                                            type="number"
+                                            class="form-control form-control-sm"
+                                            name="examen_{{ e.id }}_{{ ecue.id }}"
+                                            min="0"
+                                            max="20"
+                                            step="0.01"
+                                            placeholder="Examen">
+
+                                    </div>
+
+                                </td>
+
+                                {% endfor %}
+
+                            </tr>
+
+                            {% empty %}
+
+                            <tr>
+
+                                <td colspan="100" class="text-center py-5">
+
+                                    <i class="bi bi-people fs-1 text-muted"></i>
+
+                                    <br>
+
+                                    <strong>Aucun étudiant trouvé.</strong>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="text-end mt-4 mb-5">
+
+            <button type="submit" class="btn btn-success btn-lg px-5 shadow">
+
+                <i class="bi bi-save"></i>
+
+                Enregistrer toutes les notes
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

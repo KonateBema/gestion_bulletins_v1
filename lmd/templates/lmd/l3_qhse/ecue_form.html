@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container mt-4">
+
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-header bg-primary text-white">
+
+            <h4>
+
+                <i class="bi bi-book"></i>
+
+                {{titre}}
+
+            </h4>
+
+
+        </div>
+
+
+
+        <div class="card-body">
+
+
+            <div class="alert alert-info">
+
+                UE :
+                <strong>
+                    {{ue.code}} - {{ue.libelle}}
+                </strong>
+
+            </div>
+
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+
+                {{form.as_p}}
+
+
+                <button class="btn btn-success">
+
+                    <i class="bi bi-save"></i>
+
+                    Enregistrer
+
+                </button>
+
+
+                <a href="{% url 'l3_qhse_ue' %}" class="btn btn-secondary">
+
+                    Retour
+
+                </a>
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

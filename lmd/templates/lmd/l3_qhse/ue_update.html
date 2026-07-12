@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container mt-4">
+
+
+<div class="card shadow">
+
+
+<div class="card-header bg-warning">
+
+<h4>
+✏️ Modifier UE QHSE
+</h4>
+
+</div>
+
+
+<div class="card-body">
+
+
+<form method="POST">
+
+{% csrf_token %}
+
+
+
+<div class="mb-3">
+
+<label>Code UE</label>
+
+<input 
+class="form-control"
+name="code"
+value="{{ ue.code }}"
+>
+
+</div>
+
+
+
+<div class="mb-3">
+
+<label>Libellé UE</label>
+
+<input 
+class="form-control"
+name="libelle"
+value="{{ ue.libelle }}"
+>
+
+</div>
+
+
+
+<div class="mb-3">
+
+<label>Crédit</label>
+
+<input 
+class="form-control"
+type="number"
+name="credit"
+value="{{ ue.credit }}"
+>
+
+</div>
+
+
+
+<button class="btn btn-success">
+
+💾 Enregistrer
+
+</button>
+
+
+
+<a href="{% url 'l3_qhse_ue' %}" 
+class="btn btn-secondary">
+
+Retour
+
+</a>
+
+
+
+</form>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+{% endblock %}
