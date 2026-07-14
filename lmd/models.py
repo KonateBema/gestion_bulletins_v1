@@ -746,3 +746,327 @@ class AffectationECUE(models.Model):
         ECUE,
         on_delete=models.CASCADE
     )
+
+class MasterProgramme(models.Model):
+
+    NIVEAUX = (
+        ("M1", "Master 1"),
+        ("M2", "Master 2"),
+    )
+
+
+    SPECIALITES = (
+        ("QHSE", "Management QHSE"),
+        ("DROIT", "Droit Privé"),
+        ("GESTION", "Sciences de Gestion"),
+    )
+
+
+    niveau = models.CharField(
+        max_length=2,
+        choices=NIVEAUX
+    )
+
+
+    specialite = models.CharField(
+    max_length=20,
+    choices=SPECIALITES,
+    default="GESTION",
+   )
+    filiere = models.ForeignKey(
+        FiliereLMD,
+        on_delete=models.CASCADE,
+        related_name="programmes_master",
+        null=True,
+        blank=True
+    )
+
+
+    annee_academique = models.CharField(
+        max_length=20,
+        default="2025-2026"
+    )
+
+
+    def __str__(self):
+
+        return f"{self.get_niveau_display()} - {self.get_specialite_display()}"
+    
+class MasterUE(models.Model):
+
+    programme = models.ForeignKey(
+        MasterProgramme,
+        on_delete=models.CASCADE,
+        related_name="ues"
+    )
+
+
+    code = models.CharField(
+        max_length=20
+    )
+
+
+    libelle = models.CharField(
+        max_length=200
+    )
+
+
+    credit = models.IntegerField(
+        default=0
+    )
+
+
+    semestre = models.CharField(
+        max_length=2,
+        choices=[
+            ("S1","Semestre 1"),
+            ("S2","Semestre 2"),
+            ("S3","Semestre 3"),
+            ("S4","Semestre 4"),
+        ]
+    )
+
+
+    def __str__(self):
+        return self.libelle
+
+class MasterECUE(models.Model):
+
+    ue = models.ForeignKey(
+        MasterUE,
+        on_delete=models.CASCADE,
+        related_name="ecues"
+    )
+
+
+    code = models.CharField(
+        max_length=20
+    )
+
+
+    libelle = models.CharField(
+        max_length=200
+    )
+
+
+    coefficient = models.IntegerField(
+        default=1
+    )
+
+
+    credit = models.IntegerField(
+        default=0
+    )
+
+
+    def __str__(self):
+        return self.libelle
+
+class EtudiantMaster(models.Model):
+
+    SEXE_CHOICES = (
+        ("M", "Masculin"),
+        ("F", "Féminin"),
+    )
+
+
+    NIVEAU_CHOICES = (
+        ("M1", "Master 1"),
+        ("M2", "Master 2"),
+    )
+
+
+    STATUT_CHOICES = (
+        ("AF", "Admis Formation"),
+        ("NF", "Non Formation"),
+    )
+
+
+    matricule = models.CharField(
+        max_length=50,
+        unique=True
+    )
+
+
+    nom = models.CharField(
+        max_length=100
+    )
+
+
+    prenoms = models.CharField(
+        max_length=150
+    )
+
+
+    sexe = models.CharField(
+        max_length=1,
+        choices=SEXE_CHOICES
+    )
+
+
+    programme = models.ForeignKey(
+        MasterProgramme,
+        on_delete=models.CASCADE,
+        related_name="etudiants"
+    )
+
+
+    niveau = models.CharField(
+        max_length=2,
+        choices=NIVEAU_CHOICES
+    )
+
+
+    statut = models.CharField(
+        max_length=2,
+        choices=STATUT_CHOICES,
+        default="NF"
+    )
+
+
+    telephone = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True
+    )
+
+
+    email = models.EmailField(
+        blank=True,
+        null=True
+    )
+
+
+    date_naissance = models.DateField(
+        blank=True,
+        null=True
+    )
+
+
+    lieu_naissance = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+
+    def __str__(self):
+
+        return f"{self.nom} {self.prenoms} - {self.niveau}"
+    
+class NoteMasterHH(models.Model):
+
+    etudiant = models.ForeignKey(
+        EtudiantMaster,
+        on_delete=models.CASCADE
+    )
+
+
+    ecue = models.ForeignKey(
+        MasterECUE,
+        on_delete=models.CASCADE
+    )
+
+
+    cc = models.FloatField(
+        default=0
+    )
+
+
+    examen = models.FloatField(
+        default=0
+    )
+
+
+    @property
+    def moyenne(self):
+
+        return round(
+            self.cc*0.4 + self.examen*0.6,
+            2
+        )
+
+class NoteMaster(models.Model):
+
+    etudiant = models.ForeignKey(
+        EtudiantMaster,
+        on_delete=models.CASCADE
+    )
+
+    ecue = models.ForeignKey(
+        MasterECUE,
+        on_delete=models.CASCADE
+    )
+
+    cc = models.FloatField(
+        default=0
+    )
+
+    examen = models.FloatField(
+        default=0
+    )
+
+
+    @property
+    def moyenne(self):
+
+        return round(
+            (self.cc * 0.4) + (self.examen * 0.6),
+            2
+        )
+
+
+    class Meta:
+
+        unique_together = (
+            "etudiant",
+            "ecue",
+        )
+# =====================================
+# MASTER FILIERE
+# =====================================
+
+class MasterFiliere(models.Model):
+
+    libelle = models.CharField(
+        max_length=150
+    )
+
+
+    def __str__(self):
+        return self.libelle
+
+class ResultatSemestreMaster(models.Model):
+
+    etudiant = models.ForeignKey(
+        EtudiantMaster,
+        on_delete=models.CASCADE
+    )
+
+
+    semestre = models.CharField(
+        max_length=10
+    )
+
+
+    moyenne = models.FloatField(
+        default=0
+    )
+
+
+    credits_obtenus = models.IntegerField(
+        default=0
+    )
+
+
+    resultat = models.CharField(
+        max_length=20,
+        default="RATTRAPAGE"
+    )
+
+
+
+    def __str__(self):
+
+        return f"{self.etudiant} - {self.semestre}"
+    

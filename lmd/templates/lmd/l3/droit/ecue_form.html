@@ -1,77 +1,88 @@
 {% extends "base.html" %}
 
-
 {% block content %}
-
 
 <div class="container mt-5">
 
-
     <div class="card shadow border-0">
-
 
         <div class="card-header bg-success text-white">
 
-
             <h4>
-
                 <i class="bi bi-book"></i>
 
-                Ajouter ECUE
+                {% if form.instance.pk %}
+                    Modifier ECUE
+                {% else %}
+                    Ajouter ECUE
+                {% endif %}
 
             </h4>
-
 
         </div>
 
 
-
-
         <div class="card-body">
 
-
             <form method="post">
-
 
                 {% csrf_token %}
 
 
-
-                <label>
-                    Code ECUE
-                </label>
-
-                <input name="code" class="form-control mb-3" required>
-
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    {{ form.errors }}
+                </div>
+                {% endif %}
 
 
 
-                <label>
-                    Libellé
-                </label>
+                <div class="mb-3">
 
+                    <label class="form-label">
+                        Code ECUE
+                    </label>
 
-                <input name="libelle" class="form-control mb-3" required>
+                    {{ form.code }}
 
-
-
-
-                <label>
-                    Coefficient
-                </label>
-
-
-                <input type="number" name="coefficient" class="form-control mb-3" value="1">
+                </div>
 
 
 
+                <div class="mb-3">
 
-                <label>
-                    Crédit
-                </label>
+                    <label class="form-label">
+                        Libellé
+                    </label>
+
+                    {{ form.libelle }}
+
+                </div>
 
 
-                <input type="number" name="credit" class="form-control mb-3" value="1">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Coefficient
+                    </label>
+
+                    {{ form.coefficient }}
+
+                </div>
+
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Crédit
+                    </label>
+
+                    {{ form.credit }}
+
+                </div>
+
 
 
 
@@ -79,13 +90,18 @@
 
                     <i class="bi bi-save"></i>
 
-                    Enregistrer
+                    {% if form.instance.pk %}
+                        Modifier
+                    {% else %}
+                        Enregistrer
+                    {% endif %}
 
                 </button>
 
 
 
-                <a href="{% url 'l3_droit_ecue' ue.id %}" class="btn btn-secondary">
+                <a href="{% url 'l3_droit_ecue' ue.id %}"
+                   class="btn btn-secondary">
 
                     Retour
 
@@ -98,11 +114,8 @@
 
         </div>
 
-
     </div>
 
-
 </div>
-
 
 {% endblock %}

@@ -1,60 +1,491 @@
 {% extends "base.html" %}
 
-
 {% block content %}
 
-
-<div class="container py-4">
-
-
-    <h3 class="fw-bold text-primary">
-
-        🦺 Licence Professionnelle L3 QHSE
-
-    </h3>
+<div class="container-fluid mt-4">
 
 
-    <div class="row mt-4">
+    <!-- HEADER -->
+
+    <div class="card shadow border-0 mb-4">
+
+
+        <div class="card-body d-flex justify-content-between align-items-center">
+
+
+            <div>
+
+
+                <h2 class="fw-bold text-primary mb-1">
+
+                    🦺 Licence Professionnelle L3 QHSE
+
+                </h2>
+
+
+                <p class="text-muted mb-0">
+
+                    Tableau de bord académique - Qualité, Hygiène, Sécurité et Environnement.
+
+                </p>
+
+
+            </div>
+
+
+
+            <div>
+
+
+                <span class="badge bg-success fs-6">
+
+                    L3 QHSE
+
+                </span>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+
+
+    <!-- STATISTIQUES -->
+
+
+    <div class="row g-4 mb-4">
+
+
+
+        <!-- ETUDIANTS -->
+
+        <div class="col-md-3">
+
+
+            <div class="card shadow-sm border-0 h-100">
+
+
+                <div class="card-body">
+
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+
+                        <div>
+
+
+                            <h6 class="text-muted">
+
+                                Étudiants
+
+                            </h6>
+
+
+                            <h3 class="fw-bold">
+
+                                {{ nb_etudiants|default:"0" }}
+
+                            </h3>
+
+
+                        </div>
+
+
+
+                        <div class="bg-primary text-white rounded-circle p-3">
+
+
+                            <i class="bi bi-people fs-4"></i>
+
+
+                        </div>
+
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+
+
+        <!-- UE -->
+
+        <div class="col-md-3">
+
+
+            <div class="card shadow-sm border-0 h-100">
+
+
+                <div class="card-body">
+
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+
+                        <div>
+
+
+                            <h6 class="text-muted">
+
+                                UE
+
+                            </h6>
+
+
+                            <h3 class="fw-bold">
+
+                                {{ nb_ues|default:"0" }}
+
+                            </h3>
+
+
+                        </div>
+
+
+
+                        <div class="bg-success text-white rounded-circle p-3">
+
+
+                            <i class="bi bi-journal-text fs-4"></i>
+
+
+                        </div>
+
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+
+
+        <!-- ECUE -->
+
+        <div class="col-md-3">
+
+
+            <div class="card shadow-sm border-0 h-100">
+
+
+                <div class="card-body">
+
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+
+                        <div>
+
+
+                            <h6 class="text-muted">
+
+                                ECUE
+
+                            </h6>
+
+
+                            <h3 class="fw-bold">
+
+                                {{ nb_ecues|default:"0" }}
+
+                            </h3>
+
+
+                        </div>
+
+
+
+                        <div class="bg-info text-white rounded-circle p-3">
+
+
+                            <i class="bi bi-book fs-4"></i>
+
+
+                        </div>
+
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+
+
+        <!-- NOTES -->
+
+        <div class="col-md-3">
+
+
+            <div class="card shadow-sm border-0 h-100">
+
+
+                <div class="card-body">
+
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+
+                        <div>
+
+
+                            <h6 class="text-muted">
+
+                                Notes saisies
+
+                            </h6>
+
+
+                            <h3 class="fw-bold">
+
+                                {{ nb_notes|default:"0" }}
+
+                            </h3>
+
+
+                        </div>
+
+
+
+                        <div class="bg-warning text-white rounded-circle p-3">
+
+
+                            <i class="bi bi-pencil-square fs-4"></i>
+
+
+                        </div>
+
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- MENU RAPIDE -->
+
+
+    <div class="row g-4">
+
+
+
+        <!-- ETUDIANTS -->
 
 
         <div class="col-md-4">
 
-            <div class="card shadow border-0">
 
-                <div class="card-body text-center">
+            <div class="card shadow border-0 h-100">
 
-                    <h2>{{nb_etudiants}}</h2>
 
-                    <p>
+                <div class="card-body">
+
+
+                    <h5 class="fw-bold">
+
+                        <i class="bi bi-people text-primary"></i>
+
                         Étudiants
+
+                    </h5>
+
+
+
+                    <p class="text-muted">
+
+                        Gestion des étudiants inscrits en L3 QHSE.
+
                     </p>
+
+
+
+                    <a href="{% url 'l3_qhse_etudiants' %}"
+
+                       class="btn btn-outline-primary">
+
+
+                        Voir les étudiants
+
+
+                    </a>
+
 
                 </div>
 
+
             </div>
+
 
         </div>
 
 
+
+
+
+
+
+
+        <!-- UE ECUE -->
 
 
         <div class="col-md-4">
 
-            <div class="card shadow border-0">
 
-                <div class="card-body text-center">
+            <div class="card shadow border-0 h-100">
 
-                    <h2>{{nb_ues}}</h2>
 
-                    <p>
-                        Unités d'enseignement
+                <div class="card-body">
+
+
+                    <h5 class="fw-bold">
+
+                        <i class="bi bi-book text-success"></i>
+
+                        UE / ECUE
+
+                    </h5>
+
+
+
+                    <p class="text-muted">
+
+                        Gestion des unités d'enseignement QHSE.
+
                     </p>
+
+
+
+                    <a href="{% url 'l3_qhse_ue' %}"
+
+                       class="btn btn-outline-success">
+
+
+                        Gérer les UE
+
+
+                    </a>
+
 
                 </div>
 
+
             </div>
 
+
         </div>
+
+
+
+
+
+
+
+
+        <!-- NOTES -->
+
+
+        <div class="col-md-4">
+
+
+            <div class="card shadow border-0 h-100">
+
+
+                <div class="card-body">
+
+
+                    <h5 class="fw-bold">
+
+                        <i class="bi bi-pencil-square text-warning"></i>
+
+                        Saisie des notes
+
+                    </h5>
+
+
+
+                    <p class="text-muted">
+
+                        Saisie et consultation des notes ECUE.
+
+                    </p>
+
+
+
+                    <a href="#"
+
+                       class="btn btn-outline-warning">
+
+
+                        Accéder
+
+
+                    </a>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
 
 
     </div>

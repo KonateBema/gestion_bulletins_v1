@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container-fluid py-4">
+
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-header bg-primary text-white">
+
+
+            <h4 class="mb-0">
+
+                🎓 {{ titre }}
+
+            </h4>
+
+
+        </div>
+
+
+
+        <div class="card-body">
+
+
+            <form method="POST">
+
+
+                {% csrf_token %}
+
+
+
+                <div class="row">
+
+
+
+                    <div class="col-md-6 mb-3">
+
+
+                        <label class="form-label fw-bold">
+
+                            Niveau
+
+                        </label>
+
+
+                        {{ form.niveau }}
+
+
+                    </div>
+
+
+
+
+                    <div class="col-md-6 mb-3">
+
+
+                        <label class="form-label fw-bold">
+
+                            Spécialité
+
+                        </label>
+
+
+                        {{ form.specialite }}
+
+
+                    </div>
+
+
+
+
+
+                    <div class="col-md-6 mb-3">
+
+
+                        <label class="form-label fw-bold">
+
+                            Filière
+
+                        </label>
+
+
+                        {{ form.filiere }}
+
+
+                    </div>
+
+
+
+
+
+                    <div class="col-md-6 mb-3">
+
+
+                        <label class="form-label fw-bold">
+
+                            Année académique
+
+                        </label>
+
+
+                        {{ form.annee_academique }}
+
+
+                    </div>
+
+
+
+                </div>
+
+
+
+
+                <div class="mt-4">
+
+
+                    <button type="submit" 
+                            class="btn btn-success">
+
+                        <i class="bi bi-save"></i>
+
+                        Enregistrer
+
+                    </button>
+
+
+
+
+                    <a href="{% url 'master_etudiant_list' %}" 
+                       class="btn btn-secondary">
+
+                        <i class="bi bi-arrow-left"></i>
+
+                        Retour
+
+                    </a>
+
+
+
+                </div>
+
+
+
+            </form>
+
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+{% endblock %}

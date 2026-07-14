@@ -118,11 +118,14 @@
                                 <td>
 
                                     <div class="d-grid gap-2">
+                                    {% for note in e.notes_affichage %}
+                                       {% if note.ecue_id == ecue.id %}
 
                                         <input
                                             type="number"
                                             class="form-control form-control-sm"
                                             name="cc_{{ e.id }}_{{ ecue.id }}"
+                                            value="{{ note.cc }}"
                                             min="0"
                                             max="20"
                                             step="0.01"
@@ -132,10 +135,14 @@
                                             type="number"
                                             class="form-control form-control-sm"
                                             name="examen_{{ e.id }}_{{ ecue.id }}"
+                                            value="{{ note.examen }}"
                                             min="0"
                                             max="20"
                                             step="0.01"
                                             placeholder="Examen">
+                                            {% endif %}
+                                            
+                                     {% endfor %}
 
                                     </div>
 

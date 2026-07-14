@@ -1,90 +1,161 @@
 {% extends "base.html" %}
 
-
 {% block content %}
-
 
 <div class="container-fluid mt-4">
 
 
     <!-- HEADER -->
+    <div class="card shadow border-0 mb-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+
+            <div>
+                <h3 class="fw-bold text-primary mb-1">
+                    ⚖️ UE / ECUE - Licence 3 Droit Privé
+                </h3>
+
+                <p class="text-muted mb-0">
+                    Gestion des unités d'enseignement -
+                    <strong>{{ filiere.libelle }}</strong>
+                </p>
+            </div>
 
 
-        <div>
+            <div>
 
-            <h2 class="fw-bold">
-                ⚖️ UE - L3 Droit Privé
-            </h2>
+                <a href="{% url 'l3_droit_ue_add' %}"
+                   class="btn btn-success">
 
+                    <i class="bi bi-plus-circle"></i>
+                    Ajouter une UE
 
-            <p class="text-muted">
-                Gestion des unités d'enseignement -
-                <strong>{{ filiere.libelle }}</strong>
-            </p>
+                </a>
+
+            </div>
 
         </div>
-
-
-
-        <a href="{% url 'l3_droit_ue_add' %}"
-           class="btn btn-primary shadow-sm">
-
-
-            <i class="bi bi-plus-circle"></i>
-
-            Nouvelle UE
-
-
-        </a>
-
 
     </div>
 
 
 
+    {% for ue in ues %}
 
 
-    <!-- TABLE UE -->
+    <div class="card shadow border-0 mb-4">
 
 
-    <div class="card shadow border-0">
+        <!-- HEADER UE -->
+
+        <div class="card-header bg-primary text-white">
+
+            <div class="d-flex justify-content-between align-items-center">
 
 
-        <div class="card-header bg-dark text-white">
+                <div>
+
+                    <h5 class="mb-1 fw-bold">
+
+                        📘 {{ ue.code }} - {{ ue.libelle }}
+
+                    </h5>
 
 
-            <h5 class="mb-0">
+                    <div>
 
-                Liste des UE
+                        Crédit UE :
+                        <span class="badge bg-light text-dark">
+                            {{ ue.credit }}
+                        </span>
 
-            </h5>
+
+                        &nbsp;
+
+
+                        Semestre :
+                        <span class="badge bg-warning text-dark">
+                            {{ ue.semestre }}
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div>
+
+
+                    <a href="{% url 'l3_droit_ecue_add' ue.id %}"
+                       class="btn btn-light btn-sm">
+
+                        <i class="bi bi-plus-circle"></i>
+                        Ajouter ECUE
+
+                    </a>
+
+
+
+                    <a href="{% url 'l3_droit_ue_update' ue.id %}"
+                       class="btn btn-warning btn-sm">
+
+                        <i class="bi bi-pencil"></i>
+
+                    </a>
+
+
+
+
+                    <a href="{% url 'l3_droit_ue_delete' ue.id %}"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Supprimer cette UE ?')">
+
+                        <i class="bi bi-trash"></i>
+
+                    </a>
+
+
+                </div>
+
+
+            </div>
 
 
         </div>
 
 
 
-        <div class="card-body p-0">
+
+
+        <!-- ECUE -->
+
+        <div class="card-body">
 
 
             <div class="table-responsive">
 
 
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle">
 
 
-                    <thead class="table-light">
+                    <thead class="table-dark">
 
                         <tr>
 
                             <th>
-                                Code
+                                Code ECUE
                             </th>
 
+
                             <th>
-                                Libellé
+                                Libellé ECUE
+                            </th>
+
+
+                            <th>
+                                Coefficient
                             </th>
 
 
@@ -93,17 +164,7 @@
                             </th>
 
 
-                            <th>
-                                Semestre
-                            </th>
-
-
-                            <th>
-                                ECUE
-                            </th>
-
-
-                            <th>
+                            <th class="text-center">
                                 Actions
                             </th>
 
@@ -118,15 +179,29 @@
                     <tbody>
 
 
-                    {% for ue in ues %}
+
+                    {% for ecue in ue.ecues.all %}
+
 
 
                     <tr>
 
 
-                        <td class="fw-bold">
+                        <td>
 
-                            {{ ue.code }}
+                            <span class="badge bg-info text-dark">
+
+                                {{ ecue.code }}
+
+                            </span>
+
+                        </td>
+
+
+
+                        <td class="fw-semibold">
+
+                            {{ ecue.libelle }}
 
                         </td>
 
@@ -134,9 +209,10 @@
 
                         <td>
 
-                            {{ ue.libelle }}
+                            {{ ecue.coefficient }}
 
                         </td>
+
 
 
 
@@ -144,7 +220,7 @@
 
                             <span class="badge bg-success">
 
-                                {{ ue.credit }} crédits
+                                {{ ecue.credit }}
 
                             </span>
 
@@ -152,42 +228,21 @@
 
 
 
-                        <td>
 
-                            <span class="badge bg-primary">
-
-                                {{ ue.semestre }}
-
-                            </span>
-
-                        </td>
+                        <td class="text-center">
 
 
+                            <a href="{% url 'l3_droit_saisie_notes' ecue.id %}"
+                               class="btn btn-success btn-sm">
 
-                        <td>
-
-
-                            <a href="{% url 'l3_droit_ecue' ue.id %}"
-                               class="btn btn-sm btn-outline-info">
-
-
-                                <i class="bi bi-book"></i>
-
-                                {{ ue.ecues.count }}
+                                <i class="bi bi-pencil-square"></i>
 
                             </a>
 
 
-                        </td>
 
-
-
-
-                        <td>
-
-
-                            <a href="{% url 'l3_droit_ue_update' ue.id %}"
-                               class="btn btn-sm btn-warning">
+                            <a href="{% url 'l3_droit_ecue_update' ecue.id %}"
+                               class="btn btn-warning btn-sm">
 
                                 <i class="bi bi-pencil"></i>
 
@@ -195,21 +250,19 @@
 
 
 
-
-                            <a href="{% url 'l3_droit_ue_delete' ue.id %}"
-                               class="btn btn-sm btn-danger"
-                               onclick="return confirm('Supprimer cette UE ?')">
+                            <a href="{% url 'l3_droit_ecue_delete' ecue.id %}"
+                               class="btn btn-danger btn-sm">
 
                                 <i class="bi bi-trash"></i>
 
                             </a>
 
 
-
                         </td>
 
 
                     </tr>
+
 
 
 
@@ -218,15 +271,15 @@
 
                     <tr>
 
-                        <td colspan="6"
-                            class="text-center py-4">
+                        <td colspan="5"
+                            class="text-center text-muted py-4">
 
 
-                            <i class="bi bi-inbox fs-3"></i>
+                            <i class="bi bi-journal-x fs-3"></i>
 
                             <br>
 
-                            Aucune UE enregistrée
+                            Aucun ECUE associé à cette UE
 
 
                         </td>
@@ -234,7 +287,9 @@
                     </tr>
 
 
+
                     {% endfor %}
+
 
 
 
@@ -254,8 +309,32 @@
 
 
 
-</div>
 
+    {% empty %}
+
+
+
+    <div class="alert alert-warning shadow-sm">
+
+        <i class="bi bi-exclamation-triangle"></i>
+
+        Aucune UE Droit Privé enregistrée.
+
+
+        <br>
+
+
+        Cliquez sur "Ajouter une UE" pour commencer.
+
+    </div>
+
+
+
+    {% endfor %}
+
+
+
+</div>
 
 
 {% endblock %}

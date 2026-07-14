@@ -2,92 +2,276 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
 
-    <div class="card shadow">
 
-        <div class="card-header bg-primary text-white">
+    <!-- HEADER -->
 
-            <h4>
-                📑 Bulletins des étudiants - Droit Privé
-            </h4>
+    <div class="card shadow border-0 mb-4">
 
-        </div>
 
-        <div class="card-body">
+        <div class="card-body d-flex justify-content-between align-items-center">
 
-            <table class="table table-hover table-bordered">
 
-                <thead class="table-dark">
+            <div>
 
-                    <tr>
+                <h3 class="fw-bold text-primary mb-1">
 
-                        <th>Matricule</th>
+                    📑 Bulletins - L3 Droit Privé
 
-                        <th>Nom</th>
+                </h3>
 
-                        <th>Prénoms</th>
 
-                        <th>Niveau</th>
+                <p class="text-muted mb-0">
 
-                        <th width="180">
-                            Action
-                        </th>
+                    Consultation et génération des bulletins des étudiants.
 
-                    </tr>
+                </p>
 
-                </thead>
 
-                <tbody>
+            </div>
 
-                    {% for e in etudiants %}
 
-                    <tr>
+            <div>
 
-                        <td>{{ e.matricule }}</td>
+                <span class="badge bg-primary fs-6">
 
-                        <td>{{ e.nom }}</td>
+                    {{ etudiants|length }} étudiants
 
-                        <td>{{ e.prenoms }}</td>
+                </span>
 
-                        <td>{{ e.niveau }}</td>
+            </div>
 
-                        <td>
-
-                            <a class="btn btn-success btn-sm" href="{% url 'imprimer_bulletin_l3_droit_prive' e.id %}">
-
-                                🖨️ Imprimer le bulletin
-
-                            </a>
-
-                            
-
-                        </td>
-
-                    </tr>
-
-                    {% empty %}
-
-                    <tr>
-
-                        <td colspan="5" class="text-center">
-
-                            Aucun étudiant.
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
 
         </div>
+
 
     </div>
 
+
+
+
+
+
+    <!-- TABLE -->
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-header bg-dark text-white">
+
+
+            <h5 class="mb-0">
+
+                <i class="bi bi-file-earmark-pdf"></i>
+
+                Liste des étudiants
+
+            </h5>
+
+
+        </div>
+
+
+
+
+
+        <div class="card-body p-0">
+
+
+            <div class="table-responsive">
+
+
+                <table class="table table-hover align-middle mb-0">
+
+
+
+                    <thead class="table-light">
+
+
+                        <tr>
+
+
+                            <th>
+                                Matricule
+                            </th>
+
+
+                            <th>
+                                Nom
+                            </th>
+
+
+                            <th>
+                                Prénoms
+                            </th>
+
+
+                            <th>
+                                Niveau
+                            </th>
+
+
+                            <th class="text-center">
+                                Action
+                            </th>
+
+
+                        </tr>
+
+
+                    </thead>
+
+
+
+
+
+                    <tbody>
+
+
+                    {% for e in etudiants %}
+
+
+
+                    <tr>
+
+
+
+                        <td class="fw-bold">
+
+                            <span class="badge bg-info text-dark">
+
+                                {{ e.matricule }}
+
+                            </span>
+
+
+                        </td>
+
+
+
+
+
+                        <td class="fw-semibold">
+
+                            {{ e.nom }}
+
+
+                        </td>
+
+
+
+
+
+                        <td>
+
+                            {{ e.prenoms }}
+
+
+                        </td>
+
+
+
+
+
+                        <td>
+
+
+                            <span class="badge bg-primary">
+
+                                {{ e.niveau }}
+
+                            </span>
+
+
+                        </td>
+
+
+
+
+
+                        <td class="text-center">
+
+
+
+                            <a href="{% url 'imprimer_bulletin_l3_droit_prive' e.id %}"
+
+                               class="btn btn-success btn-sm shadow-sm">
+
+
+                                <i class="bi bi-printer"></i>
+
+                                Générer bulletin
+
+
+                            </a>
+
+
+
+
+                        </td>
+
+
+
+                    </tr>
+
+
+
+
+                    {% empty %}
+
+
+
+
+                    <tr>
+
+
+                        <td colspan="5"
+                            class="text-center py-5 text-muted">
+
+
+                            <i class="bi bi-person-x fs-2"></i>
+
+
+                            <br>
+
+
+                            Aucun étudiant enregistré.
+
+
+                        </td>
+
+
+                    </tr>
+
+
+
+
+                    {% endfor %}
+
+
+
+
+                    </tbody>
+
+
+
+                </table>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
 </div>
+
 
 {% endblock %}

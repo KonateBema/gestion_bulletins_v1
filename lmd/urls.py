@@ -158,7 +158,9 @@ urlpatterns = [
    path("master/filieres/",views.master_filiere_list,name="master_filiere_list"),
    path("master/etudiants/",views.master_etudiant_list,name="master_etudiant_list"),
    path("master/ue/",views.master_ue_list,name="master_ue_list"),
-   path("master/notes/",views.master_saisie_notes,name="master_saisie_notes"),
+   path("master/<int:id>/ue/",views.master_ue, name="master_ue",),
+
+   
    path("master/bulletins/",views.master_bulletin_list,name="master_bulletin_list"),
 
 
@@ -179,6 +181,7 @@ urlpatterns = [
    path("l3/droit/ue/<int:pk>/delete/",views.l3_droit_ue_delete,name="l3_droit_ue_delete"),
    path("l3/droit/ue/<int:pk>/ecues/",views.l3_droit_ecue,name="l3_droit_ecue"),
    path("l3/droit/ue/<int:pk>/ecue/add/",views.l3_droit_ecue_add,name="l3_droit_ecue_add"),
+   path("l3/droit/ecue/<int:pk>/update/",views.l3_droit_ecue_update,name="l3_droit_ecue_update"),
 
    path("l3/droit/saisie-notes/<int:ecue_id>/",views.l3_droit_saisie_notes,name="l3_droit_saisie_notes"),
    path("l3/droit/notes/",views.l3_droit_notes,name="l3_droit_notes"),
@@ -246,149 +249,147 @@ urlpatterns = [
   path("tronc-commun/ue/",views.tronc_commun_ue,name="tronc_commun_ue"),
   # path("tronc-commun/notes/",views.tronc_commun_notes, name="tronc_commun_notes"),
   path("tronc-commun/bulletins/",views.bulletin_tronc_commun_list,name="bulletin_tronc_commun_list"),
+  path("tronc-commun/droit/", views.tronc_commun_droit,name="tronc_commun_droit"),
+  path("tronc-commun/gestion/", views.tronc_commun_gestion,name="tronc_commun_gestion"),
+  path("tronc-commun/notes/",views.tronc_commun_notes,name="tronc_commun_notes"),
+  path("tronc-commun/bulletin/<int:pk>/",views.bulletin_tronc_commun_pdf,name="bulletin_tronc_commun_pdf"),
+  path("tronc-commun/bulletin/<int:pk>/",views.imprimer_bulletin_tronc_commun,name="bulletin_tronc_commun_pdf"),
+  path("tronc-commun/bulletin/imprimer/<int:pk>/",views.imprimer_bulletin_tronc_commun,name="bulletin_tronc_commun_pdf"),
+  path("tronc-commun/add/",views.tronc_commun_add,name="tronc_commun_add"),
+  path("tronc-commun/update/<int:pk>/",views.tronc_commun_update,name="tronc_commun_update"),
+  path("l3/qhse/dashboard/",views.l3_qhse_dashboard,name="l3_qhse_dashboard"),
+
+  path("l3/qhse/etudiants/",views.l3_qhse_etudiants,name="l3_qhse_etudiants"),
+  path("l3/qhse/ue/",views.l3_qhse_ue,name="l3_qhse_ue"),
+  path("l3/qhse/notes/",views.l3_qhse_notes,name="l3_qhse_notes"),
+  path("l3/qhse/bulletins/",views.l3_qhse_bulletins,name="l3_qhse_bulletins"),
+  # path("l3/qhse/etudiants/",views.l3_qhse_etudiants,name="l3_qhse_etudiants"),
+  path("l3/qhse/etudiants/add/",views.l3_qhse_etudiant_add,name="l3_qhse_etudiant_add"),
+  path("l3/qhse/etudiants/<int:pk>/update/",views.l3_qhse_etudiant_update,name="l3_qhse_etudiant_update"),
+  path("l3/qhse/etudiants/<int:pk>/delete/",views.l3_qhse_etudiant_delete,name="l3_qhse_etudiant_delete"),
+  path("l3/qhse/ecue/add/<int:ue_id>/",views.l3_qhse_ecue_add,name="l3_qhse_ecue_add"),
+  path("l3/qhse/ecue/update/<int:pk>/", views.l3_qhse_ecue_update,name="l3_qhse_ecue_update"),
+  path("l3/qhse/ecue/delete/<int:pk>/", views.l3_qhse_ecue_delete, name="l3_qhse_ecue_delete"),
+   # QHSE UE CRUD
+  path("l3/qhse/ue/",views.l3_qhse_ue,name="l3_qhse_ue"),
+  path("l3/qhse/ue/update/<int:pk>/",views.l3_qhse_ue_update,name="l3_qhse_ue_update"),
+  path("l3/qhse/ue/add/",views.l3_qhse_ue_add,name="l3_qhse_ue_add"),
+  path("l3/qhse/ue/delete/<int:pk>/",views.l3_qhse_ue_delete,name="l3_qhse_ue_delete"),
   
+  path("master/",views.master_dashboard,name="master_dashboard"),
+  path("master/<int:id>/ue/",views.master_ue,name="master_ue"),
+  path("master/ue/<int:id>/ecue/",views.master_ecue,name="master_ecue"),
+#   path("master/ecue/<int:id>/notes/",views.master_saisie_notes,name="master_saisie_notes"),
+path(
+    "master/ecue/<int:id>/notes/",
+    views.master_saisie_notes_ecue,
+    name="master_saisie_notes_ecue"
+),
+path(
+    "master/notes/",
+    views.master_saisie_notes,
+    name="master_saisie_notes"
+),
+  # ==========================
+# MASTER NOTES
+# ==========================
+
+path(
+    "master/ecue/<int:id>/notes/",
+    views.master_saisie_notes,
+    name="master_saisie_notes"
+),
+  # ==========================
+# MASTER ETUDIANTS
+# ==========================
+   path(
+    "master/notes/",
+    views.master_saisie_notes,
+    name="master_saisie_notes"
+),
+   path(
+    "master/ecue/<int:id>/notes/",
+    views.master_saisie_notes_ecue,
+    name="master_saisie_notes_ecue"
+),
+
+
+  path("master/etudiants/",views.master_etudiant_list,name="master_etudiant_list"),
+  path("master/etudiant/add/",views.master_etudiant_add,name="master_etudiant_add"),
+  path("master/etudiant/<int:id>/edit/",views.master_etudiant_edit,name="master_etudiant_edit"),
+  path("master/etudiant/<int:id>/delete/",views.master_etudiant_delete,name="master_etudiant_delete"),
+  
+  path("master/programmes/add/",views.master_programme_add,name="master_programme_add"),
+  
+#   path("master/ue/add/",views.master_ue_add,name="master_ue_add"),
   path(
-        "tronc-commun/droit/",
-        views.tronc_commun_droit,
-        name="tronc_commun_droit"
-    ),
-
-    path(
-        "tronc-commun/gestion/",
-        views.tronc_commun_gestion,
-        name="tronc_commun_gestion"
-    ),
-    path(
-    "tronc-commun/notes/",
-    views.tronc_commun_notes,
-    name="tronc_commun_notes"
-   ),
-
-   path(
-    "tronc-commun/bulletin/<int:pk>/",
-    views.bulletin_tronc_commun_pdf,
-    name="bulletin_tronc_commun_pdf",
-   ),
-   path(
-    "tronc-commun/bulletin/<int:pk>/",
-    views.imprimer_bulletin_tronc_commun,
-    name="bulletin_tronc_commun_pdf",
-   ),
-
-   path(
-    "tronc-commun/bulletin/imprimer/<int:pk>/",
-    views.imprimer_bulletin_tronc_commun,
-    name="bulletin_tronc_commun_pdf"
+    "master/<int:id>/ue/add/",
+    views.master_ue_add,
+    name="master_ue_add"
 ),
+  path("master/<int:id>/ue/add/",views.master_ue_add,name="master_ue_add"),
+  path("master/ue/edit/<int:id>/",views.master_ue_edit,name="master_ue_edit"),
+  path("master/ue/delete/<int:id>/",views.master_ue_delete,name="master_ue_delete"),
+  path("master/ecue/add/",views.master_ecue_add,name="master_ecue_add"),
+  path("master/<int:id>/ue/add/",views.master_ue_add,name="master_ue_add"),
+  path("master/ue/<int:id>/ecue/",views.master_ecue,name="master_ecue"),
+  path("master/ue/<int:id>/ecue/add/",views.master_ecue_add,name="master_ecue_add"),
+  
+  path("master/programmes/",views.master_programme_list,name="master_programme_list",),
+  path("master/programmes/add/",views.master_programme_add,name="master_programme_add"),
 
-path(
-    "tronc-commun/add/",
-    views.tronc_commun_add,
-    name="tronc_commun_add"
-),
+  path("master/programmes/<int:id>/edit/",views.master_programme_edit,name="master_programme_edit"),
 
-
-path(
-    "tronc-commun/update/<int:pk>/",
-    views.tronc_commun_update,
-    name="tronc_commun_update"
-),
-
-path(
-    "l3/qhse/dashboard/",
-    views.l3_qhse_dashboard,
-    name="l3_qhse_dashboard"
-),
-
-path(
-    "l3/qhse/etudiants/",
-    views.l3_qhse_etudiants,
-    name="l3_qhse_etudiants"
-),
-
-path(
-    "l3/qhse/ue/",
-    views.l3_qhse_ue,
-    name="l3_qhse_ue"
-),
-
-path(
-    "l3/qhse/notes/",
-    views.l3_qhse_notes,
-    name="l3_qhse_notes"
-),
-
-path(
-    "l3/qhse/bulletins/",
-    views.l3_qhse_bulletins,
-    name="l3_qhse_bulletins"
-),
-
-
-
-path(
-    "l3/qhse/etudiants/",
-    views.l3_qhse_etudiants,
-    name="l3_qhse_etudiants"
-),
-
-path(
-    "l3/qhse/etudiants/add/",
-    views.l3_qhse_etudiant_add,
-    name="l3_qhse_etudiant_add"
-),
-
-path(
+  path("master/programmes/<int:id>/delete/",views.master_programme_delete,name="master_programme_delete"),
+  path("master/bulletins/<int:id>/pdf/",views.master_bulletin_pdf, name="master_bulletin_pdf"),
+  
+  path("licence/qhse/bulletin/<int:pk>/",views.imprimer_bulletin_licence_qhse,name="imprimer_bulletin_licence_qhse"),
+  path(
     "l3/qhse/etudiants/<int:pk>/update/",
     views.l3_qhse_etudiant_update,
-    name="l3_qhse_etudiant_update"
+    name="l3_qhse_etudiant_update"),
+  path(
+    "tronc-commun/ue/add/",
+    views.l3_tc_ue_add,
+    name="l3_tc_ue_add",
+    ),
+  path(
+    "tronc-commun/ecue/add/<int:ue_id>/",
+    views.l3_tc_ecue_add,
+    name="l3_tc_ecue_add"
+  ),
+
+
+  path(
+    "tronc-commun/ecue/<int:pk>/update/",
+    views.l3_tc_ecue_update,
+    name="l3_tc_ecue_update"
+   ),
+  path(
+    "tronc-commun/ue/<int:pk>/update/",
+    views.l3_tc_ue_update,
+    name="l3_tc_ue_update"
 ),
 
-path(
-    "l3/qhse/etudiants/<int:pk>/delete/",
-    views.l3_qhse_etudiant_delete,
-    name="l3_qhse_etudiant_delete"
-),
 
 path(
-    "l3/qhse/ecue/add/<int:ue_id>/",
-    views.l3_qhse_ecue_add,
-    name="l3_qhse_ecue_add"
+    "tronc-commun/ue/<int:pk>/delete/",
+    views.l3_tc_ue_delete,
+    name="l3_tc_ue_delete"
 ),
 
-path(
-    "l3/qhse/ecue/update/<int:pk>/",
-    views.l3_qhse_ecue_update,
-    name="l3_qhse_ecue_update"
-),
 
-path(
-    "l3/qhse/ecue/delete/<int:pk>/",
-    views.l3_qhse_ecue_delete,
-    name="l3_qhse_ecue_delete"
-),
-# QHSE UE CRUD
-
-path(
-    "l3/qhse/ue/",
-    views.l3_qhse_ue,
-    name="l3_qhse_ue"
-),
-path(
-    "l3/qhse/ue/update/<int:pk>/",
-    views.l3_qhse_ue_update,
-    name="l3_qhse_ue_update"
-),
-
-path(
-    "l3/qhse/ue/add/",
-    views.l3_qhse_ue_add,
-    name="l3_qhse_ue_add"
-),
-path(
-    "l3/qhse/ue/delete/<int:pk>/",
-    views.l3_qhse_ue_delete,
-    name="l3_qhse_ue_delete"
-),
+  path(
+    "tronc-commun/ecue/<int:pk>/delete/",
+    views.l3_tc_ecue_delete,
+    name="l3_tc_ecue_delete"
+  ),
+  path(
+    "tronc-commun/ue/",
+    views.tronc_commun_ue,
+    name="l3_tc_ue_list"
+   ),
+  
+ 
 
 ]

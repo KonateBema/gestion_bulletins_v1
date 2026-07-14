@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container-fluid py-4">
+
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-header bg-primary text-white">
+
+            <h4 class="mb-0">
+
+                📝 Saisie des notes Master
+
+            </h4>
+
+        </div>
+
+
+
+        <div class="card-body">
+
+
+        {% for programme in programmes %}
+
+
+            <div class="card mb-4">
+
+
+                <div class="card-header bg-light">
+
+
+                    <h5 class="mb-0 text-primary">
+
+                        🎓 {{ programme }}
+
+                    </h5>
+
+
+                    <small>
+
+                        Niveau :
+                        {{ programme.get_niveau_display }}
+
+                        |
+
+                        Spécialité :
+                        {{ programme.get_specialite_display }}
+
+                    </small>
+
+
+                </div>
+
+
+
+
+                <div class="card-body">
+
+
+                    {% for ue in programme.ues.all %}
+
+
+                    <div class="mb-3">
+
+
+                        <h6 class="text-success">
+
+                            📚 UE :
+                            {{ ue.code }}
+                            -
+                            {{ ue.libelle }}
+
+                        </h6>
+
+
+
+                        <table class="table table-bordered">
+
+
+                            <thead class="table-dark">
+
+                                <tr>
+
+                                    <th>
+                                        ECUE
+                                    </th>
+
+                                    <th>
+                                        Crédit
+                                    </th>
+
+                                    <th>
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+
+                            <tbody>
+
+
+                            {% for ecue in ue.ecues.all %}
+
+
+                                <tr>
+
+
+                                    <td>
+
+                                        {{ ecue.code }}
+                                        -
+                                        {{ ecue.libelle }}
+
+                                    </td>
+
+
+
+                                    <td>
+
+                                        {{ ecue.credit }}
+
+                                    </td>
+
+
+
+                                    <td>
+
+
+                                        <a href="{% url 'master_saisie_notes_ecue' ecue.id %}"
+                                           class="btn btn-sm btn-primary">
+
+                                            <i class="bi bi-pencil"></i>
+
+                                            Saisir notes
+
+                                        </a>
+
+
+                                    </td>
+
+
+                                </tr>
+
+
+                            {% empty %}
+
+
+                                <tr>
+
+                                    <td colspan="3"
+                                        class="text-center text-muted">
+
+                                        Aucun ECUE
+
+                                    </td>
+
+                                </tr>
+
+
+                            {% endfor %}
+
+
+
+                            </tbody>
+
+
+                        </table>
+
+
+                    </div>
+
+
+                    {% empty %}
+
+                        <p class="text-muted">
+                            Aucune UE pour ce programme
+                        </p>
+
+                    {% endfor %}
+
+
+                </div>
+
+
+            </div>
+
+
+
+        {% empty %}
+
+
+            <div class="alert alert-warning">
+
+                Aucun programme Master trouvé
+
+            </div>
+
+
+        {% endfor %}
+
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+{% endblock %}

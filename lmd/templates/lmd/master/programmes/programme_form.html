@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-primary text-white">
+
+            <h4 class="mb-0">
+                🎓 {{ titre }}
+            </h4>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Niveau</label>
+                        {{ form.niveau }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Spécialité</label>
+                        {{ form.specialite }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Filière</label>
+                        {{ form.filiere }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Année académique</label>
+                        {{ form.annee_academique }}
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn btn-success">
+
+                    <i class="bi bi-check-circle"></i>
+
+                    Enregistrer
+
+                </button>
+
+                <a href="{% url 'master_programme_list' %}"
+                   class="btn btn-secondary">
+
+                    Retour
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

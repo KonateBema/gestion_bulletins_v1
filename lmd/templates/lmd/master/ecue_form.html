@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container mt-4">
+
+
+    <div class="card shadow">
+
+
+        <div class="card-header bg-primary text-white">
+
+            <h4>
+
+                📖 {{ titre }}
+
+            </h4>
+
+        </div>
+
+
+
+        <div class="card-body">
+
+
+            <form method="POST">
+
+
+                {% csrf_token %}
+
+
+
+                <div class="mb-3">
+
+                    <label>
+                        UE
+                    </label>
+
+                    <strong>
+                        {{ ue.libelle }}
+                    </strong>
+
+                </div>
+
+
+
+                <div class="mb-3">
+
+                    <label>
+                        Code ECUE
+                    </label>
+
+                    {{ form.code }}
+
+                </div>
+
+
+
+
+                <div class="mb-3">
+
+                    <label>
+                        Libellé
+                    </label>
+
+                    {{ form.libelle }}
+
+                </div>
+
+
+
+
+                <div class="mb-3">
+
+                    <label>
+                        Coefficient
+                    </label>
+
+                    {{ form.coefficient }}
+
+                </div>
+
+
+
+
+                <div class="mb-3">
+
+                    <label>
+                        Crédit
+                    </label>
+
+                    {{ form.credit }}
+
+                </div>
+
+
+
+                <button class="btn btn-success">
+
+                    💾 Enregistrer
+
+                </button>
+
+
+                <a href="javascript:history.back()" class="btn btn-secondary">
+
+                    Retour
+
+                </a>
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

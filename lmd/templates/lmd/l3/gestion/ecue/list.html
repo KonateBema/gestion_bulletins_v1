@@ -1,211 +1,107 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
 
-
-    <div class="card shadow">
-
-
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-
-
+    <div class="card shadow border-0 mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
             <div>
-
-                <h4 class="mb-0">
-                    📖 ECUE de l'UE : {{ ue.libelle }}
-                </h4>
-
-                <small>
-                    L3 Sciences de Gestion 
-                </small>
-
+                <h3 class="fw-bold text-primary mb-1">
+                    📖 ECUE de l’UE : {{ ue.libelle }}
+                </h3>
+                <p class="text-muted mb-0">
+                    L3 Sciences de Gestion
+                </p>
             </div>
 
-
-            <a href="{% url 'l3_gestion_ecue_add' ue.id %}"
-               class="btn btn-light">
-
-                ➕ Ajouter ECUE
-
+            <a href="{% url 'l3_gestion_ecue_add' ue.id %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Ajouter un ECUE
             </a>
-
-
         </div>
+    </div>
 
-
+    <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex flex-wrap gap-3">
+                <span><strong>Code UE :</strong> {{ ue.code }}</span>
+                <span><strong>Crédits :</strong>
+                    <span class="badge bg-light text-dark">{{ ue.credit }}</span>
+                </span>
+            </div>
+        </div>
 
         <div class="card-body">
 
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Code</th>
+                            <th>Libellé ECUE</th>
+                            <th>Coefficient</th>
+                            <th>Crédit</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
 
-            <div class="mb-3">
+                    <tbody>
+                        {% for ecue in ecues %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-info text-dark">
+                                    {{ ecue.code }}
+                                </span>
+                            </td>
 
-                <strong>
-                    Code UE :
-                </strong>
+                            <td class="fw-semibold">{{ ecue.libelle }}</td>
 
-                {{ ue.code }}
+                            <td>{{ ecue.coefficient }}</td>
 
-                &nbsp;&nbsp;
+                            <td>
+                                <span class="badge bg-success">
+                                    {{ ecue.credit }}
+                                </span>
+                            </td>
 
-                <strong>
-                    Crédit :
-                </strong>
+                            <td class="text-center">
+                                <a href="{% url 'l3_gestion_saisie_notes' ecue.id %}"
+                                   class="btn btn-success btn-sm">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
 
-                {{ ue.credit }}
+                                <a href="{% url 'l3_gestion_ecue_edit' ecue.id %}"
+                                   class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
 
+                                <a href="{% url 'l3_gestion_ecue_delete' ecue.id %}"
+                                   class="btn btn-danger btn-sm">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-5">
+                                <i class="bi bi-journal-x fs-2"></i><br>
+                                Aucun ECUE enregistré pour cette UE.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-
-
-            <table class="table table-bordered table-hover">
-
-
-                <thead class="table-dark">
-
-
-                    <tr>
-
-                        <th width="120">
-                            Code
-                        </th>
-
-
-                        <th>
-                            Libellé ECUE
-                        </th>
-
-
-                        <th width="120">
-                            Coefficient
-                        </th>
-
-
-                        <th width="120">
-                            Crédit
-                        </th>
-
-
-                        <th width="300">
-                            Actions
-                        </th>
-
-
-                    </tr>
-
-
-                </thead>
-
-
-
-                <tbody>
-
-
-                {% for ecue in ecues %}
-
-
-                    <tr>
-
-
-                        <td>
-                            {{ ecue.code }}
-                        </td>
-
-
-                        <td>
-                            {{ ecue.libelle }}
-                        </td>
-
-
-                        <td>
-                            {{ ecue.coefficient }}
-                        </td>
-
-
-                        <td>
-                            {{ ecue.credit }}
-                        </td>
-
-
-                        <td>
-
-
-                            <a href="{% url 'l3_gestion_saisie_notes' ecue.id %}"
-                               class="btn btn-success btn-sm">
-
-                                📝 Notes
-
-                            </a>
-
-
-
-                            <a href="{% url 'l3_gestion_ecue_edit' ecue.id %}"
-                               class="btn btn-warning btn-sm">
-
-                                ✏️ Modifier
-
-                            </a>
-
-
-
-                            <a href="{% url 'l3_gestion_ecue_delete' ecue.id %}"
-                               class="btn btn-danger btn-sm">
-
-                                🗑️ Supprimer
-
-                            </a>
-
-
-                        </td>
-
-
-                    </tr>
-
-
-                {% empty %}
-
-
-                    <tr>
-
-                        <td colspan="5" class="text-center text-muted">
-
-                            Aucun ECUE enregistré pour cette UE.
-
-                        </td>
-
-                    </tr>
-
-
-                {% endfor %}
-
-
-
-                </tbody>
-
-
-            </table>
-
-
-
-            <a href="{% url 'l3_gestion_ue_list' %}"
-               class="btn btn-secondary">
-
-                ↩ Retour aux UE
-
-            </a>
-
-
+            <div class="text-end mt-3">
+                <a href="{% url 'l3_gestion_ue_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour aux UE
+                </a>
+            </div>
 
         </div>
-
-
     </div>
-
 
 </div>
 
-
 {% endblock %}
-

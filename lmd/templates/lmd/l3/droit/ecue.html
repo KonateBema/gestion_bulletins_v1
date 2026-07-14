@@ -1,179 +1,370 @@
 {% extends "base.html" %}
 
-
 {% block content %}
-
 
 <div class="container-fluid mt-4">
 
 
-<div class="d-flex justify-content-between mb-4">
+    <!-- HEADER -->
+    <div class="card shadow border-0 mb-4">
+
+        <div class="card-body d-flex justify-content-between align-items-center">
 
 
-<div>
+            <div>
 
-<h2 class="fw-bold">
+                <h3 class="fw-bold text-primary mb-1">
 
-📚 ECUE
+                    📚 ECUE - L3 Droit Privé
 
-</h2>
+                </h3>
 
 
-<p class="text-muted">
+                <p class="text-muted mb-0">
 
-UE :
-<strong>{{ ue.libelle }}</strong>
+                    UE :
+                    <strong>{{ ue.libelle }}</strong>
 
-</p>
+                </p>
+
+
+            </div>
+
+
+
+            <div>
+
+                <a href="{% url 'l3_droit_ecue_add' ue.id %}"
+                   class="btn btn-success">
+
+                    <i class="bi bi-plus-circle"></i>
+
+                    Ajouter ECUE
+
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <!-- INFORMATIONS UE -->
+
+    <div class="card shadow border-0 mb-4">
+
+
+        <div class="card-header bg-primary text-white">
+
+
+            <h5 class="mb-0">
+
+                📘 Informations UE
+
+            </h5>
+
+
+        </div>
+
+
+
+        <div class="card-body">
+
+
+            <div class="row">
+
+
+                <div class="col-md-4">
+
+                    <strong>Code UE :</strong>
+
+                    {{ ue.code }}
+
+                </div>
+
+
+
+                <div class="col-md-4">
+
+                    <strong>Libellé :</strong>
+
+                    {{ ue.libelle }}
+
+                </div>
+
+
+
+                <div class="col-md-4">
+
+                    <strong>Crédits :</strong>
+
+                    <span class="badge bg-success">
+
+                        {{ ue.credit }}
+
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+
+
+    <!-- LISTE ECUE -->
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-header bg-dark text-white">
+
+
+            <h5 class="mb-0">
+
+                📖 Liste des ECUE
+
+            </h5>
+
+
+        </div>
+
+
+
+
+
+        <div class="card-body p-0">
+
+
+            <div class="table-responsive">
+
+
+                <table class="table table-hover align-middle mb-0">
+
+
+                    <thead class="table-light">
+
+
+                        <tr>
+
+
+                            <th>
+                                Code
+                            </th>
+
+
+                            <th>
+                                Libellé ECUE
+                            </th>
+
+
+                            <th>
+                                Coefficient
+                            </th>
+
+
+                            <th>
+                                Crédit
+                            </th>
+
+
+                            <th class="text-center">
+                                Actions
+                            </th>
+
+
+                        </tr>
+
+
+                    </thead>
+
+
+
+
+                    <tbody>
+
+
+
+                    {% for e in ecues %}
+
+
+
+                    <tr>
+
+
+
+                        <td class="fw-bold">
+
+                            <span class="badge bg-info text-dark">
+
+                                {{ e.code }}
+
+                            </span>
+
+
+                        </td>
+
+
+
+
+                        <td class="fw-semibold">
+
+                            {{ e.libelle }}
+
+
+                        </td>
+
+
+
+
+                        <td>
+
+                            {{ e.coefficient }}
+
+
+                        </td>
+
+
+
+
+                        <td>
+
+
+                            <span class="badge bg-success">
+
+                                {{ e.credit }}
+
+                            </span>
+
+
+                        </td>
+
+
+
+
+                        <td class="text-center">
+
+
+                            <a href="{% url 'l3_droit_ecue_update' e.id %}"
+                               class="btn btn-warning btn-sm">
+
+                                <i class="bi bi-pencil"></i>
+
+                            </a>
+
+
+
+
+                            <a href="{% url 'l3_droit_ecue_delete' e.id %}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Voulez-vous supprimer cet ECUE ?')">
+
+
+                                <i class="bi bi-trash"></i>
+
+
+                            </a>
+
+
+
+                        </td>
+
+
+
+                    </tr>
+
+
+
+
+                    {% empty %}
+
+
+
+
+                    <tr>
+
+
+                        <td colspan="5"
+                            class="text-center text-muted py-5">
+
+
+                            <i class="bi bi-journal-x fs-2"></i>
+
+                            <br>
+
+                            Aucun ECUE enregistré pour cette UE.
+
+
+
+                        </td>
+
+
+                    </tr>
+
+
+
+
+                    {% endfor %}
+
+
+
+
+                    </tbody>
+
+
+
+                </table>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- RETOUR -->
+
+    <div class="mt-3">
+
+
+        <a href="{% url 'l3_droit_ue' %}"
+           class="btn btn-secondary">
+
+
+            <i class="bi bi-arrow-left"></i>
+
+            Retour aux UE
+
+
+        </a>
+
+
+    </div>
+
+
 
 </div>
-
-
-
-<a href="{% url 'l3_droit_ecue_add' ue.id %}"
-class="btn btn-success">
-
-<i class="bi bi-plus-circle"></i>
-
-Ajouter ECUE
-
-</a>
-
-
-</div>
-
-
-
-
-
-<div class="card shadow border-0">
-
-
-<table class="table table-hover mb-0">
-
-
-<thead class="table-dark">
-
-
-<tr>
-
-<th>
-Code
-</th>
-
-<th>
-Matière
-</th>
-
-<th>
-Coefficient
-</th>
-
-<th>
-Crédit
-</th>
-
-<th>
-Actions
-</th>
-
-</tr>
-
-
-</thead>
-
-
-
-<tbody>
-
-
-
-{% for e in ecues %}
-
-
-<tr>
-
-
-<td>
-{{ e.code }}
-</td>
-
-
-<td>
-{{ e.libelle }}
-</td>
-
-
-<td>
-{{ e.coefficient }}
-</td>
-
-
-<td>
-{{ e.credit }}
-</td>
-
-
-
-<td>
-
-
-<a href="#"
-class="btn btn-sm btn-warning">
-
-<i class="bi bi-pencil"></i>
-
-</a>
-
-
-
-<a href="{% url 'l3_droit_ecue_delete' e.id %}"
-class="btn btn-sm btn-danger">
-
-<i class="bi bi-trash"></i>
-
-</a>
-
-
-</td>
-
-
-</tr>
-
-
-
-{% empty %}
-
-
-<tr>
-
-<td colspan="5"
-class="text-center">
-
-Aucune ECUE
-
-</td>
-
-</tr>
-
-
-{% endfor %}
-
-
-
-</tbody>
-
-
-
-</table>
-
-
-</div>
-
-
-
-</div>
-
 
 
 {% endblock %}

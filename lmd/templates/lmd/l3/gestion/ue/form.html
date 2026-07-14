@@ -1,101 +1,115 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
+
+    <!-- HEADER -->
+    <div class="card shadow border-0 mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+
+            <div>
+                <h3 class="fw-bold text-success mb-1">
+                    {% if form.instance.pk %}
+                        ✏️ Modifier une UE
+                    {% else %}
+                        ➕ Nouvelle UE - Licence 3 Sciences de Gestion
+                    {% endif %}
+                </h3>
+
+                <p class="text-muted mb-0">
+                    Gestion des unités d'enseignement (UE)
+                </p>
+            </div>
+
+            <div>
+                <a href="{% url 'l3_gestion_ue_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Retour
+                </a>
+            </div>
+
+        </div>
+    </div>
 
     <div class="row justify-content-center">
 
-        <div class="col-md-8">
+        <div class="col-lg-8">
 
-            <div class="card shadow">
+            <div class="card shadow border-0">
 
                 <div class="card-header bg-success text-white">
-
-                    <h4 class="mb-0">
-
-                        {% if form.instance.pk %}
-
-                            ✏️ Modifier une UE
-
-                        {% else %}
-
-                            ➕ Nouvelle UE - L3 Sciences de Gestion
-
-                        {% endif %}
-
-                    </h4>
-
+                    <h5 class="mb-0">
+                        📚 Informations de l'UE
+                    </h5>
                 </div>
 
                 <div class="card-body">
 
                     <form method="POST">
-
                         {% csrf_token %}
 
                         {% if form.errors %}
-
                         <div class="alert alert-danger">
-
-                            <strong>Veuillez corriger les erreurs suivantes :</strong>
-
+                            <strong>
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Veuillez corriger les erreurs suivantes :
+                            </strong>
                             {{ form.errors }}
-
                         </div>
-
                         {% endif %}
 
-                        <div class="mb-3">
+                        <div class="row">
 
-                            <label class="form-label">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">
+                                    Code UE
+                                </label>
+                                {{ form.code }}
+                            </div>
 
-                                Code UE
-
-                            </label>
-
-                            {{ form.code }}
-
-                        </div>
-
-                        <div class="mb-3">
-
-                            <label class="form-label">
-
-                                Libellé
-
-                            </label>
-
-                            {{ form.libelle }}
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label fw-bold">
+                                    Libellé
+                                </label>
+                                {{ form.libelle }}
+                            </div>
 
                         </div>
 
-                        <div class="mb-3">
+                        <div class="row">
 
-                            <label class="form-label">
-
-                                Nombre de crédits
-
-                            </label>
-
-                            {{ form.credit }}
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label fw-bold">
+                                    Nombre de crédits
+                                </label>
+                                {{ form.credit }}
+                            </div>
 
                         </div>
 
                         <hr>
 
-                        <button type="submit" class="btn btn-success">
+                        <div class="d-flex justify-content-end gap-2">
 
-                            💾 Enregistrer
+                            <a href="{% url 'l3_gestion_ue_list' %}"
+                               class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                Annuler
+                            </a>
 
-                        </button>
+                            <button type="submit"
+                                    class="btn btn-success">
+                                <i class="bi bi-save"></i>
 
-                        <a href="{% url 'l3_gestion_ue_list' %}" class="btn btn-secondary">
+                                {% if form.instance.pk %}
+                                    Mettre à jour
+                                {% else %}
+                                    Enregistrer
+                                {% endif %}
+                            </button>
 
-                            ↩ Retour
-
-                        </a>
+                        </div>
 
                     </form>
 
@@ -110,4 +124,3 @@
 </div>
 
 {% endblock %}
-

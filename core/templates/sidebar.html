@@ -22,6 +22,25 @@
         font-weight: 600;
     }
 </style>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        let currentUrl = window.location.pathname;
+
+        document.querySelectorAll(".menu-link").forEach(function (link) {
+
+            if (link.href.includes(currentUrl)) {
+                link.classList.add("active");
+            }
+
+        });
+
+    });
+
+
+    
+</script>
+
 
 
 <div class="sidebar">
@@ -188,61 +207,61 @@
                     <!-- ================================= -->
 
 
-                    <div class="menu-subtitle">
+                    <!-- <div class="menu-subtitle">
 
                         📖 Licence Générale (L1 - L2)
 
-                    </div>
+                    </div> -->
 
 
 
-                    <a href="{% url 'filiereLMD_list' %}" class="menu-link">
+                    <!-- <a href="{% url 'filiereLMD_list' %}" class="menu-link">
 
                         <i class="bi bi-diagram-3"></i>
 
                         Filières L1-L2
 
-                    </a>
+                    </a> -->
 
 
-
+<!-- 
                     <a href="{% url 'etudiant_lmd_list' %}" class="menu-link">
 
                         <i class="bi bi-person-badge"></i>
 
                         Étudiants L1-L2
 
-                    </a>
+                    </a> -->
 
 
 
-                    <a href="{% url 'ue_list' %}" class="menu-link">
+                    <!-- <a href="{% url 'ue_list' %}" class="menu-link">
 
                         <i class="bi bi-journal-text"></i>
 
                         UE / ECUE
 
-                    </a>
+                    </a> -->
 
 
 
-                    <a href="{% url 'saisie_list' %}" class="menu-link">
+                    <!-- <a href="{% url 'saisie_list' %}" class="menu-link">
 
                         <i class="bi bi-calculator"></i>
 
                         Saisie Notes L1-L2
 
-                    </a>
+                    </a> -->
 
 
 
-                    <a href="{% url 'bulletin_lmd_list' %}" class="menu-link">
+                    <!-- <a href="{% url 'bulletin_lmd_list' %}" class="menu-link">
 
                         <i class="bi bi-file-earmark-pdf"></i>
 
                         Bulletins L1-L2
 
-                    </a>
+                    </a> -->
 
                     <!-- ================================= -->
                     <!-- TRONC COMMUN L1-L2 -->
@@ -416,11 +435,14 @@
 
                     </a>
 
-                    <a href="{% url 'liste_bulletins_gestion' %}" class="btn btn-primary">
+
+                    <a href="{% url 'liste_bulletins_gestion' %}" class="menu-link">
 
                         📑 Bulletins Sciences de Gestion
 
                     </a>
+
+              
 
                     <!-- =============== MANAGEMENT QHSE =============== -->
 
@@ -481,16 +503,11 @@
 
                     </a>
 
-
-
-
-
                     <!-- ================================= -->
-                    <!-- MASTER M1-M2 -->
+                    <!-- MASTER M1 - M2 -->
                     <!-- ================================= -->
 
-
-                    <div class="menu-subtitle mt-3">
+                    <div class="menu-subtitle mt-4">
 
                         🎓 Master (M1 - M2)
 
@@ -498,25 +515,22 @@
 
 
 
+                    <!-- ================= M1 ================= -->
+
+
+                    <div class="menu-subtitle">
+
+                        📘 Master (M1, M2)
+
+                    </div>
+
+
+
                     <a href="{% url 'master_dashboard' %}" class="menu-link">
 
+                        <i class="bi bi-speedometer2"></i>
 
-                        <i class="bi bi-bank"></i>
-
-                        Tableau de bord Master
-
-
-                    </a>
-
-
-
-                    <a href="{% url 'master_filiere_list' %}" class="menu-link">
-
-
-                        <i class="bi bi-diagram-3"></i>
-
-                        Filières Master
-
+                        Tableau de bord 
 
                     </a>
 
@@ -524,11 +538,9 @@
 
                     <a href="{% url 'master_etudiant_list' %}" class="menu-link">
 
-
                         <i class="bi bi-people"></i>
 
                         Étudiants Master
-
 
                     </a>
 
@@ -536,11 +548,9 @@
 
                     <a href="{% url 'master_ue_list' %}" class="menu-link">
 
-
                         <i class="bi bi-journal-text"></i>
 
                         UE / ECUE Master
-
 
                     </a>
 
@@ -548,11 +558,9 @@
 
                     <a href="{% url 'master_saisie_notes' %}" class="menu-link">
 
-
                         <i class="bi bi-pencil-square"></i>
 
                         Saisie Notes Master
-
 
                     </a>
 
@@ -560,16 +568,170 @@
 
                     <a href="{% url 'master_bulletin_list' %}" class="menu-link">
 
-
                         <i class="bi bi-file-earmark-pdf"></i>
 
                         Bulletins Master
-
 
                     </a>
 
 
 
+
+
+
+                    <!-- ================= M2 ================= -->
+
+<!-- 
+                    <div class="menu-subtitle mt-3">
+
+                        📗 Master 2 (M2)
+
+                    </div> -->
+
+
+
+
+                    <!-- <a href="{% url 'master_dashboard' %}?niveau=M2" class="menu-link">
+
+                        <i class="bi bi-speedometer2"></i>
+
+                        Tableau de bord M2
+
+                    </a> -->
+
+
+
+
+                    <!-- <a href="{% url 'master_etudiant_list' %}?niveau=M2" class="menu-link">
+
+                        <i class="bi bi-people"></i>
+
+                        Étudiants M2
+
+                    </a> -->
+
+
+
+
+                    <!-- <a href="{% url 'master_ue_list' %}?niveau=M2" class="menu-link">
+
+                        <i class="bi bi-journal-text"></i>
+
+                        UE / ECUE M2
+
+                    </a> -->
+
+
+
+
+                    <!-- <a href="{% url 'master_saisie_notes' %}?niveau=M2" class="menu-link">
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        Saisie Notes M2
+
+                    </a> -->
+
+
+
+<!-- 
+                    <a href="{% url 'master_bulletin_list' %}?niveau=M2" class="menu-link">
+
+                        <i class="bi bi-file-earmark-pdf"></i>
+
+                        Bulletins M2
+
+                    </a> -->
+
+
+
+
+
+
+                    <!-- ================= FILIERES ================= -->
+
+
+                    <div class="menu-subtitle mt-3">
+
+                        📚 Programmes Master
+
+                    </div>
+
+
+
+
+                    <a href="{% url 'master_filiere_list' %}" class="menu-link">
+
+                        <i class="bi bi-diagram-3"></i>
+
+                        Gestion des Filières
+
+                    </a>
+
+
+
+
+                    <!-- DROIT -->
+
+                    <div class="menu-subtitle">
+
+                        ⚖️ Droit Privé
+
+                    </div>
+
+
+                    <a href="{% url 'master_dashboard' %}?filiere=droit" class="menu-link">
+
+                        <i class="bi bi-bank"></i>
+
+                        Master Droit Privé
+
+                    </a>
+
+
+
+
+
+                    <!-- GESTION -->
+
+
+                    <div class="menu-subtitle">
+
+                        📊 Sciences de Gestion
+
+                    </div>
+
+
+                    <a href="{% url 'master_dashboard' %}?filiere=gestion" class="menu-link">
+
+                        <i class="bi bi-graph-up"></i>
+
+                        Master Sciences de Gestion
+
+                    </a>
+
+
+
+
+
+
+                    <!-- QHSE -->
+
+
+                    <div class="menu-subtitle">
+
+                        🦺 Management QHSE
+
+                    </div>
+
+
+                    <a href="{% url 'master_dashboard' %}?filiere=qhse" class="menu-link">
+
+                        <i class="bi bi-shield-check"></i>
+
+                        Master QHSE
+
+                    </a>
 
 
 
@@ -639,9 +801,7 @@
 
             </div>
 
-
         </div>
-
 
     </div>
 

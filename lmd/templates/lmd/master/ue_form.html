@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container-fluid py-4">
+
+
+    <div class="card shadow border-0">
+
+
+        <!-- HEADER -->
+
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+
+
+            <h4 class="mb-0">
+
+                <i class="bi bi-journal-text"></i>
+
+                {{ titre }}
+
+            </h4>
+
+
+
+            <span class="badge bg-light text-primary">
+
+                Master
+
+            </span>
+
+
+        </div>
+
+
+
+
+
+        <div class="card-body">
+
+
+
+            <!-- PROGRAMME -->
+
+            <div class="alert alert-info d-flex align-items-center">
+
+
+                <i class="bi bi-mortarboard-fill me-2"></i>
+
+
+                <div>
+
+
+                    <strong>Programme :</strong>
+
+                    {{ programme }}
+
+
+                </div>
+
+
+            </div>
+
+
+
+
+
+            <form method="POST">
+
+
+                {% csrf_token %}
+
+
+
+
+                <!-- ERREURS FORMULAIRE -->
+
+                {% if form.errors %}
+
+                <div class="alert alert-danger">
+
+
+                    <strong>
+                        Veuillez corriger les erreurs :
+                    </strong>
+
+
+                    {{ form.errors }}
+
+
+                </div>
+
+                {% endif %}
+
+
+
+
+
+                <div class="row">
+
+
+
+
+
+                    <!-- CODE UE -->
+
+                    <div class="col-md-6 mb-3">
+
+
+                        <label class="form-label fw-bold">
+
+                            Code UE
+
+                        </label>
+
+
+                        {{ form.code }}
+
+
+                    </div>
+
+
+
+
+
+
+                    <!-- LIBELLE -->
+
+                    <div class="col-md-6 mb-3">
+
+
+                        <label class="form-label fw-bold">
+
+                            Libellé UE
+
+                        </label>
+
+
+                        {{ form.libelle }}
+
+
+                    </div>
+
+
+
+
+
+
+                    <!-- CREDIT -->
+
+                    <div class="col-md-6 mb-3">
+
+
+                        <label class="form-label fw-bold">
+
+                            Crédit
+
+                        </label>
+
+
+                        {{ form.credit }}
+
+
+                    </div>
+
+
+
+
+
+
+
+                    <!-- SEMESTRE -->
+
+                    <div class="col-md-6 mb-3">
+
+
+                        <label class="form-label fw-bold">
+
+                            Semestre
+
+                        </label>
+
+
+                        {{ form.semestre }}
+
+
+                    </div>
+
+
+
+
+                </div>
+
+
+
+
+
+
+
+                <div class="mt-4">
+
+
+                    <button type="submit"
+                            class="btn btn-success shadow">
+
+
+                        <i class="bi bi-save"></i>
+
+                        Enregistrer l'UE
+
+
+                    </button>
+
+
+
+
+
+                    <a href="{% url 'master_ue_list' %}"
+                       class="btn btn-secondary">
+
+
+                        <i class="bi bi-arrow-left"></i>
+
+                        Retour
+
+
+                    </a>
+
+
+                </div>
+
+
+
+
+
+            </form>
+
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+</div>
+
+
+
+{% endblock %}

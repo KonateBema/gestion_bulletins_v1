@@ -685,7 +685,7 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
                 SMALL
             ),
             # Paragraph("Dr.JERRY TAFOTIE", SMALL),
-            Paragraph("""Dr.JERRY TAFOTIE<br/><br/>M. N'GORAN CELESTIN""",SMALL),
+            Paragraph("""M. N'GORAN CELESTIN<br/><br/>""",SMALL),
             # Paragraph("2025 - 2026", SMALL),
             Paragraph(f"ANNÉE SCOLAIRE : {annee}", SMALL),
             Paragraph(decision_globale, SMALL),
@@ -718,7 +718,7 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
         Paragraph("<b>RESPONSABLE</b><br/>", styles["Normal"]),
         # Paragraph("<b>VISA</b><br/>", styles["Normal"]),
         # Paragraph("<b>VISA</b><br/><br/>""M. N'GORAN CELESTIN",styles["Normal"]),
-        Paragraph("<b>VISA</b><br/><br/>""Dr.JERRY TAFOTIE<br/><br/>M. N'GORAN CELESTIN""",styles["Normal"]),
+        Paragraph("<b>VISA</b><br/><br/>""M. N'GORAN CELESTIN<br/><br/>""",styles["Normal"]),
     ]], colWidths=[8 * cm, 8 * cm], rowHeights=[3 * cm])
 
     signature_table.setStyle(TableStyle([

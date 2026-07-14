@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-primary text-white">
+
+            <h4 class="mb-0">
+                📚 Bulletins Master 1 et Master 2
+            </h4>
+
+        </div>
+
+
+        <div class="card-body">
+
+
+            <!-- =========================
+                 FORMULAIRE DE RECHERCHE
+            ========================== -->
+
+            <form method="get" class="row g-3 mb-4">
+
+
+                <!-- Matricule -->
+                <div class="col-md-4">
+
+                    <label class="form-label fw-bold">
+                        Matricule
+                    </label>
+
+                    <input 
+                        type="text"
+                        name="matricule"
+                        class="form-control"
+                        value="{{ matricule }}"
+                        placeholder="Entrer le matricule">
+
+                </div>
+
+
+
+                <!-- Niveau -->
+                <div class="col-md-3">
+
+                    <label class="form-label fw-bold">
+                        Niveau
+                    </label>
+
+
+                    <select name="niveau" class="form-select">
+
+
+                        <option value="">
+                            Tous les niveaux
+                        </option>
+
+
+                        <option value="M1"
+                        {% if niveau == "M1" %}selected{% endif %}
+                        >
+                            Master 1
+                        </option>
+
+
+                        <option value="M2"
+                        {% if niveau == "M2" %}selected{% endif %}
+                        >
+                            Master 2
+                        </option>
+
+
+                    </select>
+
+
+                </div>
+
+
+
+                <!-- Filière -->
+                <div class="col-md-3">
+
+
+                    <label class="form-label fw-bold">
+                        Filière
+                    </label>
+
+
+                    <select name="specialite" class="form-select">
+
+
+                        <option value="">
+                            Toutes les filières
+                        </option>
+
+
+                        <option value="DROIT"
+                        {% if specialite == "DROIT" %}selected{% endif %}
+                        >
+                            Droit Privé
+                        </option>
+
+
+
+                        <option value="GESTION"
+                        {% if specialite == "GESTION" %}selected{% endif %}
+                        >
+                            Sciences de Gestion
+                        </option>
+
+
+
+                        <option value="QHSE"
+                        {% if specialite == "QHSE" %}selected{% endif %}
+                        >
+                            Management QHSE
+                        </option>
+
+
+                    </select>
+
+
+                </div>
+
+
+
+                <!-- Boutons -->
+                <div class="col-md-2 d-flex align-items-end gap-2">
+
+
+                    <button type="submit" class="btn btn-primary w-100">
+
+                        🔎
+
+                    </button>
+
+
+                    <a href="{% url 'master_bulletin_list' %}"
+                       class="btn btn-secondary">
+
+                        🔄
+
+                    </a>
+
+
+                </div>
+
+
+            </form>
+
+
+
+            <!-- =========================
+                 TABLEAU ETUDIANTS
+            ========================== -->
+
+
+            <div class="table-responsive">
+
+
+            <table class="table table-bordered table-hover align-middle">
+
+
+                <thead class="table-dark">
+
+
+                    <tr>
+
+                        <th>
+                            Matricule
+                        </th>
+
+
+                        <th>
+                            Nom
+                        </th>
+
+
+                        <th>
+                            Prénoms
+                        </th>
+
+
+                        <th>
+                            Niveau
+                        </th>
+
+
+                        <th>
+                            Filière
+                        </th>
+
+
+                        <th>
+                            Action
+                        </th>
+
+
+                    </tr>
+
+
+                </thead>
+
+
+
+                <tbody>
+
+
+                    {% for etudiant in etudiants %}
+
+
+                    <tr>
+
+
+                        <td>
+                            {{ etudiant.matricule }}
+                        </td>
+
+
+                        <td>
+                            {{ etudiant.nom }}
+                        </td>
+
+
+                        <td>
+                            {{ etudiant.prenoms }}
+                        </td>
+
+
+                        <td>
+
+                            {{ etudiant.get_niveau_display }}
+
+                        </td>
+
+
+                        <td>
+
+                            {{ etudiant.programme.get_specialite_display }}
+
+                        </td>
+
+
+                        <td>
+
+
+                            <a href="{% url 'master_bulletin_pdf' etudiant.id %}"
+                               target="_blank"
+                               class="btn btn-danger btn-sm">
+
+                                🖨 Imprimer bulletin
+
+                            </a>
+
+
+                        </td>
+
+
+                    </tr>
+
+
+                    {% empty %}
+
+
+                    <tr>
+
+
+                        <td colspan="6" class="text-center text-danger">
+
+                            Aucun étudiant Master trouvé
+
+                        </td>
+
+
+                    </tr>
+
+
+                    {% endfor %}
+
+
+                </tbody>
+
+
+            </table>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

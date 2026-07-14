@@ -60,3 +60,13 @@ def creer_candidats_rattrapage(etudiant):
                 }
 
             )
+            
+def statut_semestre(moyenne):
+
+    if moyenne >= 10:
+
+        return "ADMIS"
+
+    else:
+
+        return "RATTRAPAGE"

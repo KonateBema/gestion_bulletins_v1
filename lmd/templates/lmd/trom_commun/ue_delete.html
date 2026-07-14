@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="container-fluid mt-4">
+
+
+    <div class="card shadow border-0">
+
+
+        <div class="card-header bg-danger text-white">
+
+            <h4 class="mb-0">
+
+                🗑 Suppression d'une UE
+
+            </h4>
+
+
+        </div>
+
+
+
+        <div class="card-body text-center">
+
+
+            <div class="alert alert-warning">
+
+
+                <i class="bi bi-exclamation-triangle fs-2"></i>
+
+
+                <h5 class="mt-3">
+
+                    Voulez-vous vraiment supprimer cette UE ?
+
+                </h5>
+
+
+
+                <p class="fw-bold">
+
+                    {{ objet.code }} - {{ objet.libelle }}
+
+                </p>
+
+
+                <p class="text-danger">
+
+                    Attention : les ECUE associés seront également supprimés.
+
+                </p>
+
+
+            </div>
+
+
+
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+
+                <button type="submit"
+                        class="btn btn-danger">
+
+                    <i class="bi bi-trash"></i>
+
+                    Oui, supprimer
+
+                </button>
+
+
+
+                <a href="{% url 'l3_tc_ue_list' %}"
+                   class="btn btn-secondary">
+
+
+                    <i class="bi bi-x-circle"></i>
+
+                    Annuler
+
+
+                </a>
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}
