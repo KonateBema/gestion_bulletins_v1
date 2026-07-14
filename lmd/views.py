@@ -17,6 +17,12 @@ from .models import MasterUE,EtudiantMaster , CandidatRattrapage ,FiliereLMD
 from .models import MasterECUE, NoteMaster
 from .pdf_masters import generer_bulletin_masters_pdf
 from .pdf_licence_qhse import generer_bulletin_licence_qhse_pdf
+from django.db.models import Avg
+from .models import (
+    EtudiantLMD,
+    NoteLMD,
+    SessionAcademique
+)
 
 
 def niveau_list(request):
@@ -1430,12 +1436,14 @@ def meilleure_note(note1,note2):
     
 
 @login_required
-def liste_rattrapage(request):
+def rattrapage_liste(request):
 
     candidats = CandidatRattrapage.objects.select_related(
         "etudiant",
-        "ecue"
-    )
+        "ecue",
+        "session"
+    ).all()
+
 
     return render(
         request,
@@ -1443,70 +1451,174 @@ def liste_rattrapage(request):
         {
             "candidats": candidats
         }
-    )   
+    )
     
 
 
 def saisie_rattrapage(request):
 
-    candidats = CandidatRattrapage.objects.select_related(
+    # Session de rattrapage active
+    session = SessionAcademique.objects.filter(
+        type_session="RATTRAPAGE",
+        active=True
+    ).first()
+
+
+    if not session:
+        return render(
+            request,
+            "lmd/rattrapage/saisie.html",
+            {
+                "candidats": []
+            }
+        )
+
+
+    # Chercher les notes session normale
+    notes = NoteLMD.objects.filter(
+        session="1"
+    ).select_related(
         "etudiant",
-        "ecue",
-        "session"
+        "ecue"
     )
 
 
-    if request.method == "POST":
-
-        with transaction.atomic():
-
-            for candidat in candidats:
-
-                note = request.POST.get(
-                    f"note_{candidat.id}"
-                )
+    candidats = []
 
 
-                if note:
-
-                    note = float(note)
+    for note in notes:
 
 
-                    candidat.nouvelle_note = note
+        # Si la moyenne ECUE est < 10
+        if note.moyenne < 10:
 
 
-                    # meilleure note
-                    if note > candidat.ancienne_note:
+            candidat, created = CandidatRattrapage.objects.get_or_create(
 
-                        candidat.statut = "VALIDE"
+                etudiant=note.etudiant,
 
-                    else:
+                ecue=note.ecue,
 
-                        candidat.statut = "ECHEC"
+                session=session,
+
+                annee_academique="2025-2026",
+
+                defaults={
+
+                    "ancienne_note": note.moyenne
+
+                }
+
+            )
 
 
-                    candidat.save()
+            candidats.append(candidat)
 
-
-        messages.success(
-            request,
-            "Notes de rattrapage enregistrées."
-        )
-
-
-        return redirect(
-            "liste_rattrapage"
-        )
 
 
     return render(
+
         request,
+
         "lmd/rattrapage/saisie.html",
+
         {
+
             "candidats": candidats
+
         }
+
+    )
+    
+def liste_rattrapage(request):
+
+    session_rattrapage = SessionAcademique.objects.filter(
+        type_session="RATTRAPAGE",
+        active=True
+    ).first()
+
+
+    if not session_rattrapage:
+
+        return render(
+            request,
+            "lmd/rattrapage/liste.html",
+            {
+                "candidats": []
+            }
+        )
+
+
+    # Notes de session normale
+    notes = NoteLMD.objects.filter(
+        session="1"
+    ).select_related(
+        "etudiant",
+        "ecue"
     )
 
+
+    for note in notes:
+
+
+        # étudiant non validé
+        if note.moyenne < 10:
+
+
+            CandidatRattrapage.objects.get_or_create(
+
+                etudiant=note.etudiant,
+
+                ecue=note.ecue,
+
+                session=session_rattrapage,
+
+                annee_academique="2025-2026",
+
+                defaults={
+
+                    "ancienne_note": note.moyenne
+
+                }
+
+            )
+
+
+
+    candidats = CandidatRattrapage.objects.select_related(
+
+        "etudiant",
+
+        "ecue",
+
+        "session"
+
+    ).filter(
+
+        session=session_rattrapage
+
+    ).order_by(
+
+        "etudiant__nom"
+
+    )
+
+
+
+    return render(
+
+        request,
+
+        "lmd/rattrapage/liste.html",
+
+        {
+
+            "candidats": candidats
+
+        }
+
+    )
+    
 def deliberation_rattrapage(request):
 
     candidats = CandidatRattrapage.objects.select_related(

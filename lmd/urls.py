@@ -389,6 +389,23 @@ path(
     views.tronc_commun_ue,
     name="l3_tc_ue_list"
    ),
+  path(
+"rattrapage/",
+views.rattrapage_liste,
+name="rattrapage_liste"
+),
+
+
+path(
+"rattrapage/saisie/<int:id>/",
+views.saisie_rattrapage,
+name="saisie_rattrapage"
+),
+path(
+    "rattrapage/",
+    views.rattrapage_liste,
+    name="rattrapage_liste"
+),
   
  
 
