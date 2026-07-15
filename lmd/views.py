@@ -194,8 +194,6 @@ def ue_edit(request, pk):
         "grandes_unites": GrandeUnite.objects.all(),
     })
 
-
-
 def ue_delete(request, pk):
 
     ue = UE.objects.get(pk=pk)
@@ -211,7 +209,6 @@ def ue_delete(request, pk):
             "ue": ue
         }
     )
-
 
 # =====================
 # LISTE + FILTRE
@@ -1603,8 +1600,6 @@ def liste_rattrapage(request):
 
     )
 
-
-
     return render(
 
         request,
@@ -1627,7 +1622,6 @@ def deliberation_rattrapage(request):
         "session"
     ).all()
 
-
     return render(
         request,
         "lmd/rattrapage/deliberation.html",
@@ -1643,8 +1637,7 @@ def bulletin_rattrapage_list(request):
         "ecue",
         "session"
     ).all()
-
-
+    
     return render(
         request,
         "lmd/rattrapage/bulletins.html",
@@ -1654,7 +1647,6 @@ def bulletin_rattrapage_list(request):
     )
 
 from django.shortcuts import render
-
 
 def l3_droit_dashboard(request):
 
@@ -2809,7 +2801,7 @@ def master_bulletin_pdf(request, id):
 
     return response
 
-def l3_droit_ecue_add(request, pk):
+def l3_droit_ecue_addAAA(request, pk):
 
     ue = get_object_or_404(
         UE,
@@ -2848,6 +2840,39 @@ def l3_droit_ecue_add(request, pk):
         }
     )
 
+def l3_droit_ecue_add(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        pk=pk
+    )
+    
+    if request.method == "POST":
+        form = ECUEForm(request.POST)
+
+        if form.is_valid():
+            ecue = form.save(commit=False)
+            ecue.ue = ue
+            ecue.save()
+
+            return redirect(
+                "l3_droit_ecue",
+                pk=ue.id
+            )
+
+    else:
+
+        form = ECUEForm()
+
+    return render(
+        request,
+        "lmd/l3/droit/ecue_form.html",
+        {
+            "form": form,
+            "ue": ue
+        }
+    )
+    
 
 def l3_droit_saisie_notes(request, ecue_id):
 
@@ -3802,108 +3827,6 @@ def tronc_commun_ue(request):
             "ues": ues,
             "titre": "UE / ECUE Tronc Commun L1-L2 Droit & Gestion"
         }
-    )
-
-def tronc_commun_notesAAA(request):
-
-    etudiants = EtudiantLMD.objects.filter(
-        filiere__libelle="Gestion et Droit",
-        niveau__in=["L1", "L2"]
-    ).order_by(
-        "niveau",
-        "nom"
-    )
-
-
-    ecues = ECUE.objects.filter(
-        ue__filiere__libelle="Gestion et Droit"
-    ).order_by(
-        "code"
-    )
-
-
-    semestre = "S1"
-    session = "1"
-
-
-    if request.method == "POST":
-
-        with transaction.atomic():
-
-            for etudiant in etudiants:
-
-                for ecue in ecues:
-
-
-                    cc = request.POST.get(
-                        f"cc_{etudiant.id}_{ecue.id}"
-                    )
-
-                    examen = request.POST.get(
-                        f"examen_{etudiant.id}_{ecue.id}"
-                    )
-
-
-                    # ignorer les cellules vides
-                    if cc == "" and examen == "":
-                        continue
-
-
-                    try:
-                        cc = float(cc or 0)
-                    except:
-                        cc = 0
-
-
-                    try:
-                        examen = float(examen or 0)
-                    except:
-                        examen = 0
-
-
-
-                    NoteLMD.objects.update_or_create(
-
-                        etudiant=etudiant,
-
-                        ecue=ecue,
-
-                        semestre=semestre,
-
-                        session=session,
-
-
-                        defaults={
-
-                            "cc": cc,
-
-                            "examen": examen,
-
-                        }
-
-                    )
-
-
-        return redirect(
-            "tronc_commun_notes"
-        )
-
-
-
-    return render(
-
-        request,
-
-        "lmd/trom_commun/notes.html",
-
-        {
-
-            "etudiants": etudiants,
-
-            "ecues": ecues,
-
-        }
-
     )
 
 def tronc_commun_notes(request):
@@ -4869,83 +4792,7 @@ def master_ue(request, id):
             "ues": ues
         }
     )
-
-def master_ue_addAAA(request):
-
-    if request.method == "POST":
-
-        form = MasterUEForm(request.POST)
-
-        if form.is_valid():
-
-            form.save()
-
-            return redirect(
-                "master_ue_list"
-            )
-
-
-    else:
-
-        form = MasterUEForm()
-
-
-    return render(
-        request,
-        "lmd/master/ue_form.html",
-        {
-            "form":form,
-            "titre":"Ajouter UE Master"
-        }
-    )
-    
-def master_ue_addAA(request,id):
-
-    programme = get_object_or_404(
-        MasterProgramme,
-        id=id
-    )
-
-
-    if request.method == "POST":
-
-
-        form = MasterUEForm(
-            request.POST
-        )
-
-
-        if form.is_valid():
-
-            ue = form.save(commit=False)
-
-            ue.programme = programme
-
-            ue.save()
-
-
-            return redirect(
-                "master_ue",
-                programme.id
-            )
-
-
-    else:
-
-        form = MasterUEForm()
-
-
-
-    return render(
-        request,
-        "lmd/master/ue_form.html",
-        {
-            "form":form,
-            "titre":"Ajouter UE",
-            "programme":programme
-        }
-    )
-
+ 
 def master_ue_add(request,id):
 
     programme = get_object_or_404(
@@ -4993,53 +4840,7 @@ def master_ue_add(request,id):
         }
     )
 
-def master_ue_addPASS(request, id):
 
-    programme = get_object_or_404(
-        MasterProgramme,
-        id=id
-    )
-
-
-    if request.method == "POST":
-
-        form = MasterUEForm(
-            request.POST
-        )
-
-
-        if form.is_valid():
-
-            ue = form.save(commit=False)
-
-            # rattachement automatique au programme
-            ue.programme = programme
-
-            ue.save()
-
-
-            return redirect(
-                "master_ue",
-                id=programme.id
-            )
-
-
-    else:
-
-        form = MasterUEForm()
-
-
-
-    return render(
-        request,
-        "lmd/master/ue_form.html",
-        {
-            "form": form,
-            "titre": "Ajouter UE Master",
-            "programme": programme
-        }
-    )
-    
 def master_ue_edit(request,id):
 
     ue = get_object_or_404(
@@ -5120,38 +4921,6 @@ def master_ecue(request, id):
         }
     )
     
-def master_ecue_addQQQ(request):
-
-    if request.method=="POST":
-
-        form = MasterECUEForm(request.POST)
-
-
-        if form.is_valid():
-
-            form.save()
-
-            return redirect(
-                "master_ecue",
-                form.instance.ue.id
-            )
-
-
-    else:
-
-        form = MasterECUEForm()
-
-
-
-    return render(
-        request,
-        "lmd/master/ecue_form.html",
-        {
-            "form":form,
-            "titre":"Ajouter ECUE Master"
-        }
-    )
- 
 def master_ecue_add(request, id):
 
     ue = get_object_or_404(

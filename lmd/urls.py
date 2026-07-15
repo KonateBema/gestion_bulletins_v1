@@ -182,6 +182,7 @@ urlpatterns = [
    path("l3/droit/ue/<int:pk>/ecues/",views.l3_droit_ecue,name="l3_droit_ecue"),
    path("l3/droit/ue/<int:pk>/ecue/add/",views.l3_droit_ecue_add,name="l3_droit_ecue_add"),
    path("l3/droit/ecue/<int:pk>/update/",views.l3_droit_ecue_update,name="l3_droit_ecue_update"),
+   path("l3/droit/ecue/<int:pk>/delete/",views.l3_droit_ecue_delete,name="l3_droit_ecue_delete"),
 
    path("l3/droit/saisie-notes/<int:ecue_id>/",views.l3_droit_saisie_notes,name="l3_droit_saisie_notes"),
    path("l3/droit/notes/",views.l3_droit_notes,name="l3_droit_notes"),
