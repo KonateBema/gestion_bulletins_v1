@@ -335,16 +335,33 @@ def generate_bulletin_pdf(etudiant, classe):
              pro_points += moy * coef
              pro_coef += coef
              
-        if "anglais" in m.libelle.lower():
+        if "technique d'expression" in m.libelle.lower():
             ang_points += moy * coef
             ang_coef += coef
+            
+        categorie = n.matiere.categorie.nom if n.matiere.categorie else ""   
+        
+        if categorie == "FORMATION GENERALE":
+             fg_points += moy * coef
+             fg_coef  += coef
+             
+        formation_generale = safe_round(fg_points / fg_coef if fg_coef else 0 )
 
-        formation_generale = (
-            total_points / total_coef if total_coef else 0
-         )
-        moyenne_professionnelle = (
-             professionnel_points / professionnel_coef if professionnel_coef else 0
-        )
+        # formation_generale = (
+        #     total_points / total_coef if total_coef else 0
+        #  )
+        
+        
+        if categorie == "COMPTABILITE & DOCS":
+            pro_points += moy * coef
+            pro_coef += coef
+            
+        moyenne_professionnelle = safe_round( pro_points / pro_coef if pro_coef else 0)
+            
+        # moyenne_professionnelle = (
+            
+        #      professionnel_points / professionnel_coef if professionnel_coef else 0
+        # )
         
         moyenne_professionnelle_tech = safe_round(tech_points / tech_coef if tech_coef else 0)
         formation_ang_expr = safe_round(ang_points / ang_coef if ang_coef else 0)
@@ -374,7 +391,7 @@ def generate_bulletin_pdf(etudiant, classe):
 
     formation_generale = safe_round(formation_generale)
     safe_round(moyenne_science)  # noqa: F821
-    moyenne_professionnelle = safe_round(moyenne_professionnelle)
+    # moyenne_professionnelle = safe_round(moyenne_professionnelle)
     A4[0] - 2.4 * cm
     
     data.insert(2, [

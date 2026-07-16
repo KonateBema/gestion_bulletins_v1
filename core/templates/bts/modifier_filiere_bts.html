@@ -4,10 +4,10 @@
 
 <div class="container mt-4">
 
-    <div class="card">
+    <div class="card shadow">
 
-        <div class="card-header">
-            Modifier une Filière BTS
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Modifier une Filière BTS</h5>
         </div>
 
         <div class="card-body">
@@ -15,8 +15,8 @@
             <form method="post">
                 {% csrf_token %}
 
+                <!-- Nom de la filière -->
                 <div class="mb-3">
-
                     <label class="form-label">
                         Nom de la filière
                     </label>
@@ -27,15 +27,28 @@
                         value="{{ filiere.nom }}"
                         class="form-control"
                         required>
-
                 </div>
 
-                <button class="btn btn-primary">
+                <!-- Niveau -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        Niveau
+                    </label>
+
+                    <input
+                        type="text"
+                        name="niveau"
+                        value="{% if niveau %}{{ niveau.nom }}{% endif %}"
+                        class="form-control"
+                        placeholder="Ex : BTS 1"
+                        required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
                     Mettre à jour
                 </button>
 
-                <a href="{% url 'liste_filieres_bts' %}"
-                   class="btn btn-secondary">
+                <a href="{% url 'liste_filieres_bts' %}" class="btn btn-secondary">
                     Retour
                 </a>
 

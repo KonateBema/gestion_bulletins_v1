@@ -23,6 +23,12 @@ class Filiere(models.Model):
 class Filierebts(models.Model):
     nom = models.CharField(max_length=150)
 
+    niveaux = models.ManyToManyField(
+        Niveau,
+        blank=True,
+        related_name="filieres_bts"
+    )
+
     def __str__(self):
         return self.nom
 

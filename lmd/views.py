@@ -2801,45 +2801,6 @@ def master_bulletin_pdf(request, id):
 
     return response
 
-def l3_droit_ecue_addAAA(request, pk):
-
-    ue = get_object_or_404(
-        UE,
-        pk=pk
-    )
-
-
-    if request.method=="POST":
-
-        ECUE.objects.create(
-
-            ue=ue,
-
-            code=request.POST.get("code"),
-
-            libelle=request.POST.get("libelle"),
-
-            coefficient=request.POST.get("coefficient"),
-
-            credit=request.POST.get("credit")
-
-        )
-
-
-        return redirect(
-            "l3_droit_ecue",
-            pk=ue.id
-        )
-
-
-    return render(
-        request,
-        "lmd/l3/droit/ecue_form.html",
-        {
-            "ue":ue
-        }
-    )
-
 def l3_droit_ecue_add(request, pk):
 
     ue = get_object_or_404(

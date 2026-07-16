@@ -80,11 +80,6 @@ urlpatterns = [
         views.supprimer_filiere_bts,
         name='supprimer_filiere_bts'
     ),
- 
-    # path('salles/', views.salle_list, name='salle_list'),
-    # path('salles/add/', views.salle_create, name='salle_add'),
-    # path('salles/edit/<int:pk>/', views.salle_edit, name='salle_edit'),
-    # path('salles/delete/<int:pk>/', views.salle_delete, name='salle_delete'),
 
     path('salles/', views.salle_list, name='salle_list'),
     path('salles/add/', views.salle_create, name='salle_add'),

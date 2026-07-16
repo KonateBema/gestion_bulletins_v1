@@ -89,23 +89,6 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-
-# =========================
-# 🏠 HOME / DASHBOARD GLOBAL
-# =========================
-# @login_required
-# def dashboard(request):
-
-#     return render(request, "dashboard.html", {
-#         "etudiants_count": Etudiant.objects.count(),
-#         "professeurs_count": Professeur.objects.count(),
-#         "classes_count": Classe.objects.count(),
-#         "matieres_count": Matiere.objects.count(),
-#         "notes_count": Note.objects.count(),
-#         "l1_count": EtudiantLMD.objects.filter(niveau="L1").count(),
-#         "l2_count": EtudiantLMD.objects.filter(niveau="L2").count(),"master_count": EtudiantLMD.objects.filter(niveau__in=["M1","M2"]).count(),
-        
-#     })
 @login_required
 def dashboard(request):
 
@@ -282,22 +265,6 @@ def bulletin_etudiant(request):
         "mention": mention(moyenne),
     })
 
-# =========================
-# 🏫 BULLETIN CLASSE
-# =========================
-# @login_required
-# def bulletin_classe(request, classe_id):
-
-#     classe = Classe.objects.get(id=classe_id)
-
-#     classement = classement_classe(classe)
-#     moyenne_classe_val = moyenne_classe(classe)
-
-#     return render(request, "bulletin_classe.html", {
-#         "classe": classe,
-#         "classement": classement,
-#         "moyenne_classe": moyenne_classe_val,
-#     })
 
 # =========================
 # 📄 PDF BULLETIN
@@ -960,12 +927,6 @@ def bulletin_list(request):
  
 
 
-# class FiliereBTSListView(ListView):
-#     model = Filierebts
-#     template_name = "bts/filieres.html"
-#     context_object_name = "filieres"
-
-
 def liste_filieres_bts(request):
     filieres = Filierebts.objects.all().order_by('nom')
 
@@ -973,7 +934,7 @@ def liste_filieres_bts(request):
         'filieres': filieres
     })
 
-def ajouter_filiere_bts(request):
+def ajouter_filiere_btsGGG(request):
     if request.method == "POST":
         nom = request.POST.get("nom")
 
@@ -986,7 +947,45 @@ def ajouter_filiere_bts(request):
 
     return render(request, 'bts/ajouter_filiere_bts.html')
 
-def modifier_filiere_bts(request, pk):
+
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .models import Filierebts, Niveau
+
+
+def ajouter_filiere_bts(request):
+
+    if request.method == "POST":
+
+        nom = request.POST.get("nom")
+        niveaux_ids = request.POST.getlist("niveaux")
+
+        # Création de la filière
+        filiere = Filierebts.objects.create(
+            nom=nom
+        )
+
+        # Association des niveaux sélectionnés
+        filiere.niveaux.set(niveaux_ids)
+
+        messages.success(
+            request,
+            "Filière BTS ajoutée avec succès."
+        )
+
+        return redirect("liste_filieres_bts")
+
+    niveaux = Niveau.objects.all()
+
+    return render(
+        request,
+        "bts/ajouter_filiere_bts.html",
+        {
+            "niveaux": niveaux
+        }
+    )
+
+def modifier_filiere_btsFFF(request, pk):
     filiere = get_object_or_404(Filierebts, pk=pk)
 
     if request.method == "POST":
@@ -999,6 +998,36 @@ def modifier_filiere_bts(request, pk):
     return render(request, 'bts/modifier_filiere_bts.html', {
         'filiere': filiere
     })
+    
+def modifier_filiere_bts(request, pk):
+
+    filiere = get_object_or_404(Filierebts, pk=pk)
+    niveau = filiere.niveaux.first()
+
+    if request.method == "POST":
+
+        filiere.nom = request.POST.get("nom")
+        filiere.save()
+
+        nom_niveau = request.POST.get("niveau")
+
+        niveau, _ = Niveau.objects.get_or_create(
+            nom=nom_niveau
+        )
+
+        filiere.niveaux.set([niveau])
+
+        messages.success(request, "Filière modifiée avec succès.")
+        return redirect("liste_filieres_bts")
+
+    return render(
+        request,
+        "bts/modifier_filiere_bts.html",
+        {
+            "filiere": filiere,
+            "niveau": niveau,
+        }
+    )
 
 
 def supprimer_filiere_bts(request, pk):
