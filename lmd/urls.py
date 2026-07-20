@@ -344,7 +344,14 @@ path(
   path("master/programmes/<int:id>/delete/",views.master_programme_delete,name="master_programme_delete"),
   path("master/bulletins/<int:id>/pdf/",views.master_bulletin_pdf, name="master_bulletin_pdf"),
   
-  path("licence/qhse/bulletin/<int:pk>/",views.imprimer_bulletin_licence_qhse,name="imprimer_bulletin_licence_qhse"),
+  # path("licence/qhse/bulletin/<int:pk>/",views.imprimer_bulletin_licence_qhse,name="imprimer_bulletin_licence_qhse"),
+  # path("bulletin/qhse/<int:pk>/<str:semestre>/",views.imprimer_bulletin_licence_qhse,name="imprimer_bulletin_licence_qhse"),
+  path(
+    "bulletin/qhse/<int:pk>/<str:semestre>/",
+    views.imprimer_bulletin_licence_qhse,
+    name="imprimer_bulletin_licence_qhse"
+),
+  
   path(
     "l3/qhse/etudiants/<int:pk>/update/",
     views.l3_qhse_etudiant_update,

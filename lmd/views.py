@@ -4217,26 +4217,6 @@ def l3_qhse_dashboard(request):
 # ETUDIANTS QHSE
 # =====================================================
 
-def l3_qhse_etudiantszzzzzz(request):
-
-    filiere = FiliereLMD.objects.get(
-        code="QHSE-L3"
-    )
-
-    etudiants = EtudiantLMD.objects.filter(
-        filiere=filiere,
-        niveau="L3"
-    )
-
-    return render(
-        request,
-        "lmd/l3_qhse/etudiants.html",
-        {
-            "etudiants": etudiants,
-            "filiere": filiere
-        }
-    )
-
 def l3_qhse_etudiants1(request):
 
     filiere = FiliereLMD.objects.get(code="QHSE-L3")
@@ -4262,7 +4242,7 @@ def l3_qhse_etudiants(request):
     filiere = FiliereLMD.objects.get(code="QHSE-L3")
 
     etudiants = EtudiantLMD.objects.filter(
-        filiere="filiere",
+         filiere=filiere,
         niveau="L3"
     )
 
@@ -4435,7 +4415,7 @@ def l3_qhse_etudiant_delete(request,pk):
 
     return render(
         request,
-        "lmd/qhse/etudiant_delete.html",
+        "lmd/l3_qhse/etudiant_delete.html",
         {
             "etudiant":etudiant
         }
@@ -4452,10 +4432,11 @@ def l3_qhse_ue(request):
 
 
     ues = UE.objects.filter(
-        filiere=filiere
+        # filiere=filiere
+        filiere__code__in=["QHSE", "QHSE-L3"]
     ).prefetch_related(
         "ecues"
-    )
+    ).order_by("code")
 
 
     return render(
@@ -4505,15 +4486,30 @@ def l3_qhse_notes(request):
 
 def l3_qhse_bulletins(request):
 
-    filiere = FiliereLMD.objects.filter(
-        code="QHSE"
-    ).first()
+    filiere = FiliereLMD.objects.get(
+        code="QHSE-L3"
+    )
 
 
     etudiants = EtudiantLMD.objects.filter(
         filiere=filiere,
         niveau="L3"
+    ).select_related(
+        "filiere"
     )
+
+
+    print("Filière :", filiere)
+    print("Nombre étudiants :", etudiants.count())
+
+
+    for e in etudiants:
+        print(
+            e.id,
+            e.matricule,
+            e.nom,
+            e.prenoms
+        )
 
 
     return render(
@@ -4524,6 +4520,8 @@ def l3_qhse_bulletins(request):
             "filiere": filiere
         }
     )
+
+
 
 def l3_qhse_ecue_add(request, ue_id):
 
@@ -4947,7 +4945,7 @@ def master_programme_list(request):
     )
     
     
-def imprimer_bulletin_licence_qhse(request, pk):
+def imprimer_bulletin_licence_qhse1(request, pk):
 
     etudiant = get_object_or_404(
         EtudiantLMD,
@@ -4979,6 +4977,46 @@ def imprimer_bulletin_licence_qhse(request, pk):
         content_type="application/pdf",
         filename=f"Bulletin_{etudiant.matricule}.pdf"
     )
+
+def imprimer_bulletin_licence_qhse(request, pk, semestre):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        pk=pk
+    )
+
+
+    pdf_dir = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins_licence_qhse"
+    )
+
+
+    os.makedirs(
+        pdf_dir,
+        exist_ok=True
+    )
+
+
+    fichier = os.path.join(
+        pdf_dir,
+        f"bulletin_{etudiant.matricule}_{semestre}.pdf"
+    )
+
+
+    generer_bulletin_licence_qhse_pdf(
+        etudiant,
+        fichier,
+        semestre
+    )
+
+
+    return FileResponse(
+        open(fichier, "rb"),
+        content_type="application/pdf",
+        filename=f"Bulletin_{etudiant.matricule}_{semestre}.pdf"
+    )
+
 
 def l3_tc_ue_list(request):
 

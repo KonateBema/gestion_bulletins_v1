@@ -77,7 +77,7 @@ def classement_classe(classe):
 
 def mention(moyenne):
     if moyenne < 10:
-        return "Échec ❌"
+        return "faible ❌"
     elif moyenne < 12:
         return "Passable"
     elif moyenne < 14:

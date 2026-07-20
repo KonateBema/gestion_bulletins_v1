@@ -13,7 +13,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-from .models import Note
+from .models import Note,Filierebts
 from .services import calcul_moyenne_etudiant, mention
 from reportlab.platypus import Flowable
 from reportlab.lib import colors
@@ -121,15 +121,32 @@ def generate_bulletin_pdf(etudiant, classe):
     # =====================================================
     # EN-TÊTE ÉTAT
     # =====================================================
-
     header_table = Table([
-       [Paragraph("""
-        <para align="left">
-        <b>RÉPUBLIQUE DE CÔTE D'IVOIRE</b><br/>
-        Union - Discipline - Travail
-        </para>
-    """, SMALL)]
-  ], colWidths=[18*cm])
+    [
+        Paragraph("""
+            <para align="left">
+            <b>MINISTÈRE DE L’ENSEIGNEMENT <br/>
+            SUPÉRIEUR ET DE LA <br/>
+            RECHERCHE SCIENTIFIQUE</b>
+            </para>
+        """, SMALL),
+
+        Paragraph("""
+            <para align="right">
+            <b>RÉPUBLIQUE DE CÔTE D'IVOIRE</b><br/>
+            Union - Discipline - Travail
+            </para>
+        """, SMALL)
+    ]
+    ], colWidths=[9*cm, 9*cm])
+
+    header_table.setStyle(TableStyle([
+         ("VALIGN", (0, 0), (-1, -1), "TOP"),
+         ("LEFTPADDING", (0, 0), (-1, -1), 0),
+         ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+         ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+         ("TOPPADDING", (0, 0), (-1, -1), 0),
+       ]))
 
     header_table.setStyle(TableStyle([
        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -141,11 +158,11 @@ def generate_bulletin_pdf(etudiant, classe):
 
     elements.append(Paragraph("""
         <para align="right">
-        ANNÉE ACADÉMIQUE : 2025 - 2026
+         <b>ANNÉE ACADÉMIQUE : 2025 - 2026</b>
         </para>
     """, SMALL))
 
-    elements.append(Spacer(1, 8))
+    elements.append(Spacer(1, 10))
     # =====================================================
     # LOGO
     # =====================================================
@@ -170,11 +187,12 @@ def generate_bulletin_pdf(etudiant, classe):
         [[
             logo,
             Paragraph("""
-                <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/>
-                BP Abidjan - Côte d'Ivoire<br/>
-                Tel: +225 07 78 63 74 00<br/>
+                <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/><br/>
+                BP Abidjan - Côte d'Ivoire<br/><br/>
+                Tel: +225 07 78 63 74 00<br/><br/>
+                Fix: 2722550041 <br/><br/>
                 Email: contact@uic.ci
-                Email: contact@uic.ci
+                
             """, SMALL)
         ]],
         colWidths=[2.5 * cm, 7.5 * cm],
@@ -193,13 +211,22 @@ def generate_bulletin_pdf(etudiant, classe):
     # =====================================================
     # CADRE ÉTUDIANT
     # =====================================================
+    date_lieu = ""
+
+    if etudiant.date_naissance:
+        date_lieu += etudiant.date_naissance.strftime("%d/%m/%Y")
+
+    if getattr(etudiant, "lieu_naissance", ""):
+        date_lieu += f" à {etudiant.lieu_naissance}"
+       
     cadre_etudiant = Table(
         [
             ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
             ["Matricule", etudiant.matricule],
+            ["Date de naissance", date_lieu],
             ["Sexe", getattr(etudiant, "sexe", "")],
-            ["Classe", classe.nom],
-            ["Filière", classe.nom],
+            ["Classe", classe.salle.nom],
+            ["Filière", etudiant.filiere_bts.nom],
             ["Redoublant", "NON"],
         ],
         colWidths=[3 * cm, 4.5 * cm]
@@ -335,17 +362,17 @@ def generate_bulletin_pdf(etudiant, classe):
              pro_points += moy * coef
              pro_coef += coef
              
-        if "technique d'expression" in m.libelle.lower():
-            ang_points += moy * coef
-            ang_coef += coef
+        # if "technique d'expression" in m.libelle.lower():
+        #     ang_points += moy * coef
+        #     ang_coef += coef
             
         categorie = n.matiere.categorie.nom if n.matiere.categorie else ""   
         
-        if categorie == "FORMATION GENERALE":
-             fg_points += moy * coef
-             fg_coef  += coef
+        # if categorie == "FORMATION GENERALE":
+        #      fg_points += moy * coef
+        #      fg_coef  += coef
              
-        formation_generale = safe_round(fg_points / fg_coef if fg_coef else 0 )
+        # formation_generale = safe_round(fg_points / fg_coef if fg_coef else 0 )
 
         # formation_generale = (
         #     total_points / total_coef if total_coef else 0
@@ -362,9 +389,74 @@ def generate_bulletin_pdf(etudiant, classe):
             
         #      professionnel_points / professionnel_coef if professionnel_coef else 0
         # )
-        
+        # total = 0
+        # coef_total = 0
+        # for note in notes[:5]:  # Les 5 premières matières
+        #     moy = note.moyenne
+        #     coef = note.matiere.coefficient
+        #     total += moy * coef
+        #     coef_total += coef
+            
+        # formation_ang_expr = safe_round(total / coef_total if coef_total else 0)
+        valeurs = [
+             float(ligne[1])
+              for ligne in data[:5]
+              if isinstance(ligne[1], (int, float))
+           ]
+
+        formation_ang_expr = safe_round(
+          sum(valeurs) / len(valeurs) if valeurs else 0
+         )
+    
         moyenne_professionnelle_tech = safe_round(tech_points / tech_coef if tech_coef else 0)
-        formation_ang_expr = safe_round(ang_points / ang_coef if ang_coef else 0)
+        
+        total_points_ang = 0
+
+        for ligne in data[:4]:
+             if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
+                 total_points_ang += ligne[1] * ligne[2]
+
+        formation_ang_expr_points = safe_round(total_points_ang)
+        # formation general
+        valeurs_fg = [
+          float(ligne[1])
+          for ligne in data[5:10]
+          if isinstance(ligne[1], (int, float))
+        ]
+
+        formation_generale = safe_round(
+           sum(valeurs_fg) / len(valeurs_fg) if valeurs_fg else 0
+          )
+         
+        total_points_gnrl = 0
+
+        for ligne in data[5:8]:
+             if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
+                 total_points_gnrl += ligne[1] * ligne[2]
+
+        formation_generl_points = safe_round(total_points_gnrl)
+        
+        
+        #  "FORMATION TECHNIQUE et PROFESSIONNELLE",
+        valeurs_prof = [
+          float(ligne[1])
+          for ligne in data[9:]
+          if isinstance(ligne[1], (int, float))
+        ]
+
+        moyenne_professionnelle_tech = safe_round(
+            sum(valeurs_prof) / len(valeurs_prof) if valeurs_prof else 0
+          ) 
+        
+        total_points_tech = 0
+
+        for ligne in data[7:]:
+             if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
+                  total_points_tech += ligne[1] * ligne[2]
+
+        formation_generl_tech = safe_round(total_points_tech)
+        
+        # formation_ang_expr = safe_round(ang_points / ang_coef if ang_coef else 0)
 
         rang_matiere = (
           Note.objects.filter(
@@ -394,21 +486,30 @@ def generate_bulletin_pdf(etudiant, classe):
     # moyenne_professionnelle = safe_round(moyenne_professionnelle)
     A4[0] - 2.4 * cm
     
-    data.insert(2, [
-         "ANGLAIS ET TECHNIQUE D'EXPRESSION",
-          formation_ang_expr, "", "", "", "", "", "", ""
+   
+    data.insert(4, [
+         "//////////////////////",
+          "", "", "", "", "", "", "", ""
          ])
-    data.insert(8, [
-         "FORMATION GENERALE",
-          formation_generale, "", "", "", "", "", "", ""
-       ])
+    data.insert(5, [
+         "ANGLAIS ET TECHNIQUE D'EXPRESSION",
+          formation_ang_expr, "", formation_ang_expr_points, "", "", "", "", ""
+         ])
+    data.insert(9, [
+         "//////////////////////",
+          "", "", "", "", "", "", "", ""
+         ])
     data.insert(10, [
-        "FORMATION PROFESSIONNELLE",
-        moyenne_professionnelle, "", "", "", "", "", "", ""
-    ])
-    data.insert(17, [
+         "FORMATION GENERALE",
+          formation_generale, "", formation_generl_points, "", "", "", "", ""
+       ])
+    # data.insert(10, [
+    #     "FORMATION PROFESSIONNELLE",
+    #     moyenne_professionnelle, "", "", "", "", "", "", ""
+    # ])
+    data.append([
         "FORMATION TECHNIQUE et PROFESSIONNELLE",
-        moyenne_professionnelle_tech, "", "", "", "", "", "", ""
+        moyenne_professionnelle_tech, "", formation_generl_tech, "", "", "", "", ""
         ])
 
     
@@ -425,29 +526,7 @@ def generate_bulletin_pdf(etudiant, classe):
     1.5 * cm,
     1.2 * cm,   # MAX
   ])
-#     table.setStyle(TableStyle([
-#     ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
-#     ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-#     ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-#     # ("FONTSIZE", (0, 0), (-1, -1), 8),
-#     ("ALIGN", (1, 1), (-1, -1), "CENTER"),
-#      # 🔥 LIGNES INSÉRÉES EN GRIS
-#     ("BACKGROUND", (0, 2), (-1, 2), colors.lightgrey),
-#     # ("BACKGROUND", (0, 4), (-1, 4), colors.lightgrey),
-#     ("BACKGROUND", (0, 8), (-1, 8), colors.lightgrey),
-#     ("BACKGROUND", (0, 10), (-1, 10), colors.lightgrey),
-#     ("BACKGROUND", (0, 17), (-1, 17), colors.lightgrey),
-    
-#     ("TOPPADDING", (0, 0), (-1, -1), 2),
-#     ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
-#     ("LEFTPADDING", (0, 0), (-1, -1), 3),
-#     ("RIGHTPADDING", (0, 0), (-1, -1), 3),
-#     ("FONTSIZE", (0, 0), (-1, -1), 7),
-#     ("LEADING", (0, 0), (-1, -1), 8),
-    
-#     ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
-#    ]))
-    
+
     style = [
     ("GRID", (0,0), (-1,-1), 0.4, colors.black),
     ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
@@ -463,7 +542,7 @@ def generate_bulletin_pdf(etudiant, classe):
     ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
    ]
     
-    for ligne in [2,8,10,17]:
+    for ligne in [5,10,len(data) - 1]:
         if ligne < len(data):
             style.append(
                  ("BACKGROUND", (0,ligne), (-1,ligne), colors.lightgrey) )
@@ -471,7 +550,7 @@ def generate_bulletin_pdf(etudiant, classe):
     table.setStyle(TableStyle(style)) 
           
     elements.append(table)
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, 10))
 
     # =====================================================
     # RECAP
@@ -549,16 +628,14 @@ def generate_bulletin_pdf(etudiant, classe):
     # )
 
     # elements.append(observation)
-    elements.append(Spacer(1, 20))
-
-
+    elements.append(Spacer(1, 8))
 
     visa_table = Table([
     [
         Paragraph("<b>Le Chef d’établissement</b><br/><br/><br/><br/>Signature & Cachet", SMALL),
-        Paragraph("<b>Le Président du Jury</b><br/><br/><br/><br/>Signature", SMALL),
+        Paragraph("<b>OBSERVATION DU CONSEIL DE CLASSE</b><br/><br/><br/><br/>Signature", SMALL),
     ]
-   ], colWidths=[8 * cm, 8 * cm])
+   ], colWidths=[6 * cm, 8 * cm])
 
 
 
@@ -592,10 +669,10 @@ def generate_bulletin_pdf(etudiant, classe):
     # FOOTER
     # =====================================================
     elements.append(Spacer(1, 8))
-    elements.append(Paragraph(
-        f"Edité le {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-        SMALL
-    ))
+    # elements.append(Paragraph(
+    #     f"Edité le {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+    #     SMALL
+    # ))
 
     doc.build(elements)
 

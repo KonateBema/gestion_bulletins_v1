@@ -187,6 +187,7 @@ class NoteLMD(models.Model):
             f"{self.ecue.libelle} - "
             f"{self.semestre}"
         )
+
 class NoteLMDEN(models.Model):
 
     etudiant = models.ForeignKey(

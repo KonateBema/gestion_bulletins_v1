@@ -19,15 +19,15 @@
 
                     Bulletins L3 QHSE
 
-                    <h2>Total : {{ etudiants.count }}</h2>
+                    <!-- <h2>Total : {{ etudiants.count }}</h2>
 
                     {% for e in etudiants %}
-                    <p>
+                    <p>cls
                         {{ e.id }} -
                         {{ e.matricule }} -
                         {{ e.nom }} {{ e.prenoms }}
                     </p>
-                    {% endfor %}
+                    {% endfor %} -->
 
                     <hr>
 
@@ -192,20 +192,27 @@
                             </td>
                             <td class="text-center">
 
-                                <!-- <a href="{% url 'bulletin_tronc_commun_pdf' e.id %}" target="_blank"
-                                    class="btn btn-sm btn-danger rounded-pill px-3">
+                                <td class="text-center">
 
-                                    <i class="bi bi-file-earmark-pdf me-1"></i>
-                                    PDF
-                                </a> -->
-                                <a href="{% url 'imprimer_bulletin_licence_qhse' e.id %}" target="_blank"
-                                    class="btn btn-sm btn-danger rounded-pill px-3">
-
-                                    <i class="bi bi-file-earmark-pdf me-1"></i>
-                                    PDF
-                                </a>
-
-
+                                    <a href="{% url 'imprimer_bulletin_licence_qhse' e.id 'S1' %}"
+                                       target="_blank"
+                                       class="btn btn-sm btn-primary rounded-pill px-3">
+                                
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                        S1
+                                    </a>
+                                
+                                
+                                    <a href="{% url 'imprimer_bulletin_licence_qhse' e.id 'S2' %}"
+                                       target="_blank"
+                                       class="btn btn-sm btn-danger rounded-pill px-3">
+                                
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                        S2
+                                    </a>
+                                
+                                
+                                </td>
 
                             </td>
 

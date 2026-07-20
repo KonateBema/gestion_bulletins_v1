@@ -76,16 +76,14 @@ def add_footer(canvas, doc):
 # GENERATION PDF
 # =========================================================
 
-def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
+def generer_bulletin_licence_qhse_pdf(etudiant, file_path, semestre):
 
-    # ues = UE.objects.filter(
-    #     filiere=etudiant.filiere
-    # ).prefetch_related("ecues")
     
     ues = (
          UE.objects
          .filter(
-              filiere=etudiant.filiere
+              filiere=etudiant.filiere,
+              semestre=semestre
        )
        .select_related("grande_unite")
        .prefetch_related("ecues")
@@ -95,8 +93,6 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
         )
       )
     
-    
-
     print("=" * 50)
     print("ETUDIANT :", etudiant.nom)
     print("FILIERE :", etudiant.filiere)
@@ -172,7 +168,6 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
     ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]))
     
-
     elements.append(header_table)
 
     elements.append(Spacer(1, 14))
@@ -180,9 +175,11 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
     filiere=etudiant.filiere,
     niveau=etudiant.niveau
    ).first()
-    semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
+    # semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
+    semestre = saisie.semestre if saisie else semestre
     session = saisie.session if saisie else "-"
-    annee = etudiant.annee_academique
+    # annee = etudiant.annee_academique
+    annee = "2025-2026"
 
     elements.append(Paragraph(f"""
         <para align="center">
@@ -236,26 +233,6 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
     # =========================================================
     # LOGO CENTER
     # =========================================================
-
-    # logo_center = Table([[logo]], colWidths=[2.5 * cm])
-    # logo_center.setStyle(TableStyle([
-    #     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-    #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    # ]))
-
-
-    # =========================================================
-    # ETUDIANT
-    # =========================================================
-     
-    # date_naissance = (
-    # etudiant.date_naissance.strftime("%d/%m/%Y")
-    # if etudiant.date_naissance
-    # else "Non renseignée"
-    # )
-
-    # lieu = etudiant.lieu_naissance or "-"
-
 
     cadre_etudiant = Table([
         [
@@ -374,9 +351,6 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
         table_style.append(("BOTTOMPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("TEXTCOLOR", (0, row_index), (-1, row_index), colors.green))
         # premiere ligne /colonne
-        # table_style.append(("SPAN", (0, 1), (0, 2)))
-        # table_style.append(("SPAN", (0, 1), (0, 3)))
-        
          #  ligne /colonne 2 (FUSION EU)
         table_style.append(("SPAN", (1, 1), (1, 2)))
 
@@ -440,113 +414,6 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
            table_style.append(
                   ("FONTNAME",(0,ligne),(7,ligne),"Helvetica-Bold")
             )
-               
-            
-        # compteur_ue += 1  
-        # if compteur_ue == 4:
-           
-        #     ues_fondamentales = ues[:5]
-        #     total_credit_ecue = sum(
-        #         ecue.credit
-        #         for ue_temp in ues[:3]
-        #         for ecue in ue_temp.ecues.all()
-        #          )
-                 
-        #     total_credit_ue = sum(
-        #         getattr(ue_temp, "credit", 0)
-        #         for ue_temp in ues[:2]
-        #         ) 
-        #       # TOTAL MOYENNES ECUE
-
-        #     total_moy_ecue = 0
-        #     total_moy_ue = 0
-        #     for ue_temp in ues_fondamentales:
-        #         somme_ecue = 0
-        #         nombre_ecue = 0
-
-        #         for ecue in ue_temp.ecues.all():
-        #             note = NoteLMD.objects.filter(
-        #               etudiant=etudiant,
-        #               ecue=ecue,
-        #               semestre="S1",
-        #               session="1"
-        #             ).first()
-        #             moy_ecue = float(note.moyenne) if note and note.moyenne else 0
-        #             total_moy_ecue = moy_ecue
-        #             somme_ecue += moy_ecue
-        #             nombre_ecue += 1
-        #         # Moyenne de l'UE
-        #             moy_ue = (
-        #                round(somme_ecue / nombre_ecue, 2)
-        #                if nombre_ecue else 0
-        #               )
-        #             total_moy_ue = moy_ue
-
-        #     # total_credit_ue = sum(
-        #     #      ue_temp.credit or 0
-        #     #     for ue_temp in ues_fondamentales total_moy_ecue
-        #     #    )  
-        #          # Somme des crédits UE des 5 premières UE
-        #     add_section(f"UE : UNITÉS FONDAMENTALES ",data,table_style)
-          
-        #     # add_section(f"{ue.code} - UE : UNITÉS FONDAMENTALES (ECUE={total_credit_ecue} | UE={total_credit_ue})",data,table_style)
-
-        # if compteur_ue == 6:
-        #     ues_culture = ues[6:9]  # 6ème à la 19ème UE
-        #     total_credit_ecue = sum(
-        #         ecue.credit
-        #          for ue_temp in ues[2:4]
-        #         #  for ue_temp in ues_culture
-        #           for ecue in ue_temp.ecues.all() )
-
-        #     total_credit_ue = sum(
-        #         getattr(ue_temp, "credit", 0)
-        #         for ue_temp in ues[2:4]
-        #         # for ue_temp in ues_culture
-        #         )
-            
-        #     total_moy_ecue_culture = 0
-        #     nb_ecue_culture = 0
-        #     total_moy_ue_culture = 0
-        #     nb_ue_culture = 0
-            
-        #     for ue_temp in ues_culture:
-        #         somme_ecue = 0
-        #         nombre_ecue = 0
-        #         for ecue in ue_temp.ecues.all():
-        #             note = NoteLMD.objects.filter(
-        #                 etudiant=etudiant,
-        #                 ecue=ecue,
-        #                 semestre="S1",
-        #                 session="1"
-        #                  ).first()
-        #             moy_ecue = (
-        #                 float(note.moyenne)
-        #                 if note and note.moyenne is not None 
-        #                  else 0 )
-        #             # total_moy_ecue_culture += moy_ecue
-        #             total_credit_ecue += moy_ecue
-        #             nb_ecue_culture += 1
-        #             somme_ecue += moy_ecue
-        #             nombre_ecue += 1
-        #         if nombre_ecue:
-        #             moy_ue = round(somme_ecue / nombre_ecue, 2)
-        #             total_moy_ue += moy_ue
-        #             nb_ue_culture += 1
-        #     total_moy_ecue = (
-        #          round(total_moy_ecue / nb_ecue_culture, 2)
-        #          if nb_ecue_culture else 0   )
-        #     total_moy_ue = (
-        #         round(total_moy_ue / nb_ue_culture, 2)
-        #         if nb_ue_culture else 0  )
-            
-        #     add_section("UE: UNITES DE CULTURE GENERALES", data, table_style)
-        #     # add_section(f"UE : UNITES DE CULTURE GENERALES "f"(ECUE={total_credit_ecue} | "f"UE={total_credit_ue_culture} | "f"MOY={moyenne_ue_culture})",data,table_style,)
-        # if compteur_ue == 15:
-        #     add_section("UE: UNITES DE SPECIALITES", data, table_style)
-        
-        
-
         # ecues = ue.ecues.all()
         # ecues = ECUE.objects.filter(ue=ue)  # SAFE à 100%
         ecues = ue.ecues.all()
@@ -555,7 +422,8 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
         somme_ue = 0
         count = 0
         lignes = []
-        credit_ue = getattr(ue, "credit", 6)
+        # credit_ue = getattr(ue, "credit", 6)
+        credit_ue = ue.credit
         somme_ponderee = 0
         credit_total_ue = 0
 
@@ -564,12 +432,11 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
         somme = 0
         coef = 0
         for ecue in ecues:
-            ecues_total += 1
+            # ecues_total += 1
             note = NoteLMD.objects.filter(
                 etudiant=etudiant,
                 ecue=ecue,
-                semestre="S1",
-                session="1"
+                ecue__ue__semestre=semestre,
             ).first()
             row_index = len(data)
             moyenne = note.moyenne if note else 0
@@ -616,7 +483,8 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path):
         if count == 0:
              continue
             
-        moy_ue = round(somme_ue / count, 2)
+        # moy_ue = round(somme_ue / count, 2)
+        moy_ue = round(somme_ponderee / credit_total_ue,2) if credit_total_ue else 0
         # decision = "VALIDÉE" if moy_ue >= 10 else "NON VALIDÉE"
         decision = (
             '<para align="center"><font color="green"><b>VALIDÉE</b></font></para>'

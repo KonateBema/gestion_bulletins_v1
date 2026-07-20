@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-danger text-white">
+            Confirmation de suppression
+        </div>
+
+        <div class="card-body">
+
+            <p>
+                Voulez-vous vraiment supprimer l'étudiant
+                <strong>{{ etudiant.nom }} {{ etudiant.prenoms }}</strong> ?
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-danger">
+                    Oui, supprimer
+                </button>
+
+                <a href="{% url 'l3_qhse_etudiants' %}" class="btn btn-secondary">
+                    Annuler
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
