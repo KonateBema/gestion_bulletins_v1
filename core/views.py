@@ -362,40 +362,6 @@ def etudiants_par_salle(request):
         }
     )
 
-def etudiant_updateBBBB(request, id):
-
-    etudiant = get_object_or_404(Etudiant, id=id)
-
-    if request.method == "POST":
-
-        etudiant.matricule = request.POST.get('matricule')
-        etudiant.nom = request.POST.get('nom')
-        etudiant.prenoms = request.POST.get('prenoms')
-
-        filiere_bts_id = request.POST.get('filiere_bts')
-
-        if filiere_bts_id:
-            etudiant.filiere_bts = Filierebts.objects.get(
-                id=filiere_bts_id
-            )
-        else:
-            etudiant.filiere_bts = None
-
-        etudiant.save()
-
-        return redirect('etudiant_list')
-
-    filieres_bts = Filierebts.objects.all()
-
-    return render(
-        request,
-        'etudiants/form.html',
-        {
-            'etudiant': etudiant,
-            'filieres_bts': filieres_bts
-        }
-    )
-
 def etudiant_update(request, id):
 
     etudiant = get_object_or_404(Etudiant, id=id)
@@ -420,57 +386,6 @@ def etudiant_update(request, id):
 def etudiant_delete(request, id):
     Etudiant.objects.get(id=id).delete()
     return redirect("etudiant_list")
-
-
-def classe_listAR(request):
-
-    # 🟢 CREATE
-    if request.method == "POST":
-        form = ClasseForm(request.POST)
-
-        if form.is_valid():
-            form.save()
-            return redirect("classe_list")
-        else:
-            print(form.errors)
-
-    else:
-        form = ClasseForm()
-
-    # 🟢 FILTERS
-    query = request.GET.get("q")
-    filiere_bts = request.GET.get("filiere_bts")
-    niveau = request.GET.get("niveau")
-
-    # 🟢 QUERYSET OPTIMISÉ
-    classes = Classe.objects.select_related(
-        "filiere_bts",
-        "niveau",
-        "salle"
-    ).order_by("-id")
-
-    # 🟢 SEARCH
-    if query:
-        classes = classes.filter(nom__icontains=query)
-
-    # 🟢 FILTER FILIERE BTS
-    if filiere_bts:
-        classes = classes.filter(filiere_bts__id=filiere_bts)
-
-    # 🟢 FILTER NIVEAU
-    if niveau:
-        classes = classes.filter(niveau__nom__icontains=niveau)
-
-    # 🟢 PAGINATION
-    paginator = Paginator(classes, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, "classes/list.html", {
-        "page_obj": page_obj,
-        "form": form
-    })
-
 
 def classe_list(request):
 
@@ -659,40 +574,6 @@ def affectation_delete(request, id):
 from .models import Note
 from .forms import NoteForm
 
-
-def note_listAAA(request):
-    notes = Note.objects.select_related("etudiant", "matiere").all()
-
-    return render(request, "notes/list.html", {
-        "notes": notes
-    })
-
-def note_listTO(request):
-    notes = Note.objects.select_related(
-        "etudiant",
-        "matiere"
-    ).all()
-
-    etudiant_id = request.GET.get("etudiant")
-    matiere_id = request.GET.get("matiere")
-    semestre = request.GET.get("semestre")
-
-    if etudiant_id:
-        notes = notes.filter(etudiant_id=etudiant_id)
-
-    if matiere_id:
-        notes = notes.filter(matiere_id=matiere_id)
-
-    if semestre:
-        notes = notes.filter(semestre=semestre)
-
-    return render(request, "notes/list.html", {
-        "notes": notes,
-        "etudiants": Etudiant.objects.all(),
-        "matieres": Matiere.objects.all(),
-        
-    })
-
 from django.core.paginator import Paginator
 
 def note_list(request):
@@ -828,44 +709,6 @@ from .pdf_service import generate_bulletin_pdf
 from django.http import FileResponse, HttpResponse
 
 from .models import Etudiant
-
-
-
-def download_bulletin_pdfOOOO(request):
-
-    # Récupérer un étudiant
-    etudiant = Etudiant.objects.first()
-
-    if not etudiant:
-        return HttpResponse("Aucun étudiant trouvé.")
-
-    # Génération du PDF
-    file_path = generate_bulletin_pdf(etudiant)
-
-    # Téléchargement du PDF
-    return FileResponse(
-        open(file_path, "rb"),
-        as_attachment=True,
-        filename=f"bulletin_{etudiant.matricule}.pdf"
-    )
-
-
-
-def download_bulletin_pdfVERI(request, etudiant_id, classe_id):
-
-    etudiant = Etudiant.objects.get(id=etudiant_id)
-    classe = Classe.objects.get(id=classe_id)
-
-    file_path = generate_bulletin_pdf(
-        etudiant,
-        classe
-    )
-
-    return FileResponse(
-        open(file_path, "rb"),
-        as_attachment=True,
-        filename=f"bulletin_{etudiant.matricule}.pdf"
-    )
 
 def download_bulletin_pdf(request, etudiant_id, classe_id, semestre):
 

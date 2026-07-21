@@ -2,79 +2,154 @@
 
 {% block content %}
 
-<div class="container py-4">
+<div class="container py-5">
 
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>📊 {{ title }}</h3>
+
+        <div>
+            <h3 class="fw-bold text-primary mb-1">
+                📊 {{ title }}
+            </h3>
+
+            <p class="text-muted mb-0">
+                Enregistrement d'une nouvelle note étudiant
+            </p>
+        </div>
+
     </div>
 
+
     <!-- CARD FORM -->
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-lg border-0 rounded-4">
+
+        <div class="card-header bg-primary text-white rounded-top-4 py-3">
+
+            <h5 class="mb-0 fw-bold">
+                📝 Informations de la note
+            </h5>
+
+        </div>
+
 
         <div class="card-body p-4">
 
+
             <form method="POST">
+
                 {% csrf_token %}
 
-                <div class="row">
+
+                <div class="row g-4">
+
 
                     <!-- Étudiant -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">🎓 Étudiant</label>
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            🎓 Étudiant
+                        </label>
+
                         {{ form.etudiant }}
+
                     </div>
 
+
+
                     <!-- Matière -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">📘 Matière</label>
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            📘 Matière
+                        </label>
+
                         {{ form.matiere }}
+
                     </div>
 
                     <!-- Devoir -->
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">✏️ Devoir</label>
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-semibold">
+                            ✏️ Devoir
+                        </label>
+
                         {{ form.devoir }}
+
                     </div>
 
                     <!-- Examen -->
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">🧾 Examen</label>
-                        {{ form.examen }}
-                    </div>
+                    <div class="col-md-4">
 
+                        <label class="form-label fw-semibold">
+                            🧾 Examen
+                        </label>
+
+                        {{ form.examen }}
+
+                    </div>
                     <!-- CC -->
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">📌 Contrôle continu (CC)</label>
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-semibold">
+                            📌 Contrôle Continu
+                        </label>
+
                         {{ form.cc }}
+
                     </div>
 
                     <!-- Semestre -->
-                    <div class="col-md-12 mb-4">
-                        <label class="form-label">📅 Semestre</label>
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-semibold">
+                            📅 Semestre
+                        </label>
+
                         {{ form.semestre }}
+
                     </div>
 
+
                 </div>
+
+                <!-- SEPARATEUR -->
+                <hr class="my-4">
 
                 <!-- ACTIONS -->
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
 
-                    <a href="{% url 'note_list' %}" class="btn btn-outline-secondary">
+
+                    <a href="{% url 'note_list' %}"
+                       class="btn btn-outline-secondary px-4">
+
                         ⬅ Retour
+
                     </a>
 
-                    <button type="submit" class="btn btn-success px-4">
+
+
+                    <button type="submit"
+                            class="btn btn-success px-5 shadow-sm">
+
                         💾 Enregistrer
+
                     </button>
 
+
                 </div>
+
+
 
             </form>
 
+
         </div>
+
     </div>
 
+
 </div>
+
 
 {% endblock %}

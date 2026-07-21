@@ -190,7 +190,7 @@
 
                             <td>
 
-                                <div class="btn-group" role="group">
+                                <!-- <div class="btn-group" role="group">
 
                                     <a href="{% url 'bulletin_tronc_commun_pdf' e.id %}" class="btn btn-sm btn-success"
                                         target="_blank">
@@ -200,7 +200,33 @@
 
                                     </a>
 
-                                </div>
+                                </div> -->
+                                <td>
+
+                                    <div class="btn-group">
+                                
+                                        <a href="{% url 'bulletin_tronc_commun_pdf' e.id 'S1' %}"
+                                           class="btn btn-sm btn-primary"
+                                           target="_blank">
+                                
+                                            <i class="bi bi-printer"></i>
+                                            S1
+                                
+                                        </a>
+                                
+                                
+                                        <a href="{% url 'bulletin_tronc_commun_pdf' e.id 'S2' %}"
+                                           class="btn btn-sm btn-success"
+                                           target="_blank">
+                                
+                                            <i class="bi bi-printer"></i>
+                                            S2
+                                
+                                        </a>
+                                
+                                    </div>
+                                
+                                </td>
 
                             </td>
 

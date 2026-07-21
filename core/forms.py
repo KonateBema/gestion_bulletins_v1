@@ -158,16 +158,62 @@ class AffectationForm(forms.ModelForm):
 from django import forms
 from .models import Note
 
+from django import forms
+from .models import Note
+
+
 class NoteForm(forms.ModelForm):
 
     class Meta:
         model = Note
-        fields = "__all__"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        fields = [
+            "etudiant",
+            "matiere",
+            "devoir",
+            "examen",
+            "cc",
+            "semestre",
+        ]
 
-        for field in self.fields.values():
-            field.widget.attrs.update({
-                "class": "form-control"
-            })
+        widgets = {
+
+            "etudiant": forms.Select(
+                attrs={
+                    "class": "form-select"
+                }
+            ),
+
+            "matiere": forms.Select(
+                attrs={
+                    "class": "form-select"
+                }
+            ),
+
+            "devoir": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Note devoir"
+                }
+            ),
+
+            "examen": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Note examen"
+                }
+            ),
+
+            "cc": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Note CC"
+                }
+            ),
+
+            "semestre": forms.Select(
+                attrs={
+                    "class": "form-select"
+                }
+            ),
+        }

@@ -62,6 +62,10 @@ class Classe(models.Model):
         null=True,
         blank=True
     )
+    annee_academique = models.CharField(
+    max_length=20,
+    default="2025-2026"
+    )
 
     def __str__(self):
         filiere = self.filiere_bts.nom if self.filiere_bts else "Sans filière"
@@ -186,6 +190,10 @@ class SaisieNotesBTS(models.Model):
         Matiere,
         on_delete=models.CASCADE
     )
+    annee_academique = models.CharField(
+    max_length=20,
+     default="2025-2026"
+    )
 
     semestre = models.CharField(max_length=10)
 
@@ -201,28 +209,66 @@ class SaisieNotesBTS(models.Model):
         )
 
 class Note(models.Model):
+
+    SEMESTRE_CHOICES = [
+        ("S1", "Semestre 1"),
+        ("S2", "Semestre 2"),
+    ]
+
     saisie = models.ForeignKey(
-        SaisieNotesBTS,  # noqa: F821
+        SaisieNotesBTS,
         on_delete=models.CASCADE,
         related_name="notes",
         null=True,
         blank=True
     )
-    etudiant = models.ForeignKey(Etudiant, on_delete=models.CASCADE)
-    matiere = models.ForeignKey(Matiere, on_delete=models.CASCADE)
 
-    semestre = models.CharField(max_length=10)
+    etudiant = models.ForeignKey(
+        Etudiant,
+        on_delete=models.CASCADE
+    )
 
-    cc = models.FloatField(default=0)       # contrôle continu
-    devoir = models.FloatField(default=0)
-    examen = models.FloatField(default=0)
+    matiere = models.ForeignKey(
+        Matiere,
+        on_delete=models.CASCADE
+    )
 
-    moyenne = models.FloatField(null=True, blank=True)
+    semestre = models.CharField(
+        max_length=2,
+        choices=SEMESTRE_CHOICES,
+        default="S1"
+    )
+
+    cc = models.FloatField(
+        default=0
+    )  # Contrôle continu
+
+    devoir = models.FloatField(
+        default=0
+    )
+
+    examen = models.FloatField(
+        default=0
+    )
+
+    moyenne = models.FloatField(
+        null=True,
+        blank=True
+    )
+
 
     def save(self, *args, **kwargs):
-        self.moyenne = (self.cc + self.devoir + self.examen) / 3
+
+        self.moyenne = round(
+            (self.cc + self.devoir + self.examen) / 3,
+            2
+        )
+
         super().save(*args, **kwargs)
 
+
+    def __str__(self):
+        return f"{self.etudiant} - {self.matiere} - {self.semestre}"
 
 # =========================
 # 10. BULLETIN
@@ -234,6 +280,7 @@ class Bulletin(models.Model):
     moyenne_generale = models.FloatField(default=0)
     rang = models.IntegerField(null=True, blank=True)
     mention = models.CharField(max_length=50, blank=True)
+    annee_academique = models.CharField(max_length=20,default="2025-2026")
 
     decision_jury = models.CharField(max_length=100, blank=True)
 

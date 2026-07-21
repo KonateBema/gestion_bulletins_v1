@@ -76,7 +76,7 @@ def add_footer(canvas, doc):
 # GENERATION PDF
 # =========================================================
 
-def generer_bulletin_tronc_commun_pdf(etudiant, file_path):
+def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
 
     ues = UE.objects.filter(
         filiere__libelle="Gestion et Droit"
@@ -175,7 +175,8 @@ def generer_bulletin_tronc_commun_pdf(etudiant, file_path):
     filiere=etudiant.filiere,
     niveau=etudiant.niveau
    ).first()
-    semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
+    # semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
+    semestre_saisie = saisie.semestre if saisie else "-"
     session = saisie.session if saisie else "-"
     annee = etudiant.annee_academique
 
@@ -184,7 +185,7 @@ def generer_bulletin_tronc_commun_pdf(etudiant, file_path):
         <b>
         <font color="#B30000">RELEVE DE NOTES</font>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        SEMESTRE {semestre} - SESSION {session}
+        SEMESTRE {semestre_saisie} - SESSION {session}
         &nbsp;&nbsp;&nbsp;&nbsp;
         ANNÉE SCOLAIRE : {annee}
         </b>
@@ -437,8 +438,9 @@ def generer_bulletin_tronc_commun_pdf(etudiant, file_path):
                     note = NoteLMD.objects.filter(
                       etudiant=etudiant,
                       ecue=ecue,
-                      semestre="S1",
-                      session="1"
+                     semestre=semestre,
+                     session="1"
+
                     ).first()
                     moy_ecue = float(note.moyenne) if note and note.moyenne else 0
                     total_moy_ecue = moy_ecue
@@ -486,7 +488,7 @@ def generer_bulletin_tronc_commun_pdf(etudiant, file_path):
                     note = NoteLMD.objects.filter(
                         etudiant=etudiant,
                         ecue=ecue,
-                        semestre="S1",
+                        semestre=semestre,
                         session="1"
                          ).first()
                     moy_ecue = (

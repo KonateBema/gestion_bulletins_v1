@@ -16,7 +16,7 @@ def calcul_moyenne_etudiant1(etudiant):
 
     return total / notes.count()
 
-def calcul_moyenne_etudiant(etudiant):
+def calcul_moyenne_etudiant(etudiant,semestre=None):
 
     notes = Note.objects.filter(etudiant=etudiant)
 

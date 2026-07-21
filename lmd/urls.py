@@ -253,7 +253,9 @@ urlpatterns = [
   path("tronc-commun/droit/", views.tronc_commun_droit,name="tronc_commun_droit"),
   path("tronc-commun/gestion/", views.tronc_commun_gestion,name="tronc_commun_gestion"),
   path("tronc-commun/notes/",views.tronc_commun_notes,name="tronc_commun_notes"),
-  path("tronc-commun/bulletin/<int:pk>/",views.bulletin_tronc_commun_pdf,name="bulletin_tronc_commun_pdf"),
+  # path("tronc-commun/bulletin/<int:pk>/",views.bulletin_tronc_commun_pdf,name="bulletin_tronc_commun_pdf"),
+  path("bulletin/tronc-commun/<int:id>/<str:semestre>/",views.bulletin_tronc_commun_pdf, name="bulletin_tronc_commun_pdf"),
+  
   path("tronc-commun/bulletin/<int:pk>/",views.imprimer_bulletin_tronc_commun,name="bulletin_tronc_commun_pdf"),
   path("tronc-commun/bulletin/imprimer/<int:pk>/",views.imprimer_bulletin_tronc_commun,name="bulletin_tronc_commun_pdf"),
   path("tronc-commun/add/",views.tronc_commun_add,name="tronc_commun_add"),

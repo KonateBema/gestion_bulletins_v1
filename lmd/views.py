@@ -17,6 +17,7 @@ from .models import MasterUE,EtudiantMaster , CandidatRattrapage ,FiliereLMD
 from .models import MasterECUE, NoteMaster
 from .pdf_masters import generer_bulletin_masters_pdf
 from .pdf_licence_qhse import generer_bulletin_licence_qhse_pdf
+from reportlab.platypus import SimpleDocTemplate
 from django.db.models import Avg
 from .models import (
     EtudiantLMD,
@@ -3652,6 +3653,7 @@ def imprimer_bulletin_tronc_commun(request, pk):
 
     generer_bulletin_tronc_commun_pdf(
         etudiant,
+        semestre,
         file_path
     )
 
@@ -4040,14 +4042,16 @@ def liste_etudiants_tronc_commun(request):
         }
     )
 
-
-def bulletin_tronc_commun_pdf(request, pk):
+def bulletin_tronc_commun_pdfBBBB(request, id, semestre):
 
     etudiant = get_object_or_404(
         EtudiantLMD,
-        id=pk
+        id=id
     )
 
+    # Accepte "1", "2", "S1" ou "S2"
+    if not str(semestre).startswith("S"):
+        semestre = f"S{semestre}"
 
     pdf_dir = os.path.join(
         settings.MEDIA_ROOT,
@@ -4059,24 +4063,55 @@ def bulletin_tronc_commun_pdf(request, pk):
         exist_ok=True
     )
 
-
     fichier = os.path.join(
         pdf_dir,
-        f"bulletin_{etudiant.matricule}.pdf"
+        f"bulletin_{etudiant.matricule}_{semestre}.pdf"
     )
-
 
     generer_bulletin_tronc_commun_pdf(
         etudiant,
+        semestre,
         fichier
     )
-
 
     return FileResponse(
         open(fichier, "rb"),
         content_type="application/pdf"
     )
 
+def bulletin_tronc_commun_pdf(request, id, semestre):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id
+    )
+
+    pdf_dir = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins"
+    )
+
+    os.makedirs(pdf_dir, exist_ok=True)
+
+    file_path = os.path.join(
+        pdf_dir,
+        f"tronc_commun_{etudiant.matricule}_{semestre}.pdf"
+    )
+
+    generer_bulletin_tronc_commun_pdf(
+        etudiant,
+        file_path,
+        semestre
+        
+    )
+  
+
+    return FileResponse(
+
+        open(file_path, "rb"),
+        content_type="application/pdf"
+    )
+ 
 from .forms import TroncCommunEtudiantForm
 
 

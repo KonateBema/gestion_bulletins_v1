@@ -16,7 +16,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from .models import Note,Filierebts
 from .services import calcul_moyenne_etudiant, mention
 from reportlab.platypus import Flowable
-from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
@@ -344,6 +343,13 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     total_points = 0
     total_coef = 0
     notes_list = list(notes[:6])
+    total_points_gnrl = 0
+    total_coef_gnrl = 0
+    total_points_tech = 0
+    total_coef_tech = 0
+    formation_generl_tech = 0
+    moyenne_professionnelle_tech = 0
+    formation_generl_points = 0
     formation_ang_expr = 0
     formation_ang_expr_points = 0
     formation_generale = 0
@@ -415,44 +421,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
 
         # formation_ang_expr_points = safe_round(total_points_ang)
         # formation general
-        valeurs_fg = [
-          float(ligne[1])
-          for ligne in data[:10]
-          if isinstance(ligne[1], (int, float))
-        ]
-
-        formation_generale = safe_round(
-           sum(valeurs_fg) / len(valeurs_fg) if valeurs_fg else 0
-          )
-         
-        total_points_gnrl = 0
-
-        for ligne in data[1:10]:
-             if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
-                 total_points_gnrl += ligne[1] * ligne[2]
-
-        formation_generl_points = safe_round(total_points_gnrl)
-        
-        
-        #  "FORMATION TECHNIQUE et PROFESSIONNELLE",
-        valeurs_prof = [
-          float(ligne[1])
-          for ligne in data[9:]
-          if isinstance(ligne[1], (int, float))
-        ]
-
-        moyenne_professionnelle_tech = safe_round(
-            sum(valeurs_prof) / len(valeurs_prof) if valeurs_prof else 0
-          ) 
-        
-        total_points_tech = 0
-
-        for ligne in data[7:]:
-             if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
-                  total_points_tech += ligne[1] * ligne[2]
-
-        formation_generl_tech = safe_round(total_points_tech)
-        
+       
         # formation_ang_expr = safe_round(ang_points / ang_coef if ang_coef else 0)
 
         rang_matiere = (
@@ -476,7 +445,57 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
             safe_round(stats.get("max_note")),
         ])
 
-    
+    valeurs_fg = [
+          float(ligne[1])
+          for ligne in data[:10]
+          if isinstance(ligne[1], (int, float))
+        ]
+
+    formation_generale = safe_round(
+           sum(valeurs_fg) / len(valeurs_fg) if valeurs_fg else 0
+          )
+         
+    total_points_gnrl = 0
+    for ligne in data[1:10]:
+          if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
+                 total_points_gnrl += ligne[1] * ligne[2]
+
+    formation_generl_points = safe_round(total_points_gnrl)
+        
+        # Total des coefficients
+    total_coef_gnrl = sum(
+           ligne[2]
+           for ligne in data[1:10]
+           if isinstance(ligne[2], (int, float))
+          )
+
+    total_coef_gnrl = safe_round(total_coef_gnrl)
+        #  "FORMATION TECHNIQUE et PROFESSIONNELLE",
+    valeurs_prof = [
+          float(ligne[1])
+          for ligne in data[10:]
+          if isinstance(ligne[1], (int, float))
+        ]
+
+    moyenne_professionnelle_tech = safe_round(
+            sum(valeurs_prof) / len(valeurs_prof) if valeurs_prof else 0
+          ) 
+        
+    total_points_tech = 0
+
+    for ligne in data[10:]:
+       if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
+                  total_points_tech += ligne[1] * ligne[2]
+
+    formation_generl_tech = safe_round(total_points_tech)
+        # Total des coefficients
+    total_coef_tech = sum(
+            ligne[2]
+            for ligne in data[10:]
+            if isinstance(ligne[2], (int, float))
+        )
+
+    total_coef_tech = safe_round(total_coef_tech)
 
     formation_generale = safe_round(formation_generale)
     safe_round(moyenne_science)  # noqa: F821
@@ -498,7 +517,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     #      ])
     data.insert(10, [
          "FORMATION GENERALE",
-          formation_generale, "", formation_generl_points, "", "", "", "", ""
+          formation_generale, total_coef_gnrl, formation_generl_points, "", "", "", "", ""
        ])
     # data.insert(10, [
     #     "FORMATION PROFESSIONNELLE",
@@ -506,7 +525,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # ])
     data.append([
         "FORMATION TECHNIQUE et PROFESSIONNELLE",
-        moyenne_professionnelle_tech, "", formation_generl_tech, "", "", "", "", ""
+        moyenne_professionnelle_tech, total_coef_tech, formation_generl_tech, "", "", "", "", ""
         ])
 
     
@@ -540,11 +559,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ("SPAN", (4,10), (8,10)),
      # Fusion dernière ligne FORMATION TECHNIQUE ET PROFESSIONNELLE
     ("SPAN", (4, len(data)-1), (8, len(data)-1)),
-
-    
-   
-
-    
    ]
     
     for ligne in [10,len(data) - 1]:
@@ -553,14 +567,13 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
                  ("BACKGROUND", (0,ligne), (-1,ligne), colors.lightgrey) )
             
     table.setStyle(TableStyle(style)) 
-          
     elements.append(table)
     elements.append(Spacer(1, 10))
-
     # =====================================================
     # RECAP
     # =====================================================
-    moyenne_generale = calcul_moyenne_etudiant(etudiant)
+    # moyenne_generale = calcul_moyenne_etudiant(etudiant)
+    moyenne_generale = calcul_moyenne_etudiant(etudiant,semestre)
 
     recap_data = [
        ["RAPPEL SEMESTRE", "TRAVAIL", "CONDUITE", "CONSEIL DE CLASSE"],
@@ -621,17 +634,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
   ]))
 
     elements.append(recap)
-    # observation = Paragraph(
-    # """
-    # <br/>
-    # <b>OBSERVATION DU CONSEIL DE CLASSE :</b><br/><br/>
-    # L’étudiant a montré un travail satisfaisant au cours de ce semestre.
-    # Le conseil encourage l’étudiant à poursuivre ses efforts pour améliorer ses résultats
-    # et maintenir une discipline exemplaire.
-    # """,
-    # SMALL
-    # )
-
     # elements.append(observation)
     elements.append(Spacer(1, 8))
 
@@ -641,8 +643,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         Paragraph("<b>OBSERVATION DU CONSEIL DE CLASSE</b><br/><br/><br/><br/>Signature", SMALL),
     ]
    ], colWidths=[6 * cm, 8 * cm])
-
-
 
     visa_table.setStyle(TableStyle([
     # bordure principale plus élégante
