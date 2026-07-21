@@ -77,7 +77,7 @@ def classement_classe(classe):
 
 def mention(moyenne):
     if moyenne < 10:
-        return "faible ❌"
+        return "faible "
     elif moyenne < 12:
         return "Passable"
     elif moyenne < 14:
@@ -85,7 +85,7 @@ def mention(moyenne):
     elif moyenne < 16:
         return "Bien"
     else:
-        return "Très bien ⭐"
+        return "Très bien "
 
 
 def obtenir_rang(etudiant):
