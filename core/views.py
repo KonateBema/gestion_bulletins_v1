@@ -851,7 +851,7 @@ def download_bulletin_pdfOOOO(request):
 
 
 
-def download_bulletin_pdf(request, etudiant_id, classe_id):
+def download_bulletin_pdfVERI(request, etudiant_id, classe_id):
 
     etudiant = Etudiant.objects.get(id=etudiant_id)
     classe = Classe.objects.get(id=classe_id)
@@ -865,6 +865,30 @@ def download_bulletin_pdf(request, etudiant_id, classe_id):
         open(file_path, "rb"),
         as_attachment=True,
         filename=f"bulletin_{etudiant.matricule}.pdf"
+    )
+
+def download_bulletin_pdf(request, etudiant_id, classe_id, semestre):
+
+    etudiant = get_object_or_404(
+        Etudiant,
+        id=etudiant_id
+    )
+
+    classe = get_object_or_404(
+        Classe,
+        id=classe_id
+    )
+
+    file_path = generate_bulletin_pdf(
+        etudiant=etudiant,
+        classe=classe,
+        semestre=semestre
+    )
+
+    return FileResponse(
+        open(file_path, "rb"),
+        as_attachment=True,
+        filename=f"bulletin_S{semestre}_{etudiant.matricule}.pdf"
     )
 
 def bulletin_classe(request, classe_id):

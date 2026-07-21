@@ -91,5 +91,10 @@ urlpatterns = [
         views.saisie_note_groupee,
         name="saisie_note_groupee"
     ),
+    path(
+    "bulletin/pdf/<int:etudiant_id>/<int:classe_id>/<int:semestre>/",
+    views.download_bulletin_pdf,
+    name="bulletin_pdf",
+)
 
 ]

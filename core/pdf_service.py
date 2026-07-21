@@ -98,7 +98,7 @@ moyenne_science =0
 # =====================================================
 # GENERATION PDF
 # =====================================================
-def generate_bulletin_pdf(etudiant, classe):
+def generate_bulletin_pdf(etudiant, classe,semestre):
     total_fg_points = 0
     total_fg_coef = 0
     rows = []
@@ -266,17 +266,31 @@ def generate_bulletin_pdf(etudiant, classe):
     # =====================================================
     # TITRE
     # =====================================================
-    elements.append(Paragraph("BULLETIN DE NOTES - 1er SEMESTRE", TITLE))
+    # elements.append(Paragraph("BULLETIN DE NOTES - 1er SEMESTRE", TITLE))
+    elements.append(
+    Paragraph(f"BULLETIN DE NOTES - {semestre}er SEMESTRE", TITLE))
     elements.append(Spacer(1, 10))
 
     # =====================================================
     # NOTES
     # =====================================================
-    notes = Note.objects.filter(etudiant=etudiant).select_related("matiere")
+
+    if str(semestre).startswith("S"):
+          semestre_value = str(semestre)
+    else:
+          semestre_value = f"S{semestre}"
+
+    notes = (
+        Note.objects.filter(
+        etudiant=etudiant,
+        semestre=semestre_value
+      )
+      .select_related("matiere")
+      )
 
     stats_map = {
         s["matiere"]: s
-        for s in Note.objects.filter(etudiant__classe=classe)
+        for s in Note.objects.filter(etudiant__classe=classe, semestre=semestre_value)
         .values("matiere")
         .annotate(
             min_note=Min("moyenne"),
@@ -286,7 +300,7 @@ def generate_bulletin_pdf(etudiant, classe):
     }
 
     classement = (
-        Note.objects.filter(etudiant__classe=classe)
+        Note.objects.filter(etudiant__classe=classe, semestre=semestre_value)
         .values("etudiant")
         .annotate(moy=Avg("moyenne"))
         .order_by("-moy")
@@ -330,20 +344,24 @@ def generate_bulletin_pdf(etudiant, classe):
     total_points = 0
     total_coef = 0
     notes_list = list(notes[:6])
-    professionnel_points = 0
-    professionnel_coef = 0
+    formation_ang_expr = 0
+    formation_ang_expr_points = 0
+    formation_generale = 0
+    formation_generl_points = 0
+    moyenne_professionnelle_tech = 0
+    formation_generl_tech = 0
   
     for n in notes_list:
         moy = safe_round(n.moyenne)
         coef = safe_round(n.matiere.coefficient)
         total_fg_points += moy * coef
         total_fg_coef += coef
-    formation_generale = (
-        total_fg_points / total_fg_coef
-        if total_fg_coef > 0
-        else 0)
+    # formation_generale = (
+    #     total_fg_points / total_fg_coef
+    #     if total_fg_coef > 0
+    #     else 0)
 
-    formation_generale = safe_round(formation_generale)
+    # formation_generale = safe_round(formation_generale)
 
     for n in notes:
         m = n.matiere
@@ -366,61 +384,40 @@ def generate_bulletin_pdf(etudiant, classe):
         #     ang_points += moy * coef
         #     ang_coef += coef
             
-        categorie = n.matiere.categorie.nom if n.matiere.categorie else ""   
+        # categorie = n.matiere.categorie.nom if n.matiere.categorie else ""   
         
-        # if categorie == "FORMATION GENERALE":
-        #      fg_points += moy * coef
-        #      fg_coef  += coef
-             
-        # formation_generale = safe_round(fg_points / fg_coef if fg_coef else 0 )
+ 
+        
+        # if categorie == "COMPTABILITE & DOCS":
+        #     pro_points += moy * coef
+        #     pro_coef += coef
+            
+        # moyenne_professionnelle = safe_round( pro_points / pro_coef if pro_coef else 0)
+            
 
-        # formation_generale = (
-        #     total_points / total_coef if total_coef else 0
+        # valeurs = [
+        #      float(ligne[1])
+        #       for ligne in data[:5]
+        #       if isinstance(ligne[1], (int, float))
+        #    ]
+
+        # formation_ang_expr = safe_round(
+        #   sum(valeurs) / len(valeurs) if valeurs else 0
         #  )
-        
-        
-        if categorie == "COMPTABILITE & DOCS":
-            pro_points += moy * coef
-            pro_coef += coef
-            
-        moyenne_professionnelle = safe_round( pro_points / pro_coef if pro_coef else 0)
-            
-        # moyenne_professionnelle = (
-            
-        #      professionnel_points / professionnel_coef if professionnel_coef else 0
-        # )
-        # total = 0
-        # coef_total = 0
-        # for note in notes[:5]:  # Les 5 premières matières
-        #     moy = note.moyenne
-        #     coef = note.matiere.coefficient
-        #     total += moy * coef
-        #     coef_total += coef
-            
-        # formation_ang_expr = safe_round(total / coef_total if coef_total else 0)
-        valeurs = [
-             float(ligne[1])
-              for ligne in data[:5]
-              if isinstance(ligne[1], (int, float))
-           ]
-
-        formation_ang_expr = safe_round(
-          sum(valeurs) / len(valeurs) if valeurs else 0
-         )
     
-        moyenne_professionnelle_tech = safe_round(tech_points / tech_coef if tech_coef else 0)
+        # moyenne_professionnelle_tech = safe_round(tech_points / tech_coef if tech_coef else 0)
         
-        total_points_ang = 0
+        # total_points_ang = 0
 
-        for ligne in data[:4]:
-             if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
-                 total_points_ang += ligne[1] * ligne[2]
+        # for ligne in data[:4]:
+        #      if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
+        #          total_points_ang += ligne[1] * ligne[2]
 
-        formation_ang_expr_points = safe_round(total_points_ang)
+        # formation_ang_expr_points = safe_round(total_points_ang)
         # formation general
         valeurs_fg = [
           float(ligne[1])
-          for ligne in data[5:10]
+          for ligne in data[:10]
           if isinstance(ligne[1], (int, float))
         ]
 
@@ -430,7 +427,7 @@ def generate_bulletin_pdf(etudiant, classe):
          
         total_points_gnrl = 0
 
-        for ligne in data[5:8]:
+        for ligne in data[1:10]:
              if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
                  total_points_gnrl += ligne[1] * ligne[2]
 
@@ -487,18 +484,18 @@ def generate_bulletin_pdf(etudiant, classe):
     A4[0] - 2.4 * cm
     
    
-    data.insert(4, [
-         "//////////////////////",
-          "", "", "", "", "", "", "", ""
-         ])
-    data.insert(5, [
-         "ANGLAIS ET TECHNIQUE D'EXPRESSION",
-          formation_ang_expr, "", formation_ang_expr_points, "", "", "", "", ""
-         ])
-    data.insert(9, [
-         "//////////////////////",
-          "", "", "", "", "", "", "", ""
-         ])
+    # data.insert(4, [
+    #      "//////////////////////",
+    #       "", "", "", "", "", "", "", ""
+    #      ])
+    # data.insert(5, [
+    #      "ANGLAIS ET TECHNIQUE D'EXPRESSION",
+    #       formation_ang_expr, "", formation_ang_expr_points, "", "", "", "", ""
+    #      ])
+    # data.insert(9, [
+    #      "//////////////////////",
+    #       "", "", "", "", "", "", "", ""
+    #      ])
     data.insert(10, [
          "FORMATION GENERALE",
           formation_generale, "", formation_generl_points, "", "", "", "", ""
@@ -540,9 +537,17 @@ def generate_bulletin_pdf(etudiant, classe):
     ("RIGHTPADDING", (0,0), (-1,-1), 3),
     ("FONTSIZE", (0,0), (-1,-1), 7),
     ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
+    ("SPAN", (4,10), (8,10)),
+     # Fusion dernière ligne FORMATION TECHNIQUE ET PROFESSIONNELLE
+    ("SPAN", (4, len(data)-1), (8, len(data)-1)),
+
+    
+   
+
+    
    ]
     
-    for ligne in [5,10,len(data) - 1]:
+    for ligne in [10,len(data) - 1]:
         if ligne < len(data):
             style.append(
                  ("BACKGROUND", (0,ligne), (-1,ligne), colors.lightgrey) )
