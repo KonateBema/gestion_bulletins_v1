@@ -246,16 +246,23 @@
 
                         <td>
 
-
-                            <a href="{% url 'master_bulletin_pdf' etudiant.id %}"
+                            <a href="{% url 'master_bulletin_pdf' etudiant.id 'S1' %}"
                                target="_blank"
-                               class="btn btn-danger btn-sm">
-
-                                🖨 Imprimer bulletin
-
+                               class="btn btn-success btn-sm">
+                        
+                                🖨  Imprimer bulletin S1
+                        
                             </a>
-
-
+                        
+                        
+                            <a href="{% url 'master_bulletin_pdf' etudiant.id 'S2' %}"
+                               target="_blank"
+                               class="btn btn-primary btn-sm">
+                        
+                                🖨 Imprimer bulletin S2
+                        
+                            </a>
+                        
                         </td>
 
 

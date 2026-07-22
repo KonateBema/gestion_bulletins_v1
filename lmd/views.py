@@ -1436,21 +1436,34 @@ def meilleure_note(note1,note2):
 @login_required
 def rattrapage_liste(request):
 
-    candidats = CandidatRattrapage.objects.select_related(
+    semestre = request.GET.get("semestre")
+
+
+    candidats = CandidatRattrapage.objects.filter(
+        ancienne_note__lt=10
+    ).select_related(
         "etudiant",
         "ecue",
         "session"
-    ).all()
+    )
+
+
+    if semestre:
+        candidats = candidats.filter(
+            session__semestre=semestre
+        )
 
 
     return render(
         request,
         "lmd/rattrapage/liste.html",
         {
-            "candidats": candidats
+            "candidats": candidats,
+            "semestre": semestre
         }
     )
-    
+
+@login_required
 def saisie_rattrapage(request):
 
     session = SessionAcademique.objects.filter(
@@ -1470,7 +1483,8 @@ def saisie_rattrapage(request):
 
 
     notes = NoteLMD.objects.filter(
-        session="1"
+        session="1",
+        moyenne__lt=10
     ).select_related(
         "etudiant",
         "ecue"
@@ -1483,35 +1497,35 @@ def saisie_rattrapage(request):
     for note in notes:
 
 
-        if note.moyenne < 10:
+        candidat, created = CandidatRattrapage.objects.get_or_create(
+
+            etudiant=note.etudiant,
+
+            ecue=note.ecue,
+
+            session=session,
+
+            annee_academique="2025-2026",
+
+            defaults={
+                "ancienne_note": note.moyenne
+            }
+
+        )
+        # Toujours mettre à jour l'ancienne note
+        candidat.ancienne_note = note.moyenne
+        candidat.save()
 
 
-            candidat, created = CandidatRattrapage.objects.get_or_create(
+        if not created:
 
-                etudiant=note.etudiant,
-
-                ecue=note.ecue,
-
-                session=session,
-
-                annee_academique="2025-2026",
-
-                defaults={
-                    "ancienne_note": note.moyenne
-                }
-
-            )
+            candidat.ancienne_note = note.moyenne
+            candidat.save()
 
 
-            # Correction ici
-            if not created:
-
-                candidat.ancienne_note = note.moyenne
-
-                candidat.save()
+        candidats.append(candidat)
 
 
-            candidats.append(candidat)
 
     return render(
 
@@ -1523,14 +1537,20 @@ def saisie_rattrapage(request):
             "candidats": candidats
         }
 
-    )  
+    )
     
+@login_required
 def liste_rattrapage(request):
+
+    # ==============================
+    # Session active de rattrapage
+    # ==============================
 
     session_rattrapage = SessionAcademique.objects.filter(
         type_session="RATTRAPAGE",
         active=True
     ).first()
+
 
     if not session_rattrapage:
 
@@ -1542,38 +1562,64 @@ def liste_rattrapage(request):
             }
         )
 
-    # Notes de session normale
+
+
+    # ==============================
+    # Notes session normale
+    # Notes < 10 uniquement
+    # ==============================
+
     notes = NoteLMD.objects.filter(
-        session="1"
+        session="1",
+        moyenne__lt=10,
+        semestre="S1"   # Modifier si besoin
     ).select_related(
         "etudiant",
         "ecue"
     )
 
+
+
+    # ==============================
+    # Création des candidats
+    # ==============================
+
     for note in notes:
 
-        # étudiant non validé
-        if note.moyenne < 10:
 
-            CandidatRattrapage.objects.get_or_create(
+        candidat, created = CandidatRattrapage.objects.get_or_create(
 
-                etudiant=note.etudiant,
+            etudiant=note.etudiant,
 
-                ecue=note.ecue,
+            ecue=note.ecue,
 
-                session=session_rattrapage,
+            session=session_rattrapage,
 
-                annee_academique="2025-2026",
+            annee_academique="2025-2026",
 
-                defaults={
+            defaults={
 
-                    "ancienne_note": note.moyenne
+                "ancienne_note": note.moyenne
 
-                }
+            }
 
-            )
+        )
 
 
+        # Mise à jour de l'ancienne note
+        # même si le candidat existe déjà
+
+        if not created:
+
+            candidat.ancienne_note = note.moyenne
+
+            candidat.save()
+
+
+
+    # ==============================
+    # Liste finale des candidats
+    # ==============================
 
     candidats = CandidatRattrapage.objects.select_related(
 
@@ -1589,9 +1635,12 @@ def liste_rattrapage(request):
 
     ).order_by(
 
-        "etudiant__nom"
+        "etudiant__nom",
+        "etudiant__prenoms"
 
     )
+
+
 
     return render(
 
@@ -1606,7 +1655,6 @@ def liste_rattrapage(request):
         }
 
     )
-    
 def deliberation_rattrapage(request):
 
     candidats = CandidatRattrapage.objects.select_related(
@@ -2192,7 +2240,6 @@ def master_filiere_list(request):
         "lmd/master/filieres.html"
     )
 
-
     
 def master_etudiant_list(request):
 
@@ -2774,73 +2821,42 @@ def master_bulletin_list(request):
         context
     )
 
-def master_bulletin_pdfES(request, id):
-
-    etudiant = get_object_or_404(
-        EtudiantLMD,
-        id=id
-    )
-
-    # création fichier PDF temporaire
-    temp_dir = os.path.join(
-        settings.MEDIA_ROOT,
-        "bulletins_master"
-    )
-
-    os.makedirs(
-        temp_dir,
-        exist_ok=True
-    )
-
-    file_path = os.path.join(
-        temp_dir,
-        f"bulletin_{etudiant.matricule}.pdf"
-    )
-
-
-    # Génération PDF
-    generer_bulletin_masters_pdf(
-        etudiant,
-        file_path
-    )
-
-
-    # affichage dans navigateur
-    return FileResponse(
-        open(file_path, "rb"),
-        content_type="application/pdf"
-    )
-
-def master_bulletin_pdf(request, id):
+def master_bulletin_pdf(request, id, semestre):
 
     etudiant = get_object_or_404(
         EtudiantMaster,
         id=id
     )
 
-    file_path = os.path.join(
+
+    pdf_dir = os.path.join(
         settings.MEDIA_ROOT,
-        f"bulletin_master_{etudiant.matricule}.pdf"
+        "bulletins"
+    )
+
+    os.makedirs(
+        pdf_dir,
+        exist_ok=True
+    )
+
+
+    file_path = os.path.join(
+        pdf_dir,
+        f"master_{etudiant.matricule}_{semestre}.pdf"
     )
 
 
     generer_bulletin_masters_pdf(
         etudiant,
+        semestre,
         file_path
     )
 
 
-    with open(file_path, "rb") as pdf:
-        response = HttpResponse(
-            pdf.read(),
-            content_type="application/pdf"
-        )
-
-    response["Content-Disposition"] = (
-        f'inline; filename="bulletin_{etudiant.matricule}.pdf"'
+    return FileResponse(
+        open(file_path,"rb"),
+        content_type="application/pdf"
     )
-
-    return response
 
 def l3_droit_ecue_add(request, pk):
 

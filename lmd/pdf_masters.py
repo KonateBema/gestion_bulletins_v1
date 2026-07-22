@@ -84,7 +84,7 @@ def add_footer(canvas, doc):
 # GENERATION PDF
 # =========================================================
 
-def generer_bulletin_masters_pdf(etudiant, file_path):
+def generer_bulletin_masters_pdf(etudiant,semestre,file_path):
 
     ues = MasterUE.objects.filter(
         programme=etudiant.programme
@@ -184,7 +184,14 @@ def generer_bulletin_masters_pdf(etudiant, file_path):
     flat=True
     ).distinct()
 
-    semestre = ", ".join(semestres) if semestres else "-"
+    # semestre = ", ".join(semestres) if semestres else "-"
+   
+
+
+    if semestre == "S1":
+         libelle_semestre = "1er SEMESTRE"
+    else:
+          libelle_semestre = "2ème SEMESTRE"
 
     session = "Session normale"
 
@@ -196,7 +203,7 @@ def generer_bulletin_masters_pdf(etudiant, file_path):
         <b>
         <font color="#B30000">RELEVE DE NOTES</font>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        SEMESTRE {semestre} - SESSION {session}
+         {libelle_semestre} - SESSION {session}
         &nbsp;&nbsp;&nbsp;&nbsp;
         ANNÉE SCOLAIRE : {annee}
         </b>
@@ -224,8 +231,9 @@ def generer_bulletin_masters_pdf(etudiant, file_path):
     # =========================================================
     # CADRE UNIVERSITE DOMAINE : SCIENCES ECONOMIQUE 
     # =========================================================
-    # specialite = etudiant.filiere.nom if etudiant.filiere else "TRONC COMMUN"
-    specialite = etudiant.programme.get_specialite_display()
+ 
+    # specialite = etudiant.programme.get_specialite_display()
+    specialite = (etudiant.programme.filiere.libelle if etudiant.programme and etudiant.programme.filiere else "Non définie")
     cadre_universite = Table([[
         Paragraph(f"""
              <b>DOMAINE :<br/>
@@ -452,6 +460,8 @@ def generer_bulletin_masters_pdf(etudiant, file_path):
                     note = NoteMaster.objects.filter(
                       etudiant=etudiant,
                       ecue=ecue,
+                      semestre=semestre,
+                      session="1"
                     ).first()
                     moy_ecue = float(note.moyenne) if note and note.moyenne else 0
                     total_moy_ecue = moy_ecue
