@@ -9,45 +9,62 @@ from core.models import Classe, Filiere, Niveau, Etudiant
 # =====================
 
 class UE(models.Model):
-    code = models.CharField(max_length=20)
-    libelle = models.CharField(max_length=200)
-    credit = models.IntegerField()
+
+    SEMESTRE_CHOICES = (
+        ("S1", "Semestre 1"),
+        ("S2", "Semestre 2"),
+        ("S3", "Semestre 3"),
+        ("S4", "Semestre 4"),
+        ("S5", "Semestre 5"),
+        ("S6", "Semestre 6"),
+    )
+
+    code = models.CharField(
+        max_length=20
+    )
+
+    libelle = models.CharField(
+        max_length=200
+    )
+
+    credit = models.PositiveIntegerField(
+        default=0
+    )
 
     filiere = models.ForeignKey(
-    "FiliereLMD",
-    null=True,
-    blank=True,
-    on_delete=models.PROTECT,
-
+        "FiliereLMD",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="ues"
     )
 
     grande_unite = models.ForeignKey(
-    "GrandeUnite",
-    on_delete=models.PROTECT,
-    related_name="ues",
-    null=True,
-    blank=True
+        "GrandeUnite",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="ues"
     )
-  
-    semestre = models.CharField(max_length=5)
 
-    # semestre = models.ForeignKey(
-    # "Semestre",
-    # on_delete=models.PROTECT
-    # )
+    semestre = models.CharField(
+        max_length=2,
+        choices=SEMESTRE_CHOICES,
+        default="S1"
+    )
 
     def __str__(self):
         return f"{self.code} - {self.libelle}"
-
-
 # =====================
 # ECUE (Élément Constitutif d’UE)
 # =====================
+
 class ECUE(models.Model):
+
     ue = models.ForeignKey(
         UE,
         on_delete=models.CASCADE,
-        related_name='ecues'
+        related_name="ecues"
     )
 
     code = models.CharField(max_length=20)
@@ -55,10 +72,15 @@ class ECUE(models.Model):
     coefficient = models.IntegerField(default=1)
     credit = models.IntegerField(default=1)
 
-    def __str__(self):
-        return f"{self.code} - {self.libelle}"
-
-
+    semestre = models.CharField(
+        max_length=5,
+        choices=[
+            ("S1", "Semestre 1"),
+            ("S2", "Semestre 2"),
+        ],
+        default="S1"
+    )
+    
 class NoteLMD(models.Model):
 
     SESSION_CHOICES = (

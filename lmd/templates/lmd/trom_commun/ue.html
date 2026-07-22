@@ -4,27 +4,133 @@
 
 <div class="container-fluid mt-4">
 
-    <!-- HEADER -->
-    <div class="card shadow border-0 mb-4">
-        <div class="card-body d-flex justify-content-between align-items-center">
+    <!-- ========================================= -->
+    <!-- SELECTEUR DE SEMESTRE -->
+    <!-- ========================================= -->
 
-            <div>
-                <h3 class="fw-bold text-primary mb-1">
-                    🦺 UE / ECUE - Licence 1 et 2 Tronc Commun (Droit et Gestion)
-                </h3>
+    <div class="card shadow-sm border-0 mb-4">
 
-                <p class="text-muted mb-0">
-                    Gestion des unités d'enseignement et des éléments constitutifs
-                </p>
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+                <!-- TITRE -->
+                <div>
+
+                    <h3 class="fw-bold text-primary mb-1">
+                        🦺 UE / ECUE - Licence 1 et 2 Tronc Commun
+                    </h3>
+
+                    <p class="text-muted mb-0">
+                        Gestion des unités d'enseignement et des éléments constitutifs
+                    </p>
+
+                </div>
+
+
+                <!-- SEMESTRE -->
+                <div class="text-end">
+
+                    <div class="mb-2">
+
+                        <span class="fw-bold text-dark">
+                            Semestre sélectionné :
+                        </span>
+
+                        <span class="badge bg-primary ms-1">
+                            {{ semestre }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="btn-group" role="group">
+
+                        <!-- SEMESTRE 1 -->
+
+                        <a href="?semestre=S1"
+                            class="btn {% if semestre == 'S1' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+
+                            📘 Semestre 1
+
+                        </a>
+
+
+                        <!-- SEMESTRE 2 -->
+
+                        <a href="?semestre=S2"
+                            class="btn {% if semestre == 'S2' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+
+                            📗 Semestre 2
+
+                        </a>
+
+                    </div>
+
+                </div>
+
             </div>
 
+        </div>
+
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- HEADER -->
+    <!-- ========================================= -->
+
+    <div class="card shadow border-0 mb-4">
+
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+
+            <!-- INFORMATIONS -->
+            <div>
+
+                <h4 class="fw-bold text-primary mb-1">
+
+                    {% if semestre == "S1" %}
+
+                    📘 Unités d'Enseignement - Semestre 1
+
+                    {% elif semestre == "S2" %}
+
+                    📗 Unités d'Enseignement - Semestre 2
+
+                    {% else %}
+
+                    📚 Unités d'Enseignement
+
+                    {% endif %}
+
+                </h4>
+
+                <p class="text-muted mb-0">
+
+                    Tronc Commun Licence 1 et Licence 2
+                    — Droit & Gestion
+
+                </p>
+
+            </div>
+
+
+            <!-- ACTIONS -->
             <div class="text-end">
 
+                <!-- NOMBRE UE -->
+
                 <span class="badge bg-primary fs-6 px-3 py-2 me-2">
+
                     📚 {{ ues|length }} UE
+
                 </span>
 
-                <a href="{% url 'l3_tc_ue_add' %}" class="btn btn-success">
+
+                <!-- AJOUTER UE -->
+
+                <a href="{% url 'l3_tc_ue_add' %}?semestre={{ semestre }}" class="btn btn-success">
                     <i class="bi bi-plus-circle"></i>
                     Ajouter une UE
                 </a>
@@ -32,51 +138,131 @@
             </div>
 
         </div>
+
     </div>
 
+
+    <!-- ========================================= -->
+    <!-- MESSAGE DU SEMESTRE -->
+    <!-- ========================================= -->
+
+    <div class="alert alert-info shadow-sm">
+
+        <i class="bi bi-info-circle me-2"></i>
+
+        Vous consultez actuellement les UE du
+
+        <strong>
+
+            {% if semestre == "S1" %}
+
+            Semestre 1
+
+            {% elif semestre == "S2" %}
+
+            Semestre 2
+
+            {% else %}
+
+            semestre sélectionné
+
+            {% endif %}
+
+        </strong>
+
+        du Tronc Commun.
+
+    </div>
+
+
+    <!-- ========================================= -->
     <!-- LISTE DES UE -->
+    <!-- ========================================= -->
 
     {% for ue in ues %}
 
+
     <div class="card shadow-sm border-0 mb-4">
 
+
+        <!-- ===================================== -->
         <!-- ENTETE UE -->
+        <!-- ===================================== -->
 
         <div class="card-header bg-primary text-white">
 
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+
+                <!-- INFORMATIONS UE -->
 
                 <div>
 
                     <h5 class="mb-1 fw-bold">
-                        📘 {{ ue.code }} - {{ ue.libelle }}
+
+                        📘 {{ ue.code }}
+
+                        -
+
+                        {{ ue.libelle }}
+
+
+                        <!-- SEMESTRE UE -->
+
+                        <span class="badge bg-light text-dark ms-2">
+
+                            {{ ue.semestre }}
+
+                        </span>
+
                     </h5>
 
+
                     <small>
+
                         Crédit UE :
+
                         <span class="badge bg-light text-dark">
+
                             {{ ue.credit }}
+
                         </span>
+
                     </small>
 
                 </div>
 
+
+                <!-- ACTIONS UE -->
+
                 <div>
 
-                    <a href="{% url 'l3_tc_ecue_add' ue.id %}"
-                       class="btn btn-light btn-sm">
+                    <!-- AJOUTER ECUE -->
+
+                    <a href="{% url 'l3_tc_ecue_add' ue.id %}" class="btn btn-light btn-sm">
+
                         <i class="bi bi-plus-circle"></i>
+
                         Ajouter ECUE
+
                     </a>
 
-                    <a href="{% url 'l3_tc_ue_update' ue.id %}"
-                       class="btn btn-warning btn-sm">
+
+                    <!-- MODIFIER UE -->
+
+                    <a href="{% url 'l3_tc_ue_update' ue.id %}" class="btn btn-warning btn-sm">
+
                         <i class="bi bi-pencil"></i>
+
                     </a>
 
-                    <a href="{% url 'l3_tc_ue_delete' ue.id %}"
-                       class="btn btn-danger btn-sm">
+
+                    <!-- SUPPRIMER UE -->
+
+                    <a href="{% url 'l3_tc_ue_delete' ue.id %}" class="btn btn-danger btn-sm">
+
                         <i class="bi bi-trash"></i>
+
                     </a>
 
                 </div>
@@ -85,93 +271,182 @@
 
         </div>
 
-        <!-- TABLE ECUE -->
+
+        <!-- ===================================== -->
+        <!-- TABLE DES ECUE -->
+        <!-- ===================================== -->
 
         <div class="card-body">
 
+
             <div class="table-responsive">
 
-                <table class="table table-hover align-middle">
+
+                <table class="table table-hover table-bordered align-middle mb-0">
+
+
+                    <!-- EN-TETE -->
 
                     <thead class="table-dark">
 
                         <tr>
-                            <th width="15%">Code ECUE</th>
-                            <th>Libellé ECUE</th>
-                            <th class="text-center">Coefficient</th>
-                            <th class="text-center">Crédit</th>
-                            <th class="text-center" width="15%">
-                                Actions
+
+                            <th width="15%">
+                                Code ECUE
                             </th>
+
+                            <th>
+                                Libellé ECUE
+                            </th>
+
+                            <th class="text-center">
+                                Coefficient
+                            </th>
+
+                            <th class="text-center">
+                                Crédit
+                            </th>
+
+                            <th class="text-center" width="15%">
+
+                                Actions
+
+                            </th>
+
                         </tr>
 
                     </thead>
 
+
+                    <!-- CORPS -->
+
                     <tbody>
+
 
                         {% for ecue in ue.ecues.all %}
 
+
                         <tr>
 
+
+                            <!-- CODE -->
+
                             <td>
+
                                 <span class="badge bg-info text-dark">
+
                                     {{ ecue.code }}
+
                                 </span>
+
                             </td>
+
+
+                            <!-- LIBELLE -->
 
                             <td>
-                                <i class="bi bi-book text-primary"></i>
-                                <strong>{{ ecue.libelle }}</strong>
+
+                                <i class="bi bi-book text-primary me-1"></i>
+
+                                <strong>
+
+                                    {{ ecue.libelle }}
+
+                                </strong>
+
                             </td>
 
+
+                            <!-- COEFFICIENT -->
+
                             <td class="text-center">
+
                                 <span class="badge bg-warning text-dark">
+
                                     {{ ecue.coefficient }}
+
                                 </span>
+
                             </td>
 
+
+                            <!-- CREDIT -->
+
                             <td class="text-center">
+
                                 <span class="badge bg-success">
+
                                     {{ ecue.credit }}
+
                                 </span>
+
                             </td>
+
+
+                            <!-- ACTIONS -->
 
                             <td class="text-center">
 
-                                <a href="{% url 'l3_tc_ecue_update' ecue.id %}"
-                                   class="btn btn-warning btn-sm">
+
+                                <!-- MODIFIER ECUE -->
+
+                                <a href="{% url 'l3_tc_ecue_update' ecue.id %}" class="btn btn-warning btn-sm"
+                                    title="Modifier">
+
                                     <i class="bi bi-pencil"></i>
+
                                 </a>
 
-                                <a href="{% url 'l3_tc_ecue_delete' ecue.id %}"
-                                   class="btn btn-danger btn-sm">
+
+                                <!-- SUPPRIMER ECUE -->
+
+                                <a href="{% url 'l3_tc_ecue_delete' ecue.id %}" class="btn btn-danger btn-sm"
+                                    title="Supprimer">
+
                                     <i class="bi bi-trash"></i>
+
                                 </a>
+
 
                             </td>
+
 
                         </tr>
+
 
                         {% empty %}
 
+
+                        <!-- AUCUN ECUE -->
+
                         <tr>
 
-                            <td colspan="5"
-                                class="text-center text-muted py-4">
+                            <td colspan="5" class="text-center text-muted py-4">
 
-                                <i class="bi bi-journal-x fs-2"></i>
+                                <i class="bi bi-journal-x fs-2 d-block mb-2"></i>
+
+                                Aucun ECUE associé à cette UE.
 
                                 <br>
 
-                                Aucun ECUE associé à cette UE.
+                                <a href="{% url 'l3_tc_ecue_add' ue.id %}" class="btn btn-primary btn-sm mt-2">
+
+                                    <i class="bi bi-plus-circle"></i>
+
+                                    Ajouter un ECUE
+
+                                </a>
 
                             </td>
 
                         </tr>
 
+
                         {% endfor %}
 
+
                     </tbody>
+
 
                 </table>
 
@@ -181,21 +456,69 @@
 
     </div>
 
+
     {% empty %}
 
-    <div class="alert alert-warning shadow-sm">
 
-        <i class="bi bi-exclamation-triangle"></i>
+    <!-- ========================================= -->
+    <!-- AUCUNE UE -->
+    <!-- ========================================= -->
 
-        Aucune UE enregistrée pour le Tronc Commun.
+    <div class="card shadow-sm border-0">
 
-        <br>
+        <div class="card-body text-center py-5">
 
-        Cliquez sur <strong>Ajouter une UE</strong> pour commencer.
+
+            <i class="bi bi-journal-x text-warning" style="font-size: 3rem;">
+            </i>
+
+
+            <h5 class="mt-3 text-muted">
+
+                Aucune UE enregistrée pour
+
+                {% if semestre == "S1" %}
+
+                le Semestre 1
+
+                {% elif semestre == "S2" %}
+
+                le Semestre 2
+
+                {% else %}
+
+                ce semestre
+
+                {% endif %}
+
+                .
+
+            </h5>
+
+
+            <p class="text-muted">
+
+                Cliquez sur le bouton ci-dessous pour commencer.
+
+            </p>
+
+
+            <a href="{% url 'l3_tc_ue_add' %}" class="btn btn-success">
+
+                <i class="bi bi-plus-circle"></i>
+
+                Ajouter une UE
+
+            </a>
+
+
+        </div>
 
     </div>
 
+
     {% endfor %}
+
 
 </div>
 

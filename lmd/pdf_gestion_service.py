@@ -76,12 +76,7 @@ def add_footer(canvas, doc):
 # GENERATION PDF
 # =========================================================
 
-def generer_bulletin_gestion_pdf(etudiant, file_path):
-
-    # etudiant = EtudiantLMD.objects.get(id=etudiant)
-    #  ues = UE.objects.filter(
-    #     filiere=etudiant.filiere
-    # ).prefetch_related("ecues")
+def generer_bulletin_gestion_pdf(etudiant,semestre,file_path):
 
     ues = UE.objects.filter(
         filiere=etudiant.filiere
@@ -177,8 +172,14 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
     filiere=etudiant.filiere,
     niveau=etudiant.niveau
    ).first()
-    semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
-    session = saisie.session if saisie else "-"
+    # semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
+    session = "NORMALE"
+    if semestre == "S1":
+      libelle_semestre = "1er SEMESTRE"
+    else:
+       libelle_semestre = "2ème SEMESTRE"
+       session = saisie.session if saisie else "-"
+       
     annee = etudiant.annee_academique
 
     elements.append(Paragraph(f"""
@@ -186,7 +187,7 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
         <b>
         <font color="#B30000">RELEVE DE NOTES</font>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        SEMESTRE {semestre} - SESSION {session}
+         {libelle_semestre} - SESSION {session}
         &nbsp;&nbsp;&nbsp;&nbsp;
         ANNÉE SCOLAIRE : {annee}
         </b>
@@ -378,36 +379,36 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
         # table_style.append(("SPAN", (0, 1), (0, 2)))
         # table_style.append(("SPAN", (0, 1), (0, 3)))
         
-         #  ligne /colonne 2 (FUSION EU)
-        table_style.append(("SPAN", (1, 1), (1, 2)))
+#          #  ligne /colonne 2 (FUSION EU)
+#         table_style.append(("SPAN", (1, 1), (1, 2)))
 
-        table_style.append(("SPAN", (1, 3), (1, 4)))
-        table_style.append(("SPAN", (1, 6), (1, 7)))
-        table_style.append(("SPAN", (1, 8), (1, 9)))
-        table_style.append(("SPAN", (1, 11), (1, 12)))
-   #  ligne /colonne 2 (FUSION CRÉDIT UE)
-        table_style.append(("SPAN", (4, 1), (4, 2)))
-        table_style.append(("SPAN", (6, 1), (6, 2)))
-     # lignes 3 et 4
-        table_style.append(("SPAN", (4, 3), (4, 4)))
-        table_style.append(("SPAN", (6, 3), (6, 4)))
-        # lignes 6 et 7
-        table_style.append(("SPAN", (4, 6), (4, 7)))
-        table_style.append(("SPAN", (6, 6), (6, 7)))
-         # lignes 8 et 9
-        table_style.append(("SPAN", (4, 8), (4, 9)))
-        table_style.append(("SPAN", (6, 8), (6, 9)))
-         # lignes 11 et 12
-        table_style.append(("SPAN", (4, 11), (4, 12)))
-        table_style.append(("SPAN", (6, 11), (6, 12)))
-         # lignes 13 et 14
-        table_style.append(("SPAN", (4, 13), (4, 14)))
-        table_style.append(("SPAN", (6, 13), (6, 14)))
+#         table_style.append(("SPAN", (1, 3), (1, 4)))
+#         table_style.append(("SPAN", (1, 6), (1, 7)))
+#         table_style.append(("SPAN", (1, 8), (1, 9)))
+#         table_style.append(("SPAN", (1, 11), (1, 12)))
+#    #  ligne /colonne 2 (FUSION CRÉDIT UE)
+#         table_style.append(("SPAN", (4, 1), (4, 2)))
+#         table_style.append(("SPAN", (6, 1), (6, 2)))
+#      # lignes 3 et 4
+#         table_style.append(("SPAN", (4, 3), (4, 4)))
+#         table_style.append(("SPAN", (6, 3), (6, 4)))
+#         # lignes 6 et 7
+#         table_style.append(("SPAN", (4, 6), (4, 7)))
+#         table_style.append(("SPAN", (6, 6), (6, 7)))
+#          # lignes 8 et 9
+#         table_style.append(("SPAN", (4, 8), (4, 9)))
+#         table_style.append(("SPAN", (6, 8), (6, 9)))
+#          # lignes 11 et 12
+#         table_style.append(("SPAN", (4, 11), (4, 12)))
+#         table_style.append(("SPAN", (6, 11), (6, 12)))
+#          # lignes 13 et 14
+#         table_style.append(("SPAN", (4, 13), (4, 14)))
+#         table_style.append(("SPAN", (6, 13), (6, 14)))
 
         
 
-        table_style.append(("SPAN", (4, 1), (4, 3)))
-        table_style.append(("SPAN", (6, 1), (6, 2)))
+#         table_style.append(("SPAN", (4, 1), (4, 3)))
+#         table_style.append(("SPAN", (6, 1), (6, 2)))
         
 
     compteur_ue = 0
@@ -439,7 +440,7 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
                     note = NoteLMD.objects.filter(
                       etudiant=etudiant,
                       ecue=ecue,
-                      semestre="S1",
+                      semestre=semestre,
                       session="1"
                     ).first()
                     moy_ecue = float(note.moyenne) if note and note.moyenne else 0
@@ -488,7 +489,7 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
                     note = NoteLMD.objects.filter(
                         etudiant=etudiant,
                         ecue=ecue,
-                        semestre="S1",
+                        semestre=semestre,
                         session="1"
                          ).first()
                     moy_ecue = (
@@ -535,7 +536,7 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
             note = NoteLMD.objects.filter(
                 etudiant=etudiant,
                 ecue=ecue,
-                semestre="S1",
+                semestre=semestre,
                 session="1"
             ).first()
             row_index = len(data)
@@ -584,7 +585,7 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
         decision = (
             '<para align="center"><font color="green"><b>VALIDÉE</b></font></para>'
             if moy_ue >= 10
-            else '<para align="center"><font color="red"><b>NON VALI</b></font></para>'
+            else '<para align="center"><font color="red"><b>RATTRAPAGE</b></font></para>'
         )
 
         credits_total += credit_ue
@@ -596,8 +597,8 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
         else:
             ue_non_validees += 1
 
-        somme_generale += moy_ue
-        total_ue += 1
+        somme_generale += moy_ue * credit_ue
+        total_credit_ue += credit_ue
 
         for r in lignes:
             r[6] = moy_ue
@@ -605,8 +606,7 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
             r[7] = Paragraph(decision, SMALL)
             data.append(r)
 
-
-    moyenne_generale = round(somme_generale / total_ue, 2) if total_ue else 0
+    moyenne_generale = (round(somme_generale / total_credit_ue, 2)if total_credit_ue else 0)
 
     credits_restants = credits_total - credits_obtenus
     table = Table(data, colWidths=[
@@ -621,7 +621,6 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
     ],
     rowHeights=[30] + [15] * (len(data) - 1)
     )
-
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
@@ -641,7 +640,6 @@ def generer_bulletin_gestion_pdf(etudiant, file_path):
     credits_ue_acquis = credits_obtenus
     credits_ue_restants = credits_ue_total - credits_ue_acquis
     credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
-    
     
     # =========================================================
     # RECAP TABLE (TA DEMANDE EXACTE)

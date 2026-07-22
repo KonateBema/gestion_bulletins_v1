@@ -67,13 +67,22 @@
 
                         <td>
 
-                            <a href="{% url 'bulletin_gestion_lmd_pdf' etudiant.id %}"
-                               class="btn btn-success btn-sm"
-                               target="_blank">
-
-                                🖨️ Imprimer bulletin
-
-                            </a>
+                            <a href="{% url 'bulletin_gestion_lmd_pdf' etudiant.id 'S1' %}"
+                            class="btn btn-success btn-sm"
+                            target="_blank">
+                         
+                             🖨️ Bulletin S1
+                         
+                         </a>
+                         
+                         
+                         <a href="{% url 'bulletin_gestion_lmd_pdf' etudiant.id 'S2' %}"
+                            class="btn btn-primary btn-sm"
+                            target="_blank">
+                         
+                             🖨️ Bulletin S2
+                         
+                         </a>
 
                         </td>
 

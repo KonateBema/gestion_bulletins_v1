@@ -210,21 +210,34 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # =====================================================
     # CADRE ÉTUDIANT
     # =====================================================
-    date_lieu = ""
+    # date_lieu = ""
 
-    if etudiant.date_naissance:
-        date_lieu += etudiant.date_naissance.strftime("%d/%m/%Y")
+    # if etudiant.date_naissance:
+    #     date_lieu += etudiant.date_naissance.strftime("%d/%m/%Y")
 
-    if getattr(etudiant, "lieu_naissance", ""):
-        date_lieu += f" à {etudiant.lieu_naissance}"
+    # if getattr(etudiant, "lieu_naissance", ""):
+    #     date_lieu += f" à {etudiant.lieu_naissance}"
+    nom_classe = classe.nom
+
+    if classe.filiere_bts:
+         nom_classe = nom_classe.replace(f"{classe.filiere_bts.nom} ", "")
+
+    
+    date_lieu = (
+    f"{etudiant.date_naissance.strftime('%d/%m/%Y')} à {etudiant.lieu_naissance}"
+    if etudiant.date_naissance and etudiant.lieu_naissance
+    else etudiant.date_naissance.strftime("%d/%m/%Y")
+    if etudiant.date_naissance
+    else ""
+    )
        
     cadre_etudiant = Table(
         [
             ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
             ["Matricule", etudiant.matricule],
-            ["Date de naissance", date_lieu],
+            ["Date et lieu de naiss", date_lieu],
             ["Sexe", getattr(etudiant, "sexe", "")],
-            ["Classe", classe.salle.nom],
+            ["Classe", nom_classe],
             ["Filière", etudiant.filiere_bts.nom],
             ["Redoublant", "NON"],
         ],
@@ -385,44 +398,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         elif getattr(m, "categorie", None) == "PRO":
              pro_points += moy * coef
              pro_coef += coef
-             
-        # if "technique d'expression" in m.libelle.lower():
-        #     ang_points += moy * coef
-        #     ang_coef += coef
-            
-        # categorie = n.matiere.categorie.nom if n.matiere.categorie else ""   
-        
- 
-        
-        # if categorie == "COMPTABILITE & DOCS":
-        #     pro_points += moy * coef
-        #     pro_coef += coef
-            
-        # moyenne_professionnelle = safe_round( pro_points / pro_coef if pro_coef else 0)
-            
-
-        # valeurs = [
-        #      float(ligne[1])
-        #       for ligne in data[:5]
-        #       if isinstance(ligne[1], (int, float))
-        #    ]
-
-        # formation_ang_expr = safe_round(
-        #   sum(valeurs) / len(valeurs) if valeurs else 0
-        #  )
-    
-        # moyenne_professionnelle_tech = safe_round(tech_points / tech_coef if tech_coef else 0)
-        
-        # total_points_ang = 0
-
-        # for ligne in data[:4]:
-        #      if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
-        #          total_points_ang += ligne[1] * ligne[2]
-
-        # formation_ang_expr_points = safe_round(total_points_ang)
-        # formation general
-       
-        # formation_ang_expr = safe_round(ang_points / ang_coef if ang_coef else 0)
 
         rang_matiere = (
           Note.objects.filter(
@@ -444,10 +419,10 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
             safe_round(stats.get("avg_note")),
             safe_round(stats.get("max_note")),
         ])
-
+    # formation general
     valeurs_fg = [
           float(ligne[1])
-          for ligne in data[:10]
+          for ligne in data[1:8]
           if isinstance(ligne[1], (int, float))
         ]
 
@@ -456,7 +431,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
           )
          
     total_points_gnrl = 0
-    for ligne in data[1:10]:
+    for ligne in data[1:8]:
           if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
                  total_points_gnrl += ligne[1] * ligne[2]
 
@@ -465,7 +440,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         # Total des coefficients
     total_coef_gnrl = sum(
            ligne[2]
-           for ligne in data[1:10]
+           for ligne in data[1:8]
            if isinstance(ligne[2], (int, float))
           )
 
@@ -473,7 +448,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         #  "FORMATION TECHNIQUE et PROFESSIONNELLE",
     valeurs_prof = [
           float(ligne[1])
-          for ligne in data[10:]
+          for ligne in data[9:]
           if isinstance(ligne[1], (int, float))
         ]
 
@@ -483,7 +458,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         
     total_points_tech = 0
 
-    for ligne in data[10:]:
+    for ligne in data[8:]:
        if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
                   total_points_tech += ligne[1] * ligne[2]
 
@@ -491,7 +466,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         # Total des coefficients
     total_coef_tech = sum(
             ligne[2]
-            for ligne in data[10:]
+            for ligne in data[8:]
             if isinstance(ligne[2], (int, float))
         )
 
@@ -515,7 +490,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     #      "//////////////////////",
     #       "", "", "", "", "", "", "", ""
     #      ])
-    data.insert(10, [
+    data.insert(8, [
          "FORMATION GENERALE",
           formation_generale, total_coef_gnrl, formation_generl_points, "", "", "", "", ""
        ])
@@ -556,12 +531,14 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ("RIGHTPADDING", (0,0), (-1,-1), 3),
     ("FONTSIZE", (0,0), (-1,-1), 7),
     ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
-    ("SPAN", (4,10), (8,10)),
+    
+    ("SPAN", (4, 8), (8, 8)),
      # Fusion dernière ligne FORMATION TECHNIQUE ET PROFESSIONNELLE
     ("SPAN", (4, len(data)-1), (8, len(data)-1)),
+   
    ]
     
-    for ligne in [10,len(data) - 1]:
+    for ligne in [8,len(data) - 1]:
         if ligne < len(data):
             style.append(
                  ("BACKGROUND", (0,ligne), (-1,ligne), colors.lightgrey) )
@@ -639,8 +616,8 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
 
     visa_table = Table([
     [
-        Paragraph("<b>Le Chef d’établissement</b><br/><br/><br/><br/>Signature & Cachet", SMALL),
-        Paragraph("<b>OBSERVATION DU CONSEIL DE CLASSE</b><br/><br/><br/><br/>Signature", SMALL),
+        Paragraph("<b>Le Chef d’établissement</b><br/><br/><br/><br/>", SMALL),
+        Paragraph("<b>OBSERVATION DU CONSEIL DE CLASSE</b><br/><br/><br/><br/>", SMALL),
     ]
    ], colWidths=[6 * cm, 8 * cm])
 

@@ -45,34 +45,62 @@ class Salle(models.Model):
 # =========================
 # 3. CLASSE
 # =========================
+
 class Classe(models.Model):
-    nom = models.CharField(max_length=150)
-    niveau = models.ForeignKey(Niveau, on_delete=models.CASCADE)
+    nom = models.CharField(
+        max_length=150,
+        verbose_name="Nom de la classe"
+    )
+
+    niveau = models.ForeignKey(
+        Niveau,
+        on_delete=models.CASCADE,
+        verbose_name="Niveau"
+    )
 
     filiere_bts = models.ForeignKey(
         Filierebts,
         on_delete=models.CASCADE,
         null=True,
-        blank=True
+        blank=True,
+        verbose_name="Filière BTS"
     )
 
     salle = models.ForeignKey(
         Salle,
         on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        verbose_name="Salle"
     )
+
     annee_academique = models.CharField(
-    max_length=20,
-    default="2025-2026"
+        max_length=20,
+        default="2025-2026",
+        verbose_name="Année académique"
     )
 
     def __str__(self):
-        filiere = self.filiere_bts.nom if self.filiere_bts else "Sans filière"
-        return f"{self.niveau.nom} {filiere} {self.nom}"
+        """
+        Affichage simple de la classe
+        Exemple :
+        IDA 1ère Année (BTS 1)
+        GESCOM 2ème Année (BTS 2)
+        """
+        return f"{self.nom} ({self.niveau.nom})"
+
 
     def effectif(self):
+        """
+        Nombre d'étudiants inscrits dans la classe
+        """
         return self.etudiants.count()
+
+
+    class Meta:
+        verbose_name = "Classe"
+        verbose_name_plural = "Classes"
+        ordering = ["niveau", "nom"]
 # =========================
 # 4. MATIERE
 # =========================
@@ -132,6 +160,12 @@ class Etudiant(models.Model):
     prenoms = models.CharField(max_length=150)
 
     date_naissance = models.DateField(null=True, blank=True)
+    lieu_naissance = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name="Lieu de naissance"
+    )
     # sexe = models.CharField(max_length=10)
     sexe = models.CharField(
         max_length=10,

@@ -93,6 +93,7 @@ class ECUEForm(forms.ModelForm):
             "libelle",
             "coefficient",
             "credit",
+            
         ]
 
         widgets = {
@@ -134,6 +135,7 @@ from .models import UE
 
 
 class UEForm(forms.ModelForm):
+
     class Meta:
         model = UE
 
@@ -141,12 +143,39 @@ class UEForm(forms.ModelForm):
             "code",
             "libelle",
             "credit",
+            "semestre",
         ]
 
         widgets = {
-            "code": forms.TextInput(attrs={"class": "form-control"}),
-            "libelle": forms.TextInput(attrs={"class": "form-control"}),
-            "credit": forms.NumberInput(attrs={"class": "form-control"}),
+
+            "code": forms.TextInput(
+                attrs={
+                    "class": "form-control"
+                }
+            ),
+
+            "libelle": forms.TextInput(
+                attrs={
+                    "class": "form-control"
+                }
+            ),
+
+            "credit": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "min": 1
+                }
+            ),
+
+            "semestre": forms.Select(
+                choices=[
+                    ("S1", "Semestre 1"),
+                    ("S2", "Semestre 2"),
+                ],
+                attrs={
+                    "class": "form-select"
+                }
+            ),
         }
 
 

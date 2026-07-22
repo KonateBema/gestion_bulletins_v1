@@ -146,13 +146,6 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
         </para>
         """, SMALL)
       ]], colWidths=[7 * cm,2.5 * cm,  7 * cm])
-
-    # header_table.setStyle(TableStyle([
-    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    #     ('LEFTPADDING', (0, 0), (-1, -1), 0),
-    #     ('TOPPADDING', (0, 0), (-1, -1), 0),
-    #     ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-    # ]))
     
     header_table.setStyle(TableStyle([
     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -171,13 +164,19 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
     elements.append(header_table)
 
     elements.append(Spacer(1, 14))
+
+# Le semestre vient directement de l'URL
+    semestre_saisie = semestre
+
+# Récupérer la session correspondant au semestre
     saisie = SaisieNoteLMD.objects.filter(
-    filiere=etudiant.filiere,
-    niveau=etudiant.niveau
-   ).first()
-    # semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
-    semestre_saisie = saisie.semestre if saisie else "-"
-    session = saisie.session if saisie else "-"
+        filiere=etudiant.filiere,
+         niveau=etudiant.niveau,
+        semestre=semestre
+     ).first()
+
+    session = saisie.session if saisie else "1"
+
     annee = etudiant.annee_academique
 
     elements.append(Paragraph(f"""
@@ -377,36 +376,36 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
         # table_style.append(("SPAN", (0, 1), (0, 2)))
         # table_style.append(("SPAN", (0, 1), (0, 3)))
         
-         #  ligne /colonne 2 (FUSION EU)
-        table_style.append(("SPAN", (1, 1), (1, 2)))
+#          #  ligne /colonne 2 (FUSION EU)
+#         table_style.append(("SPAN", (1, 1), (1, 2)))
 
-        table_style.append(("SPAN", (1, 3), (1, 4)))
-        table_style.append(("SPAN", (1, 6), (1, 7)))
-        table_style.append(("SPAN", (1, 8), (1, 9)))
-        table_style.append(("SPAN", (1, 11), (1, 12)))
-   #  ligne /colonne 2 (FUSION CRÉDIT UE)
-        table_style.append(("SPAN", (4, 1), (4, 2)))
-        table_style.append(("SPAN", (6, 1), (6, 2)))
-     # lignes 3 et 4
-        table_style.append(("SPAN", (4, 3), (4, 4)))
-        table_style.append(("SPAN", (6, 3), (6, 4)))
-        # lignes 6 et 7
-        table_style.append(("SPAN", (4, 6), (4, 7)))
-        table_style.append(("SPAN", (6, 6), (6, 7)))
-         # lignes 8 et 9
-        table_style.append(("SPAN", (4, 8), (4, 9)))
-        table_style.append(("SPAN", (6, 8), (6, 9)))
-         # lignes 11 et 12
-        table_style.append(("SPAN", (4, 11), (4, 12)))
-        table_style.append(("SPAN", (6, 11), (6, 12)))
-         # lignes 13 et 14
-        table_style.append(("SPAN", (4, 13), (4, 14)))
-        table_style.append(("SPAN", (6, 13), (6, 14)))
+#         table_style.append(("SPAN", (1, 3), (1, 4)))
+#         table_style.append(("SPAN", (1, 6), (1, 7)))
+#         # table_style.append(("SPAN", (1, 8), (1, 9)))
+#         table_style.append(("SPAN", (1, 11), (1, 12)))
+#    #  ligne /colonne 2 (FUSION CRÉDIT UE)
+#         table_style.append(("SPAN", (4, 1), (4, 2)))
+#         table_style.append(("SPAN", (6, 1), (6, 2)))
+#      # lignes 3 et 4
+#         table_style.append(("SPAN", (4, 3), (4, 4)))
+#         table_style.append(("SPAN", (6, 3), (6, 4)))
+#         # lignes 6 et 7
+#         table_style.append(("SPAN", (4, 6), (4, 7)))
+#         table_style.append(("SPAN", (6, 6), (6, 7)))
+#          # lignes 8 et 9
+#         # table_style.append(("SPAN", (4, 8), (4, 9)))
+#         # table_style.append(("SPAN", (6, 8), (6, 9)))
+#          # lignes 11 et 12
+#         table_style.append(("SPAN", (4, 11), (4, 12)))
+#         table_style.append(("SPAN", (6, 11), (6, 12)))
+#          # lignes 13 et 14
+#         table_style.append(("SPAN", (4, 13), (4, 14)))
+#         table_style.append(("SPAN", (6, 13), (6, 14)))
 
         
 
-        table_style.append(("SPAN", (4, 1), (4, 3)))
-        table_style.append(("SPAN", (6, 1), (6, 2)))
+        # table_style.append(("SPAN", (4, 1), (4, 3)))
+        # table_style.append(("SPAN", (6, 1), (6, 2)))
         
 
     compteur_ue = 0
@@ -438,8 +437,8 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
                     note = NoteLMD.objects.filter(
                       etudiant=etudiant,
                       ecue=ecue,
-                     semestre=semestre,
-                     session="1"
+                      semestre=semestre,
+                      session="1"
 
                     ).first()
                     moy_ecue = float(note.moyenne) if note and note.moyenne else 0

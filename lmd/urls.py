@@ -195,7 +195,15 @@ urlpatterns = [
    path("l3/droit/ecue/delete/<int:pk>/",views.l3_droit_ecue_delete,name="l3_droit_ecue_delete"),
 
     # path("l3/droit-prive/bulletin/<int:pk>/",views.imprimer_bulletin_l3_droit_prive,name="imprimer_bulletin_l3_droit_prive"),
-   path("l3/droit-prive/bulletin/<int:pk>/",views.imprimer_bulletin_l3_droit_prive, name="imprimer_bulletin_l3_droit_prive"),
+  #  path("l3/droit-prive/bulletin/<int:pk>/",views.imprimer_bulletin_l3_droit_prive, name="imprimer_bulletin_l3_droit_prive"),
+   
+   path(
+    "l3-droit-prive/bulletin/<int:id>/<str:semestre>/",
+    views.imprimer_bulletin_l3_droit_prive,
+    name="imprimer_bulletin_l3_droit_prive",
+    ),
+   
+   
    path("l3/sciences-gestion/etudiants/",views.l3_sciences_gestion_etudiants,name="l3_sciences_gestion_etudiants"),
 
    path("l3/sciences-gestion/etudiants/",views.l3_gestion_etudiant_list,name="l3_gestion_etudiant_list"),
@@ -234,7 +242,9 @@ urlpatterns = [
    path("l3/gestion/ecue/<int:pk>/edit/",views.l3_gestion_ecue_edit, name="l3_gestion_ecue_edit"),
    path("l3/gestion/ecue/<int:pk>/delete/",views.l3_gestion_ecue_delete,name="l3_gestion_ecue_delete"),
    path("gestion/bulletins/",views.liste_bulletins_gestion,name="liste_bulletins_gestion"),
-   path("gestion/bulletin/<int:etudiant_id>/pdf/",views.bulletin_gestion_lmd_pdf,name="bulletin_gestion_lmd_pdf"),
+  #  path("gestion/bulletin/<int:etudiant_id>/pdf/",views.bulletin_gestion_lmd_pdf,name="bulletin_gestion_lmd_pdf"),
+   
+   path("l3-gestion/bulletin/<int:id>/<str:semestre>/",views.bulletin_gestion_lmd_pdf,name="bulletin_gestion_lmd_pdf"),
    
    path("tronc-commun/bulletins/",views.liste_bulletins_tronc_commun,name="liste_bulletins_tronc_commun"),
    path("tronc-commun/bulletin/<int:pk>/",views.imprimer_bulletin_tronc_commun,name="imprimer_bulletin_tronc_commun"),

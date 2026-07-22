@@ -1,170 +1,171 @@
 {% extends "base.html" %}
 
-
 {% block content %}
-
 
 <div class="container mt-5">
 
 
 <div class="card shadow border-0">
 
+    <div class="card-header bg-primary text-white">
 
-<div class="card-header bg-primary text-white">
+        <h4 class="mb-0">
+
+            <i class="bi bi-journal-plus"></i>
+
+            {{ titre }}
+
+        </h4>
+
+    </div>
 
 
-<h4 class="mb-0">
+    <div class="card-body">
 
-<i class="bi bi-journal-plus"></i>
+        <form method="post">
 
-{{ titre }}
+            {% csrf_token %}
 
-</h4>
 
+            <div class="row g-3">
+
+
+                <!-- CODE UE -->
+
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        Code UE
+                    </label>
+
+                    <input
+                        type="text"
+                        name="code"
+                        class="form-control"
+                        value="{{ ue.code|default:'' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- LIBELLE UE -->
+
+                <div class="col-md-8">
+
+                    <label class="form-label">
+                        Libellé UE
+                    </label>
+
+                    <input
+                        type="text"
+                        name="libelle"
+                        class="form-control"
+                        value="{{ ue.libelle|default:'' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- CREDIT -->
+
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        Crédit
+                    </label>
+
+                    <input
+                        type="number"
+                        name="credit"
+                        class="form-control"
+                        value="{{ ue.credit|default:'' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- SEMESTRE -->
+
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        Semestre
+                    </label>
+
+                    <select
+                        name="semestre"
+                        class="form-select"
+                        required
+                    >
+
+                        <option value="">
+                            -- Sélectionner un semestre --
+                        </option>
+
+
+                        <option
+                            value="S1"
+                            {% if ue.semestre == "S1" %}selected{% endif %}
+                        >
+                            Semestre 1
+                        </option>
+
+
+                        <option
+                            value="S2"
+                            {% if ue.semestre == "S2" %}selected{% endif %}
+                        >
+                            Semestre 2
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- BOUTONS -->
+
+            <div class="mt-4">
+
+                <button
+                    type="submit"
+                    class="btn btn-success"
+                >
+
+                    <i class="bi bi-save"></i>
+
+                    Enregistrer
+
+                </button>
+
+
+                <a
+                    href="{% url 'l3_droit_ue' %}"
+                    class="btn btn-secondary"
+                >
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    Retour
+
+                </a>
+
+            </div>
+
+
+        </form>
+
+    </div>
 
 </div>
 
 
-
-
-<div class="card-body">
-
-
-<form method="post">
-
-{% csrf_token %}
-
-
-
-<div class="row g-3">
-
-
-
-<div class="col-md-4">
-
-<label class="form-label">
-Code UE
-</label>
-
-<input 
-type="text"
-name="code"
-class="form-control"
-value="{{ ue.code|default:'' }}"
-required>
-
 </div>
-
-
-
-
-<div class="col-md-8">
-
-<label class="form-label">
-Libellé UE
-</label>
-
-
-<input 
-type="text"
-name="libelle"
-class="form-control"
-value="{{ ue.libelle|default:'' }}"
-required>
-
-
-</div>
-
-
-
-
-<div class="col-md-4">
-
-<label>
-Crédit
-</label>
-
-
-<input 
-type="number"
-name="credit"
-class="form-control"
-value="{{ ue.credit|default:'' }}"
-required>
-
-
-</div>
-
-
-
-
-<div class="col-md-4">
-
-
-<label>
-Semestre
-</label>
-
-
-<select name="semestre"
-class="form-select">
-
-
-<option value="S5">
-Semestre 5
-</option>
-
-
-<option value="S6">
-Semestre 6
-</option>
-
-
-</select>
-
-
-</div>
-
-
-</div>
-
-
-
-<div class="mt-4">
-
-
-<button class="btn btn-success">
-
-<i class="bi bi-save"></i>
-
-Enregistrer
-
-</button>
-
-
-
-<a href="{% url 'l3_droit_ue' %}"
-class="btn btn-secondary">
-
-Retour
-
-</a>
-
-
-</div>
-
-
-
-</form>
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
 
 {% endblock %}

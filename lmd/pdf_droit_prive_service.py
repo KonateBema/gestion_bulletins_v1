@@ -76,12 +76,8 @@ def add_footer(canvas, doc):
 # GENERATION PDF
 # =========================================================
 
-def generer_bulletin_droit_prive_pdf(etudiant, file_path):
+def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
-    # ues = UE.objects.filter(
-    #     filiere=etudiant.filiere
-    # ).prefetch_related("ecues")
-    
     ues = (
          UE.objects
          .filter(
@@ -180,8 +176,14 @@ def generer_bulletin_droit_prive_pdf(etudiant, file_path):
     filiere=etudiant.filiere,
     niveau=etudiant.niveau
    ).first()
-    semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
-    session = saisie.session if saisie else "-"
+
+    session = "NORMALE"
+
+    if semestre == "S1":
+       libelle_semestre = "1er SEMESTRE"
+    else:
+       libelle_semestre = "2ème SEMESTRE"
+    
     annee = etudiant.annee_academique
 
     elements.append(Paragraph(f"""
@@ -189,7 +191,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, file_path):
         <b>
         <font color="#B30000">RELEVE DE NOTES</font>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        SEMESTRE {semestre} - SESSION {session}
+         {libelle_semestre} - SESSION {session}
         &nbsp;&nbsp;&nbsp;&nbsp;
         ANNÉE SCOLAIRE : {annee}
         </b>
@@ -205,11 +207,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, file_path):
          spaceAfter=10,
          hAlign='CENTER'
         ))
-
-    # =========================================================
-    # LOGO
-    # =========================================================
-
     # =========================================================
     # CADRE UNIVERSITE DOMAINE : SCIENCES ECONOMIQUE 
     # =========================================================
@@ -242,21 +239,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, file_path):
     #     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
     #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     # ]))
-
-
-    # =========================================================
-    # ETUDIANT
-    # =========================================================
-     
-    # date_naissance = (
-    # etudiant.date_naissance.strftime("%d/%m/%Y")
-    # if etudiant.date_naissance
-    # else "Non renseignée"
-    # )
-
-    # lieu = etudiant.lieu_naissance or "-"
-
-
     cadre_etudiant = Table([
         [
         Paragraph("<b>Nom et Prénoms</b>", SMALL),
@@ -358,12 +340,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, file_path):
      
     def add_section(title, data, table_style):
         row_index = len(data)
-        # row_index = len(data)
-        # data.append([
-        #    Paragraph(f'<para align="LEFT" color="red"><b>{title}</b></para>', SMALL),
-        # "", "",total_credit_ecue, total_credit_ue, total_moy_ecue, total_moy_ue , ""
-        # ])
-
         table_style.append(("SPAN", (0, row_index), (2, row_index)))
         table_style.append(("BACKGROUND", (0, row_index), (-1, row_index), colors.HexColor("#D9D9D9")))
         table_style.append(("ALIGN", (0, row_index), (-1, row_index), "CENTER"))
@@ -441,114 +417,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, file_path):
                   ("FONTNAME",(0,ligne),(7,ligne),"Helvetica-Bold")
             )
                
-            
-        # compteur_ue += 1  
-        # if compteur_ue == 4:
-           
-        #     ues_fondamentales = ues[:5]
-        #     total_credit_ecue = sum(
-        #         ecue.credit
-        #         for ue_temp in ues[:3]
-        #         for ecue in ue_temp.ecues.all()
-        #          )
-                 
-        #     total_credit_ue = sum(
-        #         getattr(ue_temp, "credit", 0)
-        #         for ue_temp in ues[:2]
-        #         ) 
-        #       # TOTAL MOYENNES ECUE
-
-        #     total_moy_ecue = 0
-        #     total_moy_ue = 0
-        #     for ue_temp in ues_fondamentales:
-        #         somme_ecue = 0
-        #         nombre_ecue = 0
-
-        #         for ecue in ue_temp.ecues.all():
-        #             note = NoteLMD.objects.filter(
-        #               etudiant=etudiant,
-        #               ecue=ecue,
-        #               semestre="S1",
-        #               session="1"
-        #             ).first()
-        #             moy_ecue = float(note.moyenne) if note and note.moyenne else 0
-        #             total_moy_ecue = moy_ecue
-        #             somme_ecue += moy_ecue
-        #             nombre_ecue += 1
-        #         # Moyenne de l'UE
-        #             moy_ue = (
-        #                round(somme_ecue / nombre_ecue, 2)
-        #                if nombre_ecue else 0
-        #               )
-        #             total_moy_ue = moy_ue
-
-        #     # total_credit_ue = sum(
-        #     #      ue_temp.credit or 0
-        #     #     for ue_temp in ues_fondamentales total_moy_ecue
-        #     #    )  
-        #          # Somme des crédits UE des 5 premières UE
-        #     add_section(f"UE : UNITÉS FONDAMENTALES ",data,table_style)
-          
-        #     # add_section(f"{ue.code} - UE : UNITÉS FONDAMENTALES (ECUE={total_credit_ecue} | UE={total_credit_ue})",data,table_style)
-
-        # if compteur_ue == 6:
-        #     ues_culture = ues[6:9]  # 6ème à la 19ème UE
-        #     total_credit_ecue = sum(
-        #         ecue.credit
-        #          for ue_temp in ues[2:4]
-        #         #  for ue_temp in ues_culture
-        #           for ecue in ue_temp.ecues.all() )
-
-        #     total_credit_ue = sum(
-        #         getattr(ue_temp, "credit", 0)
-        #         for ue_temp in ues[2:4]
-        #         # for ue_temp in ues_culture
-        #         )
-            
-        #     total_moy_ecue_culture = 0
-        #     nb_ecue_culture = 0
-        #     total_moy_ue_culture = 0
-        #     nb_ue_culture = 0
-            
-        #     for ue_temp in ues_culture:
-        #         somme_ecue = 0
-        #         nombre_ecue = 0
-        #         for ecue in ue_temp.ecues.all():
-        #             note = NoteLMD.objects.filter(
-        #                 etudiant=etudiant,
-        #                 ecue=ecue,
-        #                 semestre="S1",
-        #                 session="1"
-        #                  ).first()
-        #             moy_ecue = (
-        #                 float(note.moyenne)
-        #                 if note and note.moyenne is not None 
-        #                  else 0 )
-        #             # total_moy_ecue_culture += moy_ecue
-        #             total_credit_ecue += moy_ecue
-        #             nb_ecue_culture += 1
-        #             somme_ecue += moy_ecue
-        #             nombre_ecue += 1
-        #         if nombre_ecue:
-        #             moy_ue = round(somme_ecue / nombre_ecue, 2)
-        #             total_moy_ue += moy_ue
-        #             nb_ue_culture += 1
-        #     total_moy_ecue = (
-        #          round(total_moy_ecue / nb_ecue_culture, 2)
-        #          if nb_ecue_culture else 0   )
-        #     total_moy_ue = (
-        #         round(total_moy_ue / nb_ue_culture, 2)
-        #         if nb_ue_culture else 0  )
-            
-        #     add_section("UE: UNITES DE CULTURE GENERALES", data, table_style)
-        #     # add_section(f"UE : UNITES DE CULTURE GENERALES "f"(ECUE={total_credit_ecue} | "f"UE={total_credit_ue_culture} | "f"MOY={moyenne_ue_culture})",data,table_style,)
-        # if compteur_ue == 15:
-        #     add_section("UE: UNITES DE SPECIALITES", data, table_style)
         
-        
-
-        # ecues = ue.ecues.all()
-        # ecues = ECUE.objects.filter(ue=ue)  # SAFE à 100%
         ecues = ue.ecues.all()
         print(len(data))
         print(data[:3])
@@ -568,7 +437,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, file_path):
             note = NoteLMD.objects.filter(
                 etudiant=etudiant,
                 ecue=ecue,
-                semestre="S1",
+                semestre=semestre,
                 session="1"
             ).first()
             row_index = len(data)

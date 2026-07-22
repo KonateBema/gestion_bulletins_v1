@@ -33,11 +33,12 @@
                         </div>
 
                         <!-- FILIERE -->
+                        <!-- FILIERE BTS -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Filière</label>
-                            {{ form.filiere }}
+                            <label class="form-label fw-bold">Filière BTS</label>
+                            {{ form.filiere_bts }}
                             <div class="text-danger small">
-                                {{ form.filiere.errors }}
+                                {{ form.filiere_bts.errors }}
                             </div>
                         </div>
 
@@ -48,7 +49,7 @@
                             <div class="text-danger small">
                                 {{ form.niveau.errors }}
                             </div>
-                        </div>                        
+                        </div>
                         <!-- SALLE -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">
@@ -61,7 +62,7 @@
                                 {{ form.salle.errors }}
                             </div>
                         </div>
-                        
+
                         <!-- BUTTON -->
                         <button type="submit" class="btn btn-success w-100 py-2 fw-bold rounded-3">
                             💾 Enregistrer
