@@ -1,5 +1,6 @@
 from .models import Note, Etudiant
 from django.db.models import Avg
+from django.db.models import F, Sum, FloatField
 
 def calcul_moyenne_etudiant1(etudiant):
 
@@ -16,29 +17,37 @@ def calcul_moyenne_etudiant1(etudiant):
 
     return total / notes.count()
 
-def calcul_moyenne_etudiant(etudiant,semestre=None):
+def calcul_moyenne_etudiant(etudiant, semestre=None):
 
     notes = Note.objects.filter(etudiant=etudiant)
+
+    if semestre:
+        if str(semestre).startswith("S"):
+            notes = notes.filter(semestre=semestre)
+        else:
+            notes = notes.filter(semestre=f"S{semestre}")
 
     if not notes.exists():
         return 0
 
-    total_points = 0
-    total_coef = 0
+    result = notes.aggregate(
+        total_points=Sum(
+            F("moyenne") * F("matiere__coefficient"),
+            output_field=FloatField()
+        ),
+        total_coef=Sum(
+            F("matiere__coefficient"),
+            output_field=FloatField()
+        )
+    )
 
-    for note in notes:
-
-        coef = note.matiere.coefficient
-
-        total_points += note.moyenne * coef
-        total_coef += coef
+    total_points = result["total_points"] or 0
+    total_coef = result["total_coef"] or 0
 
     if total_coef == 0:
         return 0
 
     return round(total_points / total_coef, 2)
-
-
 
 def moyenne_classe(classe):
     etudiants = Etudiant.objects.filter(classe=classe)

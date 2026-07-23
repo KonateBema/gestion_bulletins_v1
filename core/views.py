@@ -271,7 +271,7 @@ def bulletin_etudiant(request):
 # =========================
 
 
-def etudiant_list(request):
+def etudiant_listBBB(request):
 
     query = request.GET.get("q")
     classe_id = request.GET.get("classe")
@@ -315,6 +315,69 @@ def etudiant_list(request):
         }
     )
 
+def etudiant_list(request):
+
+    query = request.GET.get("q")
+    classe_id = request.GET.get("classe")
+    filiere_bts_id = request.GET.get("filiere_bts")
+    niveau = request.GET.get("niveau")
+
+    etudiants = Etudiant.objects.select_related(
+        "classe",
+        "filiere_bts"
+    ).all()
+
+    # Recherche
+    if query:
+        etudiants = etudiants.filter(
+            Q(matricule__icontains=query) |
+            Q(user__username__icontains=query) |
+            Q(prenoms__icontains=query) |
+            Q(nom__icontains=query)
+        )
+
+    # Filtre par classe (ID)
+    if classe_id:
+        etudiants = etudiants.filter(
+            classe_id=classe_id
+        )
+
+    # Filtre par niveau BTS 1 / BTS 2
+    if niveau:
+        etudiants = etudiants.filter(
+            filiere_bts__niveaux__nom=niveau
+        ).distinct()
+
+    # Filtre filière BTS
+    if filiere_bts_id:
+        etudiants = etudiants.filter(
+            filiere_bts_id=filiere_bts_id
+        )
+
+
+    paginator = Paginator(etudiants, 10)
+
+    page_number = request.GET.get("page")
+
+    page_obj = paginator.get_page(page_number)
+
+
+    return render(
+        request,
+        "etudiants/list.html",
+        {
+            "page_obj": page_obj,
+
+            # Classes disponibles
+            "classes": Classe.objects.all(),
+
+            # Filières BTS
+            "filieres_bts": Filierebts.objects.all(),
+
+            # Pour garder la valeur sélectionnée
+            "niveau": niveau,
+        }
+    )
 
 def etudiant_createENC(request):
     form = EtudiantForm(request.POST or None)

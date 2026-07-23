@@ -161,7 +161,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         </para>
     """, SMALL))
 
-    elements.append(Spacer(1, 10))
+    # elements.append(Spacer(1, 10))
     # =====================================================
     # LOGO
     # =====================================================
@@ -187,15 +187,15 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
             logo,
             Paragraph("""
                 <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/><br/>
-                BP Abidjan - Côte d'Ivoire<br/><br/>
-                Tel: +225 07 78 63 74 00<br/><br/>
-                Fix: 2722550041 <br/><br/>
-                Email: contact@uic.ci
-                
-            """, SMALL)
+                 &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;BP Abidjan - Côte d'Ivoire<br/><br/>
+                 &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;Tel: +225 07 78 63 74 00<br/><br/>
+                 &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;site: www.uci-ci.com<br/><br/>
+                 &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;Email: uicinfos@gmail.com
+           """, SMALL)
         ]],
-        colWidths=[2.5 * cm, 7.5 * cm],
+        colWidths=[0.5 * cm, 7.5 * cm],
         rowHeights=[3.7 * cm]
+
     )
 
     cadre_universite.setStyle(TableStyle([
@@ -203,26 +203,25 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        # ("LEFTPADDING", (0, 0), (-1, -1), 6),
         ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+
+          # Décaler uniquement le texte vers la droite
+        ("LEFTPADDING", (1, 0), (1, 0), 15),
+
+         # Padding du logo
+        ("LEFTPADDING", (0, 0), (0, 0), 5),
+        ("RIGHTPADDING", (0, 0), (0, 0), 5),
     ]))
 
     # =====================================================
     # CADRE ÉTUDIANT
     # =====================================================
-    # date_lieu = ""
-
-    # if etudiant.date_naissance:
-    #     date_lieu += etudiant.date_naissance.strftime("%d/%m/%Y")
-
-    # if getattr(etudiant, "lieu_naissance", ""):
-    #     date_lieu += f" à {etudiant.lieu_naissance}"
     nom_classe = classe.nom
 
     if classe.filiere_bts:
          nom_classe = nom_classe.replace(f"{classe.filiere_bts.nom} ", "")
 
-    
     date_lieu = (
     f"{etudiant.date_naissance.strftime('%d/%m/%Y')} à {etudiant.lieu_naissance}"
     if etudiant.date_naissance and etudiant.lieu_naissance
@@ -231,18 +230,33 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     else ""
     )
        
+    # cadre_etudiant = Table(
+    #     [
+    #         ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
+    #         ["Matricule", etudiant.matricule],
+    #         ["Date et lieu de naiss", date_lieu],
+    #         ["Sexe", getattr(etudiant, "sexe", "")],
+    #         ["Classe", nom_classe],
+    #         ["Filière", etudiant.filiere_bts.nom],
+    #         ["Redoublant", "NON"],
+    #     ],
+    #     colWidths=[4.5 * cm, 5.5 * cm], etudiant.filiere_bts.nom.replace(" ", "<br/>", 1),
+    # )
     cadre_etudiant = Table(
-        [
-            ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
-            ["Matricule", etudiant.matricule],
-            ["Date et lieu de naiss", date_lieu],
-            ["Sexe", getattr(etudiant, "sexe", "")],
-            ["Classe", nom_classe],
-            ["Filière", etudiant.filiere_bts.nom],
-            ["Redoublant", "NON"],
-        ],
-        colWidths=[3 * cm, 4.5 * cm]
-    )
+       [
+        ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
+        ["Matricule", etudiant.matricule],
+        ["Date et lieu de naiss", date_lieu],
+        ["Sexe", getattr(etudiant, "sexe", "")],
+        ["Classe", nom_classe],
+        # ["Filière", etudiant.filiere_bts.nom],
+        ["Filière", Paragraph(etudiant.filiere_bts.nom.replace(" ", "<br/>", 1),
+        SMALL
+       )],
+        ["Redoublant", "NON"],
+      ],
+    colWidths=[3.5 * cm, 6.5 * cm],
+)
 
     cadre_etudiant.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
@@ -263,8 +277,8 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     header = Table(
         [[cadre_universite, cadre_etudiant]],
         colWidths=[
-            usable_width * 0.58,
-            usable_width * 0.42
+            usable_width * 0.45,
+            usable_width * 0.55
         ]
     )
 
@@ -321,10 +335,35 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     rangs = {item["etudiant"]: i + 1 for i, item in enumerate(classement)}
     rang_general = format_rang(rangs.get(etudiant.id, "-"))
 
-    data = [[
-        "MATIÈRE", "MOY", "COEF", "MOY*COEF",
-        "MENTION","RANG", "MIN", "MOY", "MAX"
+    # data = [[
+    #     "MATIÈRE", "MOY", "COEF", "MOY*COEF",
+    #     "MENTION","RANG", "MIN", "MOY", "MAX"
+    # ]]
+    data = [
+    [
+        "MATIÈRE",
+        "MOY",
+        "COEF",
+        "MOY*COEF",
+        "MENTION",
+        "RANG",
+        "MOYENNE DE LA CLASSE",
+        "",
+        ""
+    ],
+    [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "MIN",
+        "MOY",
+        "MAX"
     ]]
+
+
     total_points = 0
     total_coef = 0
 
@@ -477,27 +516,12 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # moyenne_professionnelle = safe_round(moyenne_professionnelle)
     A4[0] - 2.4 * cm
     
-   
-    # data.insert(4, [
-    #      "//////////////////////",
-    #       "", "", "", "", "", "", "", ""
-    #      ])
-    # data.insert(5, [
-    #      "ANGLAIS ET TECHNIQUE D'EXPRESSION",
-    #       formation_ang_expr, "", formation_ang_expr_points, "", "", "", "", ""
-    #      ])
-    # data.insert(9, [
-    #      "//////////////////////",
-    #       "", "", "", "", "", "", "", ""
-    #      ])
+
     data.insert(8, [
          "FORMATION GENERALE",
           formation_generale, total_coef_gnrl, formation_generl_points, "", "", "", "", ""
        ])
-    # data.insert(10, [
-    #     "FORMATION PROFESSIONNELLE",
-    #     moyenne_professionnelle, "", "", "", "", "", "", ""
-    # ])
+ 
     data.append([
         "FORMATION TECHNIQUE et PROFESSIONNELLE",
         moyenne_professionnelle_tech, total_coef_tech, formation_generl_tech, "", "", "", "", ""
@@ -524,6 +548,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
     ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
     ("ALIGN", (1,1), (-1,-1), "CENTER"),
+    ("BACKGROUND", (0, 0), (-1, 1), colors.lightgrey),
 
     ("TOPPADDING", (0,0), (-1,-1), 2),
     ("BOTTOMPADDING", (0,0), (-1,-1), 2),
@@ -535,9 +560,35 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ("SPAN", (4, 8), (8, 8)),
      # Fusion dernière ligne FORMATION TECHNIQUE ET PROFESSIONNELLE
     ("SPAN", (4, len(data)-1), (8, len(data)-1)),
+    ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
+
+    # Fusion du titre MOYENNE DE LA CLASSE
+    ("SPAN", (6, 0), (8, 0)),
+
+    # Fusion MATIÈRE sur les deux lignes
+    ("SPAN", (0, 0), (0, 1)),
+
+    # Fusion MOY sur les deux lignes
+    ("SPAN", (1, 0), (1, 1)),
+
+    # Fusion COEF sur les deux lignes
+    ("SPAN", (2, 0), (2, 1)),
+
+    # Fusion MOY*COEF sur les deux lignes
+    ("SPAN", (3, 0), (3, 1)),
+
+    # Fusion MENTION sur les deux lignes
+    ("SPAN", (4, 0), (4, 1)),
+
+    # Fusion RANG sur les deux lignes
+    ("SPAN", (5, 0), (5, 1)),
+
+    # Centrage
+    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
    
    ]
-    
+
     for ligne in [8,len(data) - 1]:
         if ligne < len(data):
             style.append(
@@ -550,13 +601,83 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # RECAP
     # =====================================================
     # moyenne_generale = calcul_moyenne_etudiant(etudiant)
+    # Moyennes des deux semestres
+    # moyenne_s1 = calcul_moyenne_etudiant(etudiant, 1)
+    # moyenne_s2 = calcul_moyenne_etudiant(etudiant, 2)
+    moyenne_s1 = calcul_moyenne_etudiant(etudiant, "S1")
+    moyenne_s2 = calcul_moyenne_etudiant(etudiant, "S2")
+    
+    classement_s1 = (
+    Note.objects.filter(
+        etudiant__classe=classe,
+        semestre="S1"
+    )
+    .values("etudiant")
+    .annotate(moy=Avg("moyenne"))
+    .order_by("-moy")
+   )
+
+    rangs_s1 = {
+       item["etudiant"]: i + 1
+       for i, item in enumerate(classement_s1)
+       }
+
+    rang_s1 = format_rang(
+             rangs_s1.get(etudiant.id, "-")
+      )
+    
+    classement_s2 = (
+    Note.objects.filter(
+        etudiant__classe=classe,
+        semestre="S2"
+    )
+    .values("etudiant")
+    .annotate(moy=Avg("moyenne"))
+    .order_by("-moy")
+    )
+
+    rangs_s2 = {
+        item["etudiant"]: i + 1
+        for i, item in enumerate(classement_s2)
+      }
+
+    rang_s2 = format_rang(
+      rangs_s2.get(etudiant.id, "-")
+    )
+    
+    if str(semestre) in ["1", "S1"]:
+
+        rappel_semestre = Paragraph(
+        f"""
+        <b>1er Semestre</b><br/>
+        Moyenne : {safe_round(moyenne_s1)}/20<br/>
+        Rang : {rang_s1}
+        """,
+         SMALL
+       )
+
+    else:
+
+       rappel_semestre = Paragraph(
+         f"""
+         <b>1er Semestre</b><br/>
+         Moyenne : {safe_round(moyenne_s1)}/20<br/>
+         Rang : {rang_s1}<br/><br/>
+
+         <b>2ème Semestre</b><br/>
+         Moyenne : {safe_round(moyenne_s2)}/20<br/>
+         Rang : {rang_s2}
+         """,
+         SMALL
+    )
+    
     moyenne_generale = calcul_moyenne_etudiant(etudiant,semestre)
 
     recap_data = [
        ["RAPPEL SEMESTRE", "TRAVAIL", "CONDUITE", "CONSEIL DE CLASSE"],
 
        [
-        "",
+        rappel_semestre ,
 
         # TRAVAIL
         f"Total points : {safe_round(total_points)}\n"
@@ -565,18 +686,18 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         f"Rang : {rang_general}",
 
         # CONDUITE (discipline)
-        f"Absences totales : ...\n"
-        f"Absences justifiées : ...\n"
-        f"Consignes : ...\n"
-        f"Exclusions : ...",
+        f"Absences totales : 0.0\n"
+        f"Absences justifiées : 0.0\n"
+        f"Consignes : 0.0\n"
+        f"Exclusions : 0.0",
 
         # CONSEIL DE CLASSE
-        f"Note conduite : ...\n"
-        f"Blâme : ...\n"
-        f"Félicitations : ...\n"
-        f"Tableau d'honneur : ...\n"
-        f"Encouragement : ...\n"
-        f"Avertissement : ..."
+        f"Note conduite \n"
+        f"Blâme conduite\n"
+        f"Félicitations\n"
+        f"Tableau d'honneur\n"
+        f"Encouragement \n"
+        f"Avertissement "
      ],
    ]
 
@@ -613,37 +734,105 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     elements.append(recap)
     # elements.append(observation)
     elements.append(Spacer(1, 8))
+    moyenne_annuelle = calcul_moyenne_etudiant(etudiant)
 
-    visa_table = Table([
+    classement_annuel = (
+      Note.objects.filter(etudiant__classe=classe)
+       .values("etudiant")
+       .annotate(moy=Avg("moyenne"))
+      .order_by("-moy")
+    )
+
+    rangs_annuels = {
+      item["etudiant"]: i + 1
+      for i, item in enumerate(classement_annuel)
+     }
+
+    rang_annuel = format_rang(rangs_annuels.get(etudiant.id, "-"))
+
+#     visa_table = Table([
+#     [
+#         Paragraph("<b>Le Chef d’établissement</b><br/><br/><br/><br/>", SMALL),
+#         Paragraph("<b>OBSERVATION DU CONSEIL DE CLASSE</b><br/><br/><br/><br/>", SMALL),
+#     ]
+#    ], colWidths=[6 * cm, 8 * cm])
+    HEADER = ParagraphStyle(
+      "HEADER",
+        parent=SMALL,
+        alignment=1,               # Centré
+        fontName="Courier-Bold",
+        textColor=colors.white,
+        fontSize=9,
+      )
+    
+    visa_table = Table(
     [
-        Paragraph("<b>Le Chef d’établissement</b><br/><br/><br/><br/>", SMALL),
-        Paragraph("<b>OBSERVATION DU CONSEIL DE CLASSE</b><br/><br/><br/><br/>", SMALL),
-    ]
-   ], colWidths=[6 * cm, 8 * cm])
+        [
+            Paragraph("<b>ANNUEL</b>", HEADER),
+            Paragraph("<b>OBSERVATION DU CONSEIL DE CLASSE</b>", HEADER),
+            Paragraph("<b>DÉCISION FINALE</b>", HEADER),
+            Paragraph("<b>VISA DU CHEF D'ÉTABLISSEMENT</b>", HEADER),
+        ],
+        [
+            Paragraph(
+                f"""
+                 <b>Moy annuelle :</b> {moyenne_annuelle}/20<br/>
+                 <b>Rang annuel :</b> {rang_annuel}<br/>
+                """,
+                SMALL,
+            ),
+            Paragraph(
+                """
+                """,
+                SMALL,
+            ),
+            Paragraph(
+                """
+                ☐ Passe<br/>
+                ☐ Redouble<br/>
+                ☐ Exclu(e)<br/>
+                """,
+                SMALL,
+            ),
+            Paragraph(
+                """
+                """,
+                SMALL,
+            ),
+        ],
+    ],
+    colWidths=[
+        5 * cm,
+        5 * cm,
+        4 * cm,
+        5 * cm,
+    ],
+  )
 
     visa_table.setStyle(TableStyle([
     # bordure principale plus élégante
-    ("BOX", (0, 0), (-1, -1), 1.2, colors.HexColor("#222222")),
-
+    ("BOX", (0, 0), (-1, -1), 1, colors.black),
     # grille interne discrète (si plusieurs cases)
-    ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#999999")),
+    ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1f3a5f")),
+    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+    ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
+    ("FONTSIZE", (0, 0), (-1, 0), 9),
+    ("FONTNAME", (0, 1), (-1, -1), "Courier"),
+    ("FONTSIZE", (0, 1), (-1, -1), 8),
 
-    # fond léger (style administratif)
-    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F7F7F7")),
-
-    # alignement propre
     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ("VALIGN", (0, 0), (-1, -1), "TOP"),
 
-    # padding équilibré (important pour effet “carte”)
-    ("TOPPADDING", (0, 0), (-1, -1), 15),
-    ("BOTTOMPADDING", (0, 0), (-1, -1), 15),
-    ("LEFTPADDING", (0, 0), (-1, -1), 10),
-    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+    ("TOPPADDING", (0, 1), (-1, -1), 5),
+    ("BOTTOMPADDING", (0, 1), (-1, -1), 5),
 
-    # typo plus propre
-    ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
-    ("FONTSIZE", (0, 0), (-1, -1), 9),
+    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+
+    
+    
+
    ]))
 
     elements.append(visa_table)
