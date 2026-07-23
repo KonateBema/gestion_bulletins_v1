@@ -15,10 +15,15 @@ from .pdf_droit_prive_service import generer_bulletin_droit_prive_pdf
 from .pdf_tronc_commun_service import generer_bulletin_tronc_commun_pdf
 from .models import MasterUE,EtudiantMaster , CandidatRattrapage ,FiliereLMD
 from .models import MasterECUE, NoteMaster
-from .pdf_masters import generer_bulletin_masters_pdf
-from .pdf_licence_qhse import generer_bulletin_licence_qhse_pdf
-from reportlab.platypus import SimpleDocTemplate
-from django.db.models import Avg
+# from .pdf_masters import generer_bulletin_masters_pdf
+# from .pdf_licence_qhse import generer_bulletin_licence_qhse_pdf
+# from .services.pdf_tronc_commun_service import pdf_tronc_commun_service
+# from .services.pdf_droit_prive_service import pdf_droit_prive_service
+# from .services.pdf_licence_qhse import pdf_licence_qhse
+
+
+
+from reportlab.lib import colors
 from .models import (
     EtudiantLMD,
     NoteLMD,
@@ -5663,3 +5668,49 @@ def l3_tc_ecue_delete(request, pk):
             "objet": ecue
         }
     )
+
+    
+def bulletin_rattrapage_pdf(request, id, semestre):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id
+    )
+
+
+    filiere = etudiant.filiere.libelle.lower()
+
+
+    if "gestion" in filiere and "droit" in filiere:
+
+        return bulletin_tronc_commun_pdf(
+            request,
+            id,
+            semestre
+        )
+
+
+    elif "droit privé" in filiere:
+
+        return pdf_droit_prive_service_pdf(
+            request,
+            id,
+            semestre
+        )
+
+
+    elif "qhse" in filiere:
+
+        return pdf_licence_qhse(
+            request,
+            id,
+            semestre
+        )
+
+
+    else:
+
+        return HttpResponse(
+            "Aucun service PDF trouvé pour cette filière"
+        )    
+

@@ -48,7 +48,7 @@ Bulletins de rattrapage
 
                     <i class="bi bi-printer"></i>
 
-                    Imprimer
+                    Imprimer tous
 
                 </button>
 
@@ -103,6 +103,9 @@ Bulletins de rattrapage
                             <th>
                                 ECUE
                             </th>
+                            <th>
+                                Semestre
+                            </th>
 
 
                             <th>
@@ -120,10 +123,17 @@ Bulletins de rattrapage
                             </th>
 
 
+                            <th class="text-center">
+                                Action
+                            </th>
+
+
                         </tr>
 
 
                     </thead>
+
+
 
 
 
@@ -136,6 +146,9 @@ Bulletins de rattrapage
 
                     <tr>
 
+
+
+                        <!-- Matricule -->
 
                         <td>
 
@@ -150,12 +163,16 @@ Bulletins de rattrapage
 
 
 
+
+                        <!-- Etudiant -->
+
                         <td>
 
 
                             <div class="fw-bold">
 
                                 {{ c.etudiant.nom }}
+
                                 {{ c.etudiant.prenoms }}
 
                             </div>
@@ -173,12 +190,17 @@ Bulletins de rattrapage
 
 
 
+
+                        <!-- Filiere -->
+
                         <td>
 
 
                             <span class="badge bg-light text-dark">
 
+
                                 {{ c.etudiant.filiere.libelle }}
+
 
                             </span>
 
@@ -188,6 +210,8 @@ Bulletins de rattrapage
 
 
 
+
+                        <!-- ECUE -->
 
                         <td>
 
@@ -202,7 +226,7 @@ Bulletins de rattrapage
                             <br>
 
 
-                            <small>
+                            <small class="text-muted">
 
                                 {{ c.ecue.libelle }}
 
@@ -210,10 +234,21 @@ Bulletins de rattrapage
 
 
                         </td>
+                        <td>
+
+                            <span class="badge bg-info">
+                        
+                                {{ c.semestre }}
+                        
+                            </span>
+                        
+                        </td>
 
 
 
 
+
+                        <!-- Ancienne note -->
 
                         <td>
 
@@ -230,6 +265,8 @@ Bulletins de rattrapage
 
 
 
+
+                        <!-- Note rattrapage -->
 
                         <td>
 
@@ -263,6 +300,8 @@ Bulletins de rattrapage
 
 
 
+                        <!-- Décision -->
+
                         <td>
 
 
@@ -272,9 +311,11 @@ Bulletins de rattrapage
 
                                 <span class="badge rounded-pill bg-success">
 
+
                                     <i class="bi bi-check-circle"></i>
 
                                     Validé
+
 
                                 </span>
 
@@ -286,9 +327,11 @@ Bulletins de rattrapage
 
                                 <span class="badge rounded-pill bg-danger">
 
+
                                     <i class="bi bi-x-circle"></i>
 
                                     Échec
+
 
                                 </span>
 
@@ -318,7 +361,27 @@ Bulletins de rattrapage
 
 
 
+
+
+                        <!-- Action impression -->
+
+                        <td class="text-center">
+
+                            <a href="{% url 'bulletin_rattrapage_pdf' c.etudiant.id c.ecue.ue.semestre %}"
+                               class="btn btn-sm btn-outline-primary"
+                               target="_blank">
+                        
+                                <i class="bi bi-file-earmark-pdf"></i>
+                        
+                                Imprimer
+                        
+                            </a>
+                        
+                        </td>
+
+
                     </tr>
+
 
 
 
@@ -330,7 +393,7 @@ Bulletins de rattrapage
                     <tr>
 
 
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="8" class="text-center py-5">
 
 
                             <div class="text-muted">

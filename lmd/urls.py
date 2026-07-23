@@ -432,6 +432,15 @@ path(
     name="rattrapage_liste"
 ),
   
- 
+ path(
+    "bulletin-rattrapage/pdf/<int:id>/",
+    views.bulletin_rattrapage_pdf,
+    name="bulletin_rattrapage_pdf"
+),
+ path(
+    "bulletin-rattrapage/pdf/<int:id>/<str:semestre>/",
+    views.bulletin_rattrapage_pdf,
+    name="bulletin_rattrapage_pdf"
+),
 
 ]
