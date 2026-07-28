@@ -201,10 +201,10 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         [[
             logo,
             Paragraph("""
-                <b>UNIVERSITÉ INTER. DE COCODY</b><br/><br/>
+                <b>UNIVERSITÉ INTER. DE COCODY</b><br/><br/><br/>
                 &nbsp;&nbsp;&nbsp;BP Abidjan - Côte d'Ivoire<br/><br/>
                 &nbsp;&nbsp;&nbsp;Tel: +225 07 78 63 74 00<br/><br/>
-                &nbsp;&nbsp;&nbsp;Tél. fixe : 27 XX XX XX XX<br/><br/>
+                &nbsp;&nbsp;&nbsp;Tél. fixe : 27 XX XX XX<br/><br/>
                 &nbsp;&nbsp;&nbsp;site: www.uci-ci.com<br/><br/>
                 &nbsp;&nbsp;&nbsp;Email: uicinfos@gmail.com<br/>
            """, style_universite)
