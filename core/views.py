@@ -470,7 +470,7 @@ def bulletin_etudiant(request):
 # =========================
 @role_required("ADMIN", "GESTIONNAIRE")
 @login_required(login_url="login")
-def etudiant_list(request):
+def etudiant_listPRO(request):
 
     query = request.GET.get("q", "")
     classe_id = request.GET.get("classe", "")
@@ -595,6 +595,57 @@ def etudiant_list(request):
 
         }
     )
+
+def etudiant_list(request):
+
+    etudiants = Etudiant.objects.select_related(
+        "filiere_bts",
+        "classe"
+    ).all()
+
+    q = request.GET.get("q", "").strip()
+    niveau = request.GET.get("niveau", "").strip()
+    filiere_bts = request.GET.get("filiere_bts", "").strip()
+
+    # Recherche
+    if q:
+        etudiants = etudiants.filter(
+            Q(nom__icontains=q) |
+            Q(prenoms__icontains=q) |
+            Q(matricule__icontains=q)
+        )
+
+    # Filtre BTS 1 / BTS 2
+    if niveau:
+        etudiants = etudiants.filter(
+            classe__niveau__nom=niveau
+        )
+
+    # Filtre filière
+    if filiere_bts:
+        etudiants = etudiants.filter(
+            filiere_bts_id=filiere_bts
+        )
+
+    filieres_bts = Filierebts.objects.all().order_by("nom")
+
+    paginator = Paginator(etudiants, 20)
+
+    page_number = request.GET.get("page")
+
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "page_obj": page_obj,
+        "filieres_bts": filieres_bts,
+    }
+
+    return render(
+        request,
+        "etudiants/list.html",
+        context
+    )
+
 
 def etudiant_create(request):
 

@@ -8,186 +8,304 @@ Gestion des étudiants BTS
 
 <div class="container-fluid py-4">
 
-    <!-- ==========================
-         HEADER
-    ========================== -->
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<!-- ==========================
+     HEADER
+========================== -->
 
-        <div>
-            <h2 class="fw-bold mb-1">
-                👨‍🎓 Gestion des étudiants BTS
-            </h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-            <p class="text-muted mb-0">
-                Liste et administration des étudiants
-            </p>
-        </div>
+    <div>
+        <h2 class="fw-bold mb-1">
+            👨‍🎓 Gestion des étudiants BTS
+        </h2>
 
-        <div class="d-flex gap-2">
+        <p class="text-muted mb-0">
+            Liste et administration des étudiants
+        </p>
+    </div>
 
-            <span class="badge bg-primary fs-6 p-3">
-                Total : {{ page_obj.paginator.count }}
-            </span>
+    <div class="d-flex gap-2">
 
-            <a href="{% url 'import_etudiants_excel' %}" class="btn btn-success shadow-sm">
-                <i class="bi bi-file-earmark-excel"></i>
-                Importer Excel
+        <span class="badge bg-primary fs-6 p-3">
+            Total : {{ page_obj.paginator.count }}
+        </span>
+
+        <a href="{% url 'import_etudiants_excel' %}"
+           class="btn btn-success shadow-sm">
+
+            <i class="bi bi-file-earmark-excel"></i>
+            Importer Excel
+
+        </a>
+
+        <a href="{% url 'etudiant_add' %}"
+           class="btn btn-primary shadow-sm">
+
+            ➕ Nouvel étudiant
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================
+     MENU FILIÈRES
+========================== -->
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+
+    <div class="card-body">
+
+        <h5 class="fw-bold mb-3">
+            🎓 Filières BTS
+        </h5>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <!-- Toutes les filières -->
+
+            <a href="?q={{ request.GET.q }}&niveau={{ request.GET.niveau }}"
+               class="btn
+               {% if not request.GET.filiere_bts %}
+                   btn-dark
+               {% else %}
+                   btn-outline-dark
+               {% endif %}
+               rounded-pill px-4">
+
+                📚 Toutes les filières
+
             </a>
 
-            <a href="{% url 'etudiant_add' %}" class="btn btn-primary shadow-sm">
-                ➕ Nouvel étudiant
-            </a>
+
+            <!-- Liste des filières -->
+
+            {% for f in filieres_bts %}
+
+                <a href="?filiere_bts={{ f.id }}&q={{ request.GET.q }}&niveau={{ request.GET.niveau }}"
+                   class="btn
+                   {% if request.GET.filiere_bts == f.id|stringformat:'s' %}
+                       btn-primary
+                   {% else %}
+                       btn-outline-primary
+                   {% endif %}
+                   rounded-pill px-4">
+
+                    🎓 {{ f.nom }}
+
+                </a>
+
+            {% endfor %}
 
         </div>
 
     </div>
 
-    <!-- ==========================
-         FILTRES
-    ========================== -->
+</div>
 
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
 
-        <div class="card-body">
+<!-- ==========================
+     FILTRES
+========================== -->
 
-            <form method="GET" class="row g-3">
+<div class="card border-0 shadow-sm rounded-4 mb-4">
 
-                <div class="col-lg-4">
+    <div class="card-body">
 
-                    <label class="form-label fw-bold">
-                        Recherche
-                    </label>
+        <form method="GET" class="row g-3">
 
-                    <input
-                        type="text"
-                        name="q"
-                        class="form-control"
-                        placeholder="Nom, prénom, matricule..."
-                        value="{{ request.GET.q }}">
+            <!-- Conserver la filière sélectionnée -->
 
-                </div>
+            {% if request.GET.filiere_bts %}
 
-                <div class="col-lg-3">
+                <input type="hidden"
+                       name="filiere_bts"
+                       value="{{ request.GET.filiere_bts }}">
 
-                    <label class="form-label fw-bold">
-                        Année
-                    </label>
+            {% endif %}
 
-                    <select name="niveau" class="form-select">
 
-                        <option value="">
-                            Toutes les années
-                        </option>
+            <div class="col-lg-5">
 
-                        <option value="BTS 1"
-                            {% if request.GET.niveau == "BTS 1" %}
-                                selected
-                            {% endif %}>
-                            1ère Année
-                        </option>
+                <label class="form-label fw-bold">
+                    🔎 Recherche
+                </label>
 
-                        <option value="BTS 2"
-                            {% if request.GET.niveau == "BTS 2" %}
-                                selected
-                            {% endif %}>
-                            2ème Année
-                        </option>
+                <input
+                    type="text"
+                    name="q"
+                    class="form-control"
+                    placeholder="Nom, prénom, matricule..."
+                    value="{{ request.GET.q }}">
 
-                    </select>
+            </div>
 
-                </div>
 
-                <div class="col-lg-3">
+            <div class="col-lg-4">
 
-                    <label class="form-label fw-bold">
-                        Filière BTS
-                    </label>
+                <label class="form-label fw-bold">
+                    📚 Année
+                </label>
 
-                    <select name="filiere_bts" class="form-select">
+                <select name="niveau" class="form-select">
 
-                        <option value="">
-                            Toutes les filières
-                        </option>
+                    <option value="">
+                        Toutes les années
+                    </option>
 
-                        {% for f in filieres_bts %}
+                    <option value="BTS 1"
+                        {% if request.GET.niveau == "BTS 1" %}
+                            selected
+                        {% endif %}>
 
-                            <option value="{{ f.id }}"
-                                {% if request.GET.filiere_bts == f.id|stringformat:"s" %}
-                                    selected
-                                {% endif %}>
+                        1ère Année
 
-                                {{ f.nom }}
+                    </option>
 
-                            </option>
+                    <option value="BTS 2"
+                        {% if request.GET.niveau == "BTS 2" %}
+                            selected
+                        {% endif %}>
 
-                        {% endfor %}
+                        2ème Année
 
-                    </select>
+                    </option>
 
-                </div>
+                </select>
 
-                <div class="col-lg-2 d-flex align-items-end">
+            </div>
 
-                    <button class="btn btn-dark w-100">
-                        🔎 Filtrer
-                    </button>
 
-                </div>
+            <div class="col-lg-3 d-flex align-items-end">
 
-            </form>
+                <button type="submit"
+                        class="btn btn-dark w-100">
 
-        </div>
+                    🔎 Filtrer
+
+                </button>
+
+            </div>
+
+        </form>
 
     </div>
 
-    <!-- ==========================
-         TABLE
-    ========================== -->
+</div>
 
-    <div class="card border-0 shadow-sm rounded-4">
 
-        <div class="card-body p-0">
+<!-- ==========================
+     FILIÈRE SÉLECTIONNÉE
+========================== -->
 
-            <div class="table-responsive">
+{% if request.GET.filiere_bts %}
 
-                <table class="table table-hover align-middle mb-0">
+    {% for f in filieres_bts %}
 
-                    <thead class="table-dark">
+        {% if request.GET.filiere_bts == f.id|stringformat:'s' %}
 
-                        <tr>
+            <div class="alert alert-primary border-0 shadow-sm rounded-4">
 
-                            <th class="ps-4">Nom complet</th>
+                <div class="d-flex align-items-center">
 
-                            <th>Matricule</th>
+                    <div class="fs-2 me-3">
+                        🎓
+                    </div>
 
-                            <th>Sexe</th>
+                    <div>
 
-                            <th>Classe</th>
+                        <h5 class="fw-bold mb-1">
+                            {{ f.nom }}
+                        </h5>
 
-                            <th>Filière</th>
+                        <small>
+                            Liste des étudiants de cette filière
+                        </small>
 
-                            <th class="text-center">Actions</th>
+                    </div>
 
-                        </tr>
+                </div>
 
-                    </thead>
+            </div>
 
-                    <tbody>
+        {% endif %}
 
-                        {% for e in page_obj %}
+    {% endfor %}
+
+{% endif %}
+
+
+<!-- ==========================
+     TABLE
+========================== -->
+
+<div class="card border-0 shadow-sm rounded-4">
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th class="ps-4">
+                            Nom complet
+                        </th>
+
+                        <th>
+                            Matricule
+                        </th>
+
+                        <th>
+                            Sexe
+                        </th>
+
+                        <th>
+                            Classe
+                        </th>
+
+                        <th>
+                            Filière
+                        </th>
+
+                        <th class="text-center">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for e in page_obj %}
 
                         <tr>
 
                             <td class="ps-4 fw-semibold">
+
                                 👤 {{ e.nom }} {{ e.prenoms }}
+
                             </td>
 
+
                             <td>
+
                                 <span class="badge bg-info">
+
                                     {{ e.matricule }}
+
                                 </span>
+
                             </td>
+
 
                             <td>
 
@@ -207,29 +325,36 @@ Gestion des étudiants BTS
 
                             </td>
 
+
                             <td>
 
                                 {{ e.classe|default:"-" }}
 
                             </td>
 
+
                             <td>
 
                                 {% if e.filiere_bts %}
 
                                     <span class="badge bg-success">
+
                                         {{ e.filiere_bts.nom }}
+
                                     </span>
 
                                 {% else %}
 
                                     <span class="badge bg-secondary">
+
                                         Non définie
+
                                     </span>
 
                                 {% endif %}
 
                             </td>
+
 
                             <td class="text-center">
 
@@ -239,6 +364,7 @@ Gestion des étudiants BTS
                                     ✏️
 
                                 </a>
+
 
                                 <a href="{% url 'etudiant_delete' e.id %}"
                                    class="btn btn-outline-danger btn-sm"
@@ -252,45 +378,55 @@ Gestion des étudiants BTS
 
                         </tr>
 
-                        {% empty %}
+
+                    {% empty %}
 
                         <tr>
 
-                            <td colspan="6" class="text-center py-5">
+                            <td colspan="6"
+                                class="text-center py-5">
 
-                                <h5>
-                                    📭 Aucun étudiant trouvé
+                                <div class="fs-1">
+                                    📭
+                                </div>
+
+                                <h5 class="mt-2">
+                                    Aucun étudiant trouvé
                                 </h5>
 
                                 <p class="text-muted">
-                                    Ajoutez votre premier étudiant BTS
+                                    Aucun étudiant ne correspond à cette sélection.
                                 </p>
 
-                                <a href="{% url 'etudiant_add' %}" class="btn btn-primary">
-                                    ➕ Ajouter
+                                <a href="{% url 'etudiant_add' %}"
+                                   class="btn btn-primary">
+
+                                    ➕ Ajouter un étudiant
+
                                 </a>
 
                             </td>
 
                         </tr>
 
-                        {% endfor %}
+                    {% endfor %}
 
-                    </tbody>
+                </tbody>
 
-                </table>
-
-            </div>
+            </table>
 
         </div>
 
     </div>
 
-    <!-- ==========================
-         PAGINATION
-    ========================== -->
+</div>
 
-    {% if page_obj.paginator.num_pages > 1 %}
+
+<!-- ==========================
+     PAGINATION
+========================== -->
+
+{% if page_obj.paginator.num_pages > 1 %}
 
     <nav class="mt-4">
 
@@ -298,18 +434,19 @@ Gestion des étudiants BTS
 
             {% if page_obj.has_previous %}
 
-            <li class="page-item">
+                <li class="page-item">
 
-                <a class="page-link"
-                   href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}&niveau={{ request.GET.niveau }}&filiere_bts={{ request.GET.filiere_bts }}">
+                    <a class="page-link"
+                       href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}&niveau={{ request.GET.niveau }}&filiere_bts={{ request.GET.filiere_bts }}">
 
-                    ⬅
+                        ⬅
 
-                </a>
+                    </a>
 
-            </li>
+                </li>
 
             {% endif %}
+
 
             <li class="page-item active">
 
@@ -321,18 +458,19 @@ Gestion des étudiants BTS
 
             </li>
 
+
             {% if page_obj.has_next %}
 
-            <li class="page-item">
+                <li class="page-item">
 
-                <a class="page-link"
-                   href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}&niveau={{ request.GET.niveau }}&filiere_bts={{ request.GET.filiere_bts }}">
+                    <a class="page-link"
+                       href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}&niveau={{ request.GET.niveau }}&filiere_bts={{ request.GET.filiere_bts }}">
 
-                    ➡
+                        ➡
 
-                </a>
+                    </a>
 
-            </li>
+                </li>
 
             {% endif %}
 
@@ -340,7 +478,8 @@ Gestion des étudiants BTS
 
     </nav>
 
-    {% endif %}
+{% endif %}
+
 
 </div>
 
