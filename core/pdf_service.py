@@ -135,8 +135,8 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     header_table = Table([
     [
         Paragraph("""
-             MINISTÈRE DE L’ENSEIGNEMENT<br/>
-            SUPÉRIEUR ET DE LA<br/>
+            MINISTÈRE DE L’ENSEIGNEMENT<br/>
+             SUPÉRIEUR ET DE LA<br/>
             RECHERCHE SCIENTIFIQUE
         """, style_ministere),
 
@@ -201,7 +201,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         [[
             logo,
             Paragraph("""
-                <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/><br/>
+                <b>UNIVERSITÉ INTER. DE COCODY</b><br/><br/>
                 &nbsp;&nbsp;&nbsp;BP Abidjan - Côte d'Ivoire<br/><br/>
                 &nbsp;&nbsp;&nbsp;Tel: +225 07 78 63 74 00<br/><br/>
                 &nbsp;&nbsp;&nbsp;Tél. fixe : 27 XX XX XX XX<br/><br/>
