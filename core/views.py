@@ -1172,6 +1172,7 @@ def normaliser_filiere(texte):
 # IMPORT DES ÉTUDIANTS EXCEL
 # ==============================================================
 
+
 def import_etudiants_excel(request):
 
     if request.method != "POST":
@@ -1187,76 +1188,55 @@ def import_etudiants_excel(request):
     # ==========================================================
 
     if not fichier:
-
         messages.error(
             request,
             "Veuillez sélectionner un fichier Excel."
         )
-
-        return redirect(
-            "import_etudiants_excel"
-        )
+        return redirect("import_etudiants_excel")
 
     if not fichier.name.lower().endswith(".xlsx"):
-
         messages.error(
             request,
             "Format incorrect. Veuillez importer uniquement un fichier .xlsx."
         )
-
-        return redirect(
-            "import_etudiants_excel"
-        )
+        return redirect("import_etudiants_excel")
 
     # ==========================================================
     # 2. Lecture Excel
     # ==========================================================
 
     try:
-
         wb = load_workbook(
             fichier,
             data_only=True
         )
 
     except Exception as e:
-
         messages.error(
             request,
             f"Impossible de lire le fichier Excel : {e}"
         )
-
-        return redirect(
-            "import_etudiants_excel"
-        )
+        return redirect("import_etudiants_excel")
 
     # ==========================================================
-    # 3. Vérification des feuilles
+    # 3. Vérification de la feuille
     # ==========================================================
 
     if not wb.sheetnames:
-
         messages.error(
             request,
             "Le fichier Excel ne contient aucune feuille."
         )
-
-        return redirect(
-            "import_etudiants_excel"
-        )
+        return redirect("import_etudiants_excel")
 
     ws = wb.active
 
     if ws.max_row < 2:
-
         messages.error(
             request,
             "Le fichier Excel ne contient aucune donnée étudiant."
         )
-
-        return redirect(
-            "import_etudiants_excel"
-        )
+        return redirect("import_etudiants_excel")
 
     # ==========================================================
     # 4. Vérification des colonnes
@@ -1284,7 +1264,6 @@ def import_etudiants_excel(request):
 
     entetes_excel = entetes_excel[:10]
 
-    # Normalisation des en-têtes
     entetes_attendues_normalisees = [
         normaliser_texte(entete)
         for entete in entetes_attendues
@@ -1295,10 +1274,7 @@ def import_etudiants_excel(request):
         for entete in entetes_excel
     ]
 
-    if (
-        entetes_excel_normalisees
-        != entetes_attendues_normalisees
-    ):
+    if entetes_excel_normalisees != entetes_attendues_normalisees:
 
         messages.error(
             request,
@@ -1317,22 +1293,21 @@ def import_etudiants_excel(request):
             + " | ".join(entetes_excel)
         )
 
-        return redirect(
-            "import_etudiants_excel"
-        )
+        return redirect("import_etudiants_excel")
 
     # ==========================================================
     # 5. Préparation
     # ==========================================================
 
-    compteur = 0
+    compteur_creation = 0
+    compteur_modification = 0
     erreurs = []
 
     matricules_fichier = set()
     emails_fichier = set()
 
     # ==========================================================
-    # 6. Parcours des lignes
+    # 6. Parcours des étudiants
     # ==========================================================
 
     for ligne, row in enumerate(
@@ -1354,7 +1329,6 @@ def import_etudiants_excel(request):
                 or str(value).strip() == ""
                 for value in row
             ):
-
                 continue
 
             # --------------------------------------------------
@@ -1462,7 +1436,7 @@ def import_etudiants_excel(request):
                 continue
 
             # ==================================================
-            # 9. Doublon matricule dans Excel
+            # 9. Doublon matricule dans le fichier Excel
             # ==================================================
 
             matricule_normalise = normaliser_texte(
@@ -1484,82 +1458,7 @@ def import_etudiants_excel(request):
             )
 
             # ==================================================
-            # 10. Doublon matricule en base
-            # ==================================================
-
-            etudiant_existant = None
-
-            for etudiant in Etudiant.objects.all():
-
-                if normaliser_texte(
-                    etudiant.matricule
-                ) == matricule_normalise:
-
-                    etudiant_existant = etudiant
-                    break
-
-            if etudiant_existant:
-
-                erreurs.append(
-                    f"Ligne {ligne}: "
-                    f"l'étudiant avec le matricule "
-                    f"'{matricule}' existe déjà en base."
-                )
-
-                continue
-
-            # ==================================================
-            # 11. Vérification email
-            # ==================================================
-
-            if email:
-
-                email_normalise = normaliser_texte(
-                    email
-                )
-
-                if email_normalise in emails_fichier:
-
-                    erreurs.append(
-                        f"Ligne {ligne}: "
-                        f"email '{email}' "
-                        f"en doublon dans le fichier."
-                    )
-
-                    continue
-
-                emails_fichier.add(
-                    email_normalise
-                )
-
-                email_existant = False
-
-                for etudiant in Etudiant.objects.exclude(
-                    email__isnull=True
-                ):
-
-                    if not etudiant.email:
-                        continue
-
-                    if normaliser_texte(
-                        etudiant.email
-                    ) == email_normalise:
-
-                        email_existant = True
-                        break
-
-                if email_existant:
-
-                    erreurs.append(
-                        f"Ligne {ligne}: "
-                        f"email '{email}' "
-                        f"déjà utilisé en base."
-                    )
-
-                    continue
-
-            # ==================================================
-            # 12. Vérification sexe
+            # 10. Vérification du sexe
             # ==================================================
 
             if sexe not in ["M", "F"]:
@@ -1573,7 +1472,7 @@ def import_etudiants_excel(request):
                 continue
 
             # ==================================================
-            # 13. Date de naissance
+            # 11. Vérification date de naissance
             # ==================================================
 
             if not isinstance(
@@ -1592,12 +1491,12 @@ def import_etudiants_excel(request):
             date_naissance = date_naissance.date()
 
             # ==================================================
-            # 14. Recherche de la classe
+            # 12. Recherche de la classe
             # ==================================================
 
             classe = None
 
-            classe_excel_normalisee = normaliser_texte(
+            classe_normalisee = normaliser_texte(
                 classe_nom
             )
 
@@ -1607,7 +1506,7 @@ def import_etudiants_excel(request):
 
                 if normaliser_texte(
                     c.nom
-                ) == classe_excel_normalisee:
+                ) == classe_normalisee:
 
                     classe = c
                     break
@@ -1622,12 +1521,12 @@ def import_etudiants_excel(request):
                 continue
 
             # ==================================================
-            # 15. Recherche de la filière
-            # ==========================================================
+            # 13. Recherche de la filière
+            # ==================================================
 
             filiere = None
 
-            filiere_excel_normalisee = normaliser_filiere(
+            filiere_normalisee = normaliser_filiere(
                 filiere_nom
             )
 
@@ -1635,7 +1534,7 @@ def import_etudiants_excel(request):
 
                 if normaliser_filiere(
                     f.nom
-                ) == filiere_excel_normalisee:
+                ) == filiere_normalisee:
 
                     filiere = f
                     break
@@ -1650,14 +1549,14 @@ def import_etudiants_excel(request):
                 continue
 
             # ==================================================
-            # 16. Vérification classe / filière
+            # 14. Vérification classe / filière
             # ==================================================
 
             if classe.filiere_bts_id != filiere.id:
 
                 erreurs.append(
                     f"Ligne {ligne}: "
-                    f"la classe '{classe_nom}' "
+                    f"la classe '{classe.nom}' "
                     f"n'appartient pas à la filière "
                     f"'{filiere.nom}'."
                 )
@@ -1665,33 +1564,122 @@ def import_etudiants_excel(request):
                 continue
 
             # ==================================================
-            # 17. Création de l'étudiant
+            # 15. Vérification email dans le fichier
+            # ==================================================
+
+            if email:
+
+                email_normalise = normaliser_texte(
+                    email
+                )
+
+                if email_normalise in emails_fichier:
+
+                    erreurs.append(
+                        f"Ligne {ligne}: "
+                        f"email '{email}' "
+                        f"en doublon dans le fichier Excel."
+                    )
+
+                    continue
+
+                emails_fichier.add(
+                    email_normalise
+                )
+
+            # ==================================================
+            # 16. Recherche de l'étudiant existant
+            # ==================================================
+
+            etudiant_existant = None
+
+            for etudiant in Etudiant.objects.all():
+
+                if normaliser_texte(
+                    etudiant.matricule
+                ) == matricule_normalise:
+
+                    etudiant_existant = etudiant
+                    break
+
+            # ==================================================
+            # 17. Vérification email en base
+            # ==================================================
+
+            if email:
+
+                email_existant = False
+
+                for etudiant in Etudiant.objects.exclude(
+                    email__isnull=True
+                ):
+
+                    if (
+                        etudiant_existant
+                        and etudiant.id == etudiant_existant.id
+                    ):
+                        continue
+
+                    if not etudiant.email:
+                        continue
+
+                    if normaliser_texte(
+                        etudiant.email
+                    ) == email_normalise:
+
+                        email_existant = True
+                        break
+
+                if email_existant:
+
+                    erreurs.append(
+                        f"Ligne {ligne}: "
+                        f"email '{email}' "
+                        f"déjà utilisé par un autre étudiant."
+                    )
+
+                    continue
+
+            # ==================================================
+            # 18. Mise à jour de l'étudiant existant
+            # ==================================================
+
+            if etudiant_existant:
+
+                etudiant_existant.nom = nom
+                etudiant_existant.prenoms = prenoms
+                etudiant_existant.date_naissance = date_naissance
+                etudiant_existant.lieu_naissance = lieu_naissance
+                etudiant_existant.sexe = sexe
+                etudiant_existant.telephone = telephone
+                etudiant_existant.email = email
+                etudiant_existant.classe = classe
+                etudiant_existant.filiere_bts = filiere
+
+                etudiant_existant.save()
+
+                compteur_modification += 1
+
+                continue
+
+            # ==================================================
+            # 19. Création du nouvel étudiant
             # ==================================================
 
             Etudiant.objects.create(
-
                 matricule=matricule,
-
                 nom=nom,
-
                 prenoms=prenoms,
-
                 date_naissance=date_naissance,
-
                 lieu_naissance=lieu_naissance,
-
                 sexe=sexe,
-
                 telephone=telephone,
-
                 email=email,
-
                 classe=classe,
-
                 filiere_bts=filiere,
             )
 
-            compteur += 1
+            compteur_creation += 1
 
         except Exception as e:
 
@@ -1701,14 +1689,22 @@ def import_etudiants_excel(request):
             )
 
     # ==========================================================
-    # 18. Résultat
+    # 20. Messages de résultat
     # ==========================================================
 
-    if compteur > 0:
+    if compteur_creation > 0:
 
         messages.success(
             request,
-            f"{compteur} étudiant(s) importé(s) avec succès."
+            f"{compteur_creation} étudiant(s) créé(s) avec succès."
+        )
+
+    if compteur_modification > 0:
+
+        messages.success(
+            request,
+            f"{compteur_modification} étudiant(s) "
+            f"mis à jour avec succès."
         )
 
     if erreurs:
@@ -1725,7 +1721,11 @@ def import_etudiants_excel(request):
                 erreur
             )
 
-    if compteur == 0 and not erreurs:
+    if (
+        compteur_creation == 0
+        and compteur_modification == 0
+        and not erreurs
+    ):
 
         messages.warning(
             request,
@@ -1735,6 +1735,7 @@ def import_etudiants_excel(request):
     return redirect(
         "etudiant_list"
     )
+
 
 
 def import_etudiants_excelAAAAA(request):
