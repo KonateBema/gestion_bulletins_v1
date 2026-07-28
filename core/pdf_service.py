@@ -13,7 +13,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-from .models import Note,Filierebts
+from .models import Note
 from .services import calcul_moyenne_etudiant, mention
 from reportlab.platypus import Flowable
 from reportlab.pdfbase import pdfmetrics
@@ -120,15 +120,25 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # =====================================================
     # EN-TÊTE ÉTAT
     # =====================================================
+    from reportlab.lib.enums import TA_LEFT
+    style_ministere = ParagraphStyle(
+    "style_ministere",
+    parent=SMALL,
+    fontName="Helvetica-Bold",
+    fontSize=8,
+    leading=10,
+    alignment=TA_LEFT,
+    spaceAfter=0,
+    spaceBefore=0,
+   )
+    
     header_table = Table([
     [
         Paragraph("""
-            <para align="left">
-            <b>MINISTÈRE DE L’ENSEIGNEMENT <br/>
-            SUPÉRIEUR ET DE LA <br/>
-            RECHERCHE SCIENTIFIQUE</b>
-            </para>
-        """, SMALL),
+             MINISTÈRE DE L’ENSEIGNEMENT<br/>
+            SUPÉRIEUR ET DE LA<br/>
+            RECHERCHE SCIENTIFIQUE
+        """, style_ministere),
 
         Paragraph("""
             <para align="right">
@@ -178,7 +188,12 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         2.5 * cm,
         "CACHET"
     )
-
+    style_universite = ParagraphStyle(
+    "style_universite",
+    parent=SMALL,
+    fontSize=9,
+    leading=11,
+   )
     # =====================================================
     # CADRE UNIVERSITÉ
     # =====================================================
@@ -187,15 +202,17 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
             logo,
             Paragraph("""
                 <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/><br/>
-                 &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;BP Abidjan - Côte d'Ivoire<br/><br/>
-                 &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;Tel: +225 07 78 63 74 00<br/><br/>
-                 &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;site: www.uci-ci.com<br/><br/>
-                 &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;Email: uicinfos@gmail.com
-           """, SMALL)
+                &nbsp;&nbsp;&nbsp;BP Abidjan - Côte d'Ivoire<br/><br/>
+                &nbsp;&nbsp;&nbsp;Tel: +225 07 78 63 74 00<br/><br/>
+                &nbsp;&nbsp;&nbsp;Tél. fixe : 27 XX XX XX XX<br/><br/>
+                &nbsp;&nbsp;&nbsp;site: www.uci-ci.com<br/><br/>
+                &nbsp;&nbsp;&nbsp;Email: uicinfos@gmail.com<br/>
+           """, style_universite)
         ]],
-        colWidths=[0.5 * cm, 7.5 * cm],
-        rowHeights=[3.7 * cm]
-
+        # colWidths=[0.5 * cm, 7.5 * cm],
+        colWidths=[1.7 * cm, 6.5 * cm],
+     
+        # rowHeights=[3.7 * cm]
     )
 
     cadre_universite.setStyle(TableStyle([
@@ -217,10 +234,12 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # =====================================================
     # CADRE ÉTUDIANT
     # =====================================================
-    nom_classe = classe.nom
-
+    nom_classe = classe.nom.strip()
     if classe.filiere_bts:
-         nom_classe = nom_classe.replace(f"{classe.filiere_bts.nom} ", "")
+        nom_filiere = classe.filiere_bts.nom.strip()
+    # Supprimer le nom de la filière uniquement au début
+        if nom_classe.startswith(nom_filiere):
+             nom_classe = nom_classe[len(nom_filiere):].strip()
 
     date_lieu = (
     f"{etudiant.date_naissance.strftime('%d/%m/%Y')} à {etudiant.lieu_naissance}"
@@ -230,18 +249,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     else ""
     )
        
-    # cadre_etudiant = Table(
-    #     [
-    #         ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
-    #         ["Matricule", etudiant.matricule],
-    #         ["Date et lieu de naiss", date_lieu],
-    #         ["Sexe", getattr(etudiant, "sexe", "")],
-    #         ["Classe", nom_classe],
-    #         ["Filière", etudiant.filiere_bts.nom],
-    #         ["Redoublant", "NON"],
-    #     ],
-    #     colWidths=[4.5 * cm, 5.5 * cm], etudiant.filiere_bts.nom.replace(" ", "<br/>", 1),
-    # )
     cadre_etudiant = Table(
        [
         ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
@@ -750,12 +757,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
 
     rang_annuel = format_rang(rangs_annuels.get(etudiant.id, "-"))
 
-#     visa_table = Table([
-#     [
-#         Paragraph("<b>Le Chef d’établissement</b><br/><br/><br/><br/>", SMALL),
-#         Paragraph("<b>OBSERVATION DU CONSEIL DE CLASSE</b><br/><br/><br/><br/>", SMALL),
-#     ]
-#    ], colWidths=[6 * cm, 8 * cm])
     HEADER = ParagraphStyle(
       "HEADER",
         parent=SMALL,

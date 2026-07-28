@@ -56,45 +56,18 @@ urlpatterns = [
     path('bulletin/pdf/<int:etudiant_id>/<int:classe_id>/',views.download_bulletin_pdf, name='bulletin_pdf'),
 
     # path("bts/filieres/",FiliereBTSListView.as_view(),name="liste_filieres_bts"),
-
-    path(
-        'bts/filieres/',
-        views.liste_filieres_bts,
-        name='liste_filieres_bts'
-    ),
-
-    path(
-        'bts/filieres/ajouter/',
-        views.ajouter_filiere_bts,
-        name='ajouter_filiere_bts'
-    ),
-
-    path(
-        'bts/filieres/modifier/<int:pk>/',
-        views.modifier_filiere_bts,
-        name='modifier_filiere_bts'
-    ),
-
-    path(
-        'bts/filieres/supprimer/<int:pk>/',
-        views.supprimer_filiere_bts,
-        name='supprimer_filiere_bts'
-    ),
-
+    path('bts/filieres/', views.liste_filieres_bts,name='liste_filieres_bts'),
+    path('bts/filieres/ajouter/',views.ajouter_filiere_bts, name='ajouter_filiere_bts'),
+    path('bts/filieres/modifier/<int:pk>/',views.modifier_filiere_bts,name='modifier_filiere_bts'),
+    path('bts/filieres/supprimer/<int:pk>/',views.supprimer_filiere_bts, name='supprimer_filiere_bts'),
     path('salles/', views.salle_list, name='salle_list'),
     path('salles/add/', views.salle_create, name='salle_add'),
     path('salles/edit/<int:pk>/', views.salle_edit, name='salle_edit'),
     path('salles/delete/<int:pk>/', views.salle_delete, name='salle_delete'),
-    
-    path(
-        "saisie-groupee/",
-        views.saisie_note_groupee,
-        name="saisie_note_groupee"
-    ),
-    path(
-    "bulletin/pdf/<int:etudiant_id>/<int:classe_id>/<int:semestre>/",
-    views.download_bulletin_pdf,
-    name="bulletin_pdf",
-)
+    path("saisie-groupee/",views.saisie_note_groupee,name="saisie_note_groupee"),
+    path("bulletin/pdf/<int:etudiant_id>/<int:classe_id>/<int:semestre>/",views.download_bulletin_pdf,name="bulletin_pdf"),
+    # urls.py
+
+    path("etudiants/import-excel/",views.import_etudiants_excel, name="import_etudiants_excel"),
 
 ]

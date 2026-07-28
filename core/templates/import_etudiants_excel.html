@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-success text-white">
+            <h4>Importer les étudiants depuis Excel</h4>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Fichier Excel
+                    </label>
+
+                    <input
+                        type="file"
+                        name="excel_file"
+                        class="form-control"
+                        accept=".xlsx"
+                        required>
+
+                </div>
+
+                <button class="btn btn-success">
+
+                    Importer
+
+                </button>
+
+                <a href="{% url 'etudiant_list' %}" class="btn btn-secondary">
+
+                    Retour
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

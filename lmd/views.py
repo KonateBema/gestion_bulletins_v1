@@ -5707,7 +5707,6 @@ def bulletin_rattrapage_pdf(request, id, semestre):
             semestre
         )
 
-
     else:
 
         return HttpResponse(

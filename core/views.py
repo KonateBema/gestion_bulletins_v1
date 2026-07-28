@@ -7,41 +7,23 @@ from django.http import HttpResponse, FileResponse
 from django.views.decorators.csrf import csrf_protect
 from .forms import EtudiantForm,ClasseForm,MatiereForm,AffectationForm,NoteForm
 from django.shortcuts import get_object_or_404
-from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import Filiere
-import os
 from .services import calcul_moyenne_etudiant
-from django.conf import settings
-from django.views.generic import ListView
+from openpyxl import load_workbook
 from .models import Filierebts
 from django.contrib import messages
 from .models import Salle
 from .models import SaisieNotesBTS
-from .models import (
-    Classe,
-    Niveau
-)
-from lmd.models import EtudiantLMD
+from .models import ( Classe,Niveau)
+from lmd.models import EtudiantLMD,FiliereLMD
 # from .models import NoteBTS
-from lmd.models import EtudiantLMD, FiliereLMD
-
-from .models import (
-    Etudiant, Professeur, Classe, Matiere, Note,
-    AffectationMatiere, Inscription, Profile
-)
-
+from .models import (Etudiant, Professeur, Matiere, Note,AffectationMatiere, Inscription, Profile)
 from .forms import UserRegisterForm
 from .utils import generate_matricule
-from .services import (
-    calcul_moyenne_etudiant,
-    classement_classe,
-    mention,
-    moyenne_classe
-)
+from .services import (mention,)
 from .pdf_service import generate_bulletin_pdf
-
+from datetime import datetime
 
 # =========================
 # 🔐 LOGIN
@@ -270,125 +252,131 @@ def bulletin_etudiant(request):
 # 📄 PDF BULLETIN
 # =========================
 
-
-def etudiant_listBBB(request):
-
-    query = request.GET.get("q")
-    classe_id = request.GET.get("classe")
-    filiere_bts_id = request.GET.get("filiere_bts")
-
-    etudiants = Etudiant.objects.select_related(
-        "classe",
-        "filiere_bts"
-    ).all()
-
-    # Recherche
-    if query:
-        etudiants = etudiants.filter(
-            Q(matricule__icontains=query) |
-            Q(user__username__icontains=query) |
-            Q(prenoms__icontains=query) |
-            Q(nom__icontains=query)
-        )
-
-    # Filtre classe
-    if classe_id:
-        etudiants = etudiants.filter(classe_id=classe_id)
-
-    # Filtre filière BTS
-    if filiere_bts_id:
-        etudiants = etudiants.filter(
-            filiere_bts_id=filiere_bts_id
-        )
-
-    paginator = Paginator(etudiants, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    return render(
-        request,
-        "etudiants/list.html",
-        {
-            "page_obj": page_obj,
-            "classes": Classe.objects.all(),
-            "filieres_bts": Filierebts.objects.all(),
-        }
-    )
-
 def etudiant_list(request):
 
-    query = request.GET.get("q")
-    classe_id = request.GET.get("classe")
-    filiere_bts_id = request.GET.get("filiere_bts")
-    niveau = request.GET.get("niveau")
+    query = request.GET.get("q", "")
+    classe_id = request.GET.get("classe", "")
+    filiere_bts_id = request.GET.get("filiere_bts", "")
+    niveau = request.GET.get("niveau", "")
+
+
+    # =========================
+    # LISTE ETUDIANTS
+    # =========================
 
     etudiants = Etudiant.objects.select_related(
         "classe",
         "filiere_bts"
-    ).all()
+    ).order_by("nom", "prenoms")
 
-    # Recherche
+
+
+    # =========================
+    # RECHERCHE
+    # =========================
+
     if query:
+
         etudiants = etudiants.filter(
+
             Q(matricule__icontains=query) |
-            Q(user__username__icontains=query) |
-            Q(prenoms__icontains=query) |
-            Q(nom__icontains=query)
+
+            Q(nom__icontains=query) |
+
+            Q(prenoms__icontains=query)
+
         )
 
-    # Filtre par classe (ID)
+
+
+    # =========================
+    # FILTRE CLASSE
+    # =========================
+
     if classe_id:
+
         etudiants = etudiants.filter(
             classe_id=classe_id
         )
 
-    # Filtre par niveau BTS 1 / BTS 2
+
+
+    # =========================
+    # FILTRE NIVEAU BTS
+    # =========================
+
     if niveau:
+
         etudiants = etudiants.filter(
+
             filiere_bts__niveaux__nom=niveau
+
         ).distinct()
 
-    # Filtre filière BTS
+
+
+    # =========================
+    # FILTRE FILIERE BTS
+    # =========================
+
     if filiere_bts_id:
+
         etudiants = etudiants.filter(
+
             filiere_bts_id=filiere_bts_id
+
         )
 
 
-    paginator = Paginator(etudiants, 10)
+
+    # =========================
+    # PAGINATION
+    # =========================
+
+    paginator = Paginator(
+        etudiants,
+        10
+    )
+
 
     page_number = request.GET.get("page")
 
-    page_obj = paginator.get_page(page_number)
+
+    page_obj = paginator.get_page(
+        page_number
+    )
+
 
 
     return render(
         request,
         "etudiants/list.html",
         {
+
             "page_obj": page_obj,
 
-            # Classes disponibles
-            "classes": Classe.objects.all(),
 
-            # Filières BTS
-            "filieres_bts": Filierebts.objects.all(),
+            # données filtres
 
-            # Pour garder la valeur sélectionnée
+            "classes": Classe.objects.all().order_by("nom"),
+
+
+            "filieres_bts": Filierebts.objects.all().order_by("nom"),
+
+
             "niveau": niveau,
+
+
+            "classe_selected": classe_id,
+
+
+            "filiere_selected": filiere_bts_id,
+
+
+            "query": query,
+
         }
     )
-
-def etudiant_createENC(request):
-    form = EtudiantForm(request.POST or None)
-    if form.is_valid():
-        form.save()
-        return redirect("etudiant_list")
-    return render(request, "etudiants/form.html", {"form": form})
-
-from .models import Filierebts
-
-
 
 def etudiant_create(request):
 
@@ -604,11 +592,6 @@ def matiere_create(request):
     return render(request, "matieres/form.html", {"form": form})
 
 
-from .models import AffectationMatiere
-
-from .forms import AffectationForm
-
-
 def affectation_list(request):
     return render(request, "affectations/list.html", {
         "affectations": Affectation.objects.select_related(  # noqa: F821
@@ -634,10 +617,7 @@ def affectation_delete(request, id):
     Affectation.objects.get(id=id).delete()  # noqa: F821
     return redirect("affectation_list")
 
-from .models import Note
-from .forms import NoteForm
 
-from django.core.paginator import Paginator
 
 def note_list(request):
 
@@ -721,18 +701,6 @@ def moyenne_etudiant(etudiant):
     total = sum(n.moyenne for n in notes)
     return total / notes.count()
 
-def mention(moyenne):
-    if moyenne >= 16:
-        return "Très Bien"
-    elif moyenne >= 14:
-        return "Bien"
-    elif moyenne >= 12:
-        return "Assez Bien"
-    elif moyenne >= 10:
-        return "Passable"
-    else:
-        return "Insuffisant"
-
 
 def classe_edit(request, pk):
     classe = Classe.objects.get(pk=pk)
@@ -767,11 +735,6 @@ def matiere_delete(request, id):
     matiere.delete()
     return redirect('matiere_list')
 
-from .pdf_service import generate_bulletin_pdf
-
-from django.http import FileResponse, HttpResponse
-
-from .models import Etudiant
 
 def download_bulletin_pdf(request, etudiant_id, classe_id, semestre):
 
@@ -808,18 +771,6 @@ def bulletin_classe(request, classe_id):
         "data": data
     })
 
-from .models import Etudiant
-
-def bulletin_listQQ(request):
-    etudiants = Etudiant.objects.select_related("classe").all()
-    return render(request, "bulletins/list.html", {
-        "etudiants": etudiants
-    })
-
-
-
-from django.core.paginator import Paginator
-from .models import Etudiant, Classe
 
 def bulletin_list(request):
 
@@ -878,11 +829,6 @@ def ajouter_filiere_btsGGG(request):
     return render(request, 'bts/ajouter_filiere_bts.html')
 
 
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from .models import Filierebts, Niveau
-
-
 def ajouter_filiere_bts(request):
 
     if request.method == "POST":
@@ -915,20 +861,6 @@ def ajouter_filiere_bts(request):
         }
     )
 
-def modifier_filiere_btsFFF(request, pk):
-    filiere = get_object_or_404(Filierebts, pk=pk)
-
-    if request.method == "POST":
-        filiere.nom = request.POST.get("nom")
-        filiere.save()
-
-        messages.success(request, "Filière BTS modifiée avec succès.")
-        return redirect('liste_filieres_bts')
-
-    return render(request, 'bts/modifier_filiere_bts.html', {
-        'filiere': filiere
-    })
-    
 def modifier_filiere_bts(request, pk):
 
     filiere = get_object_or_404(Filierebts, pk=pk)
@@ -1154,4 +1086,698 @@ def saisie_note_groupee(request):
         request,
         "notes/saisie_groupee.html",
         context
+    )
+    
+
+def import_etudiants_excel(request):
+
+    if request.method != "POST":
+        return render(
+            request,
+            "import_etudiants_excel.html"
+        )
+
+    fichier = request.FILES.get("excel_file")
+
+    # ==========================================================
+    # 1. Vérification du fichier
+    # ==========================================================
+
+    if not fichier:
+        messages.error(
+            request,
+            "Veuillez sélectionner un fichier Excel."
+        )
+        return redirect("import_etudiants_excel")
+
+    if not fichier.name.lower().endswith(".xlsx"):
+        messages.error(
+            request,
+            "Format incorrect. Veuillez importer uniquement un fichier .xlsx."
+        )
+        return redirect("import_etudiants_excel")
+
+    # ==========================================================
+    # 2. Lecture Excel
+    # ==========================================================
+
+    try:
+        wb = load_workbook(
+            fichier,
+            data_only=True
+        )
+
+    except Exception as e:
+        messages.error(
+            request,
+            f"Impossible de lire le fichier Excel : {e}"
+        )
+        return redirect("import_etudiants_excel")
+
+    # ==========================================================
+    # 3. Vérification des feuilles
+    # ==========================================================
+
+    if not wb.sheetnames:
+        messages.error(
+            request,
+            "Le fichier Excel ne contient aucune feuille."
+        )
+        return redirect("import_etudiants_excel")
+
+    ws = wb.active
+
+    if ws.max_row < 2:
+        messages.error(
+            request,
+            "Le fichier Excel ne contient aucune donnée étudiant."
+        )
+        return redirect("import_etudiants_excel")
+
+    # ==========================================================
+    # 4. Vérification des colonnes
+    # ==========================================================
+
+    entetes_attendues = [
+        "Matricule",
+        "Nom",
+        "Prénoms",
+        "Date naissance",
+        "Lieu naissance",
+        "Sexe",
+        "Téléphone",
+        "Email",
+        "Classe",
+        "Filière",
+    ]
+
+    entetes_excel = [
+        str(cell.value).strip()
+        if cell.value is not None
+        else ""
+        for cell in ws[1]
+    ]
+
+    # On ne garde que les 10 premières colonnes
+    entetes_excel = entetes_excel[:10]
+
+    if entetes_excel != entetes_attendues:
+
+        messages.error(
+            request,
+            "Le format du fichier Excel est incorrect."
+        )
+
+        messages.warning(
+            request,
+            "Colonnes attendues : "
+            + " | ".join(entetes_attendues)
+        )
+
+        messages.warning(
+            request,
+            "Colonnes trouvées : "
+            + " | ".join(entetes_excel)
+        )
+
+        return redirect("import_etudiants_excel")
+
+    # ==========================================================
+    # 5. Préparation
+    # ==========================================================
+
+    compteur = 0
+    erreurs = []
+
+    # Matricules déjà rencontrés dans CE fichier
+    matricules_fichier = set()
+
+    # Emails déjà rencontrés dans CE fichier
+    emails_fichier = set()
+
+    # ==========================================================
+    # 6. Parcours des lignes
+    # ==========================================================
+
+    for ligne, row in enumerate(
+        ws.iter_rows(
+            min_row=2,
+            values_only=True
+        ),
+        start=2
+    ):
+
+        try:
+
+            # --------------------------------------------------
+            # Ligne complètement vide
+            # --------------------------------------------------
+
+            if not row or all(
+                value is None or str(value).strip() == ""
+                for value in row
+            ):
+                continue
+
+            # --------------------------------------------------
+            # Vérification nombre de colonnes
+            # --------------------------------------------------
+
+            if len(row) < 10:
+
+                erreurs.append(
+                    f"Ligne {ligne}: nombre de colonnes insuffisant."
+                )
+
+                continue
+
+            # --------------------------------------------------
+            # Lecture des données
+            # --------------------------------------------------
+
+            matricule = (
+                str(row[0]).strip()
+                if row[0] is not None
+                else ""
+            )
+
+            nom = (
+                str(row[1]).strip()
+                if row[1] is not None
+                else ""
+            )
+
+            prenoms = (
+                str(row[2]).strip()
+                if row[2] is not None
+                else ""
+            )
+
+            date_naissance = row[3]
+
+            lieu_naissance = (
+                str(row[4]).strip()
+                if row[4] is not None
+                else ""
+            )
+
+            sexe = (
+                str(row[5]).strip().upper()
+                if row[5] is not None
+                else ""
+            )
+
+            telephone = (
+                str(row[6]).strip()
+                if row[6] is not None
+                else ""
+            )
+
+            email = (
+                str(row[7]).strip().lower()
+                if row[7] is not None
+                else ""
+            )
+
+            classe_nom = (
+                str(row[8]).strip()
+                if row[8] is not None
+                else ""
+            )
+
+            filiere_nom = (
+                str(row[9]).strip()
+                if row[9] is not None
+                else ""
+            )
+
+            # ==================================================
+            # 7. Vérification des champs obligatoires
+            # ==================================================
+
+            champs_obligatoires = {
+                "Matricule": matricule,
+                "Nom": nom,
+                "Prénoms": prenoms,
+                "Lieu naissance": lieu_naissance,
+                "Sexe": sexe,
+                "Classe": classe_nom,
+                "Filière": filiere_nom,
+            }
+
+            champs_vides = [
+                champ
+                for champ, valeur in champs_obligatoires.items()
+                if not valeur
+            ]
+
+            if champs_vides:
+
+                erreurs.append(
+                    f"Ligne {ligne}: "
+                    f"champs obligatoires manquants : "
+                    f"{', '.join(champs_vides)}."
+                )
+
+                continue
+
+            # ==================================================
+            # 8. Vérification du matricule
+            # ==================================================
+
+            matricule_normalise = matricule.upper()
+
+            if matricule_normalise in matricules_fichier:
+
+                erreurs.append(
+                    f"Ligne {ligne}: "
+                    f"matricule '{matricule}' en doublon "
+                    f"dans le fichier Excel."
+                )
+
+                continue
+
+            matricules_fichier.add(matricule_normalise)
+
+            # ==================================================
+            # 9. Vérification doublon en base
+            # ==================================================
+
+            if Etudiant.objects.filter(
+                matricule__iexact=matricule
+            ).exists():
+
+                erreurs.append(
+                    f"Ligne {ligne}: "
+                    f"l'étudiant avec le matricule "
+                    f"'{matricule}' existe déjà en base."
+                )
+
+                continue
+
+            # ==================================================
+            # 10. Vérification email
+            # ==================================================
+
+            if email:
+
+                if email in emails_fichier:
+
+                    erreurs.append(
+                        f"Ligne {ligne}: "
+                        f"email '{email}' en doublon dans le fichier."
+                    )
+
+                    continue
+
+                emails_fichier.add(email)
+
+                if Etudiant.objects.filter(
+                    email__iexact=email
+                ).exists():
+
+                    erreurs.append(
+                        f"Ligne {ligne}: "
+                        f"email '{email}' déjà utilisé en base."
+                    )
+
+                    continue
+
+            # ==================================================
+            # 11. Vérification sexe
+            # ==================================================
+
+            if sexe not in ["M", "F"]:
+
+                erreurs.append(
+                    f"Ligne {ligne}: sexe '{sexe}' incorrect. "
+                    f"Valeurs autorisées : M ou F."
+                )
+
+                continue
+
+            # ==================================================
+            # 12. Vérification date naissance
+            # ==================================================
+
+            if not isinstance(date_naissance, datetime):
+
+                erreurs.append(
+                    f"Ligne {ligne}: "
+                    f"date de naissance invalide. "
+                    f"Utilisez une vraie date Excel."
+                )
+
+                continue
+
+            date_naissance = date_naissance.date()
+
+            # ==================================================
+            # 13. Recherche de la classe
+            # ==================================================
+
+            classe = Classe.objects.filter(
+                nom__iexact=classe_nom
+            ).first()
+
+            if classe is None:
+
+                erreurs.append(
+                    f"Ligne {ligne}: "
+                    f"classe '{classe_nom}' introuvable."
+                )
+
+                continue
+
+            # ==================================================
+            # 14. Recherche de la filière
+            # ==================================================
+
+            filiere = Filierebts.objects.filter(
+                nom__iexact=filiere_nom
+            ).first()
+
+            if filiere is None:
+
+                erreurs.append(
+                    f"Ligne {ligne}: "
+                    f"filière '{filiere_nom}' introuvable."
+                )
+
+                continue
+
+            # ==================================================
+            # 15. Vérification classe / filière
+            # ==================================================
+
+            if classe.filiere_bts_id != filiere.id:
+
+                erreurs.append(
+                    f"Ligne {ligne}: "
+                    f"la classe '{classe_nom}' "
+                    f"n'appartient pas à la filière "
+                    f"'{filiere_nom}'."
+                )
+
+                continue
+
+            # ==================================================
+            # 16. Création de l'étudiant
+            # ==================================================
+
+            Etudiant.objects.create(
+
+                matricule=matricule,
+
+                nom=nom,
+
+                prenoms=prenoms,
+
+                date_naissance=date_naissance,
+
+                lieu_naissance=lieu_naissance,
+
+                sexe=sexe,
+
+                telephone=telephone,
+
+                email=email,
+
+                classe=classe,
+
+                filiere_bts=filiere,
+            )
+
+            compteur += 1
+
+        except Exception as e:
+
+            erreurs.append(
+                f"Ligne {ligne}: erreur inattendue : {str(e)}"
+            )
+
+    # ==========================================================
+    # 17. Messages de résultat
+    # ==========================================================
+
+    if compteur > 0:
+
+        messages.success(
+            request,
+            f"{compteur} étudiant(s) importé(s) avec succès."
+        )
+
+    if erreurs:
+
+        messages.warning(
+            request,
+            f"{len(erreurs)} ligne(s) n'ont pas été importée(s)."
+        )
+
+        for erreur in erreurs:
+
+            messages.warning(
+                request,
+                erreur
+            )
+
+    if compteur == 0 and not erreurs:
+
+        messages.warning(
+            request,
+            "Aucun étudiant n'a été trouvé dans le fichier."
+        )
+
+    return redirect(
+        "etudiant_list"
+    )
+
+
+def import_etudiants_excelAAAAA(request):
+
+    if request.method == "POST":
+
+        fichier = request.FILES.get("excel_file")
+
+        if not fichier:
+            messages.error(
+                request,
+                "Veuillez sélectionner un fichier Excel."
+            )
+            return redirect("import_etudiants_excel")
+
+
+        # Vérification extension
+        if not fichier.name.endswith(".xlsx"):
+
+            messages.error(
+                request,
+                "Veuillez importer un fichier Excel .xlsx"
+            )
+
+            return redirect("import_etudiants_excel")
+
+
+
+        try:
+
+            wb = load_workbook(
+                fichier,
+                data_only=True
+            )
+
+
+            # Vérifier les feuilles
+
+            if len(wb.sheetnames) == 0:
+
+                messages.error(
+                    request,
+                    "Le fichier Excel ne contient aucune feuille."
+                )
+
+                return redirect("import_etudiants_excel")
+
+
+            ws = wb.active
+
+
+
+        except Exception as e:
+
+            messages.error(
+                request,
+                f"Erreur lecture Excel : {e}"
+            )
+
+            return redirect("import_etudiants_excel")
+
+
+
+        compteur = 0
+        erreurs = []
+
+
+
+        # Vérifier les lignes
+
+        if ws.max_row < 2:
+
+            messages.error(
+                request,
+                "Le fichier Excel ne contient aucune donnée étudiant."
+            )
+
+            return redirect("import_etudiants_excel")
+
+
+
+
+        for ligne, row in enumerate(
+            ws.iter_rows(
+                min_row=2,
+                values_only=True
+            ),
+            start=2
+        ):
+
+
+            try:
+
+
+                if not row or row[0] is None:
+                    continue
+
+
+
+                matricule = str(row[0]).strip()
+
+                nom = str(row[1]).strip()
+
+                prenoms = str(row[2]).strip()
+
+                date_naissance = row[3]
+
+                lieu_naissance = str(row[4]).strip()
+
+                sexe = str(row[5]).upper().strip()
+
+
+                telephone = str(row[6]).strip()
+
+                email = str(row[7]).strip()
+
+
+                classe_nom = str(row[8]).strip()
+
+                filiere_nom = str(row[9]).strip()
+
+
+
+                # Recherche classe
+
+                classe = Classe.objects.filter(
+                    nom__iexact=classe_nom
+                ).first()
+
+
+
+                # Recherche filière
+
+                filiere = Filierebts.objects.filter(
+                    nom__iexact=filiere_nom
+                ).first()
+
+
+
+                if classe is None:
+
+                    erreurs.append(
+                        f"Ligne {ligne}: classe '{classe_nom}' introuvable"
+                    )
+
+                    continue
+
+
+
+                if filiere is None:
+
+                    erreurs.append(
+                        f"Ligne {ligne}: filière '{filiere_nom}' introuvable"
+                    )
+
+                    continue
+
+
+
+
+                Etudiant.objects.update_or_create(
+
+                    matricule=matricule,
+
+                    defaults={
+
+                        "nom": nom,
+
+                        "prenoms": prenoms,
+
+                        "date_naissance": date_naissance,
+
+                        "lieu_naissance": lieu_naissance,
+
+                        "sexe": sexe,
+
+                        "telephone": telephone,
+
+                        "email": email,
+
+                        "classe": classe,
+
+                        "filiere_bts": filiere,
+
+                    }
+
+                )
+
+
+                compteur += 1
+
+
+
+            except Exception as e:
+
+                erreurs.append(
+                    f"Ligne {ligne}: {str(e)}"
+                )
+
+
+
+
+        if compteur > 0:
+
+            messages.success(
+                request,
+                f"{compteur} étudiant(s) importé(s) avec succès."
+            )
+
+
+
+        for erreur in erreurs:
+
+            messages.warning(
+                request,
+                erreur
+            )
+
+
+
+        return redirect(
+            "etudiant_list"
+        )
+
+
+
+    return render(
+        request,
+        "import_etudiants_excel.html"
     )
