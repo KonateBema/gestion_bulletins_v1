@@ -1087,7 +1087,90 @@ def saisie_note_groupee(request):
         "notes/saisie_groupee.html",
         context
     )
+import unicodedata
     
+
+import re
+
+
+
+# ==============================================================
+# NORMALISATION GÉNÉRALE
+# ==============================================================
+
+def normaliser_texte(texte):
+    """
+    Normalise un texte pour les comparaisons :
+
+    - minuscules
+    - suppression des accents
+    - apostrophes uniformisées
+    - espaces multiples supprimés
+    """
+
+    if texte is None:
+        return ""
+
+    texte = str(texte).strip().lower()
+
+    # Uniformiser les apostrophes
+    texte = texte.replace("’", "'")
+    texte = texte.replace("`", "'")
+    texte = texte.replace("´", "'")
+
+    # Supprimer les accents
+    texte = unicodedata.normalize(
+        "NFD",
+        texte
+    )
+
+    texte = "".join(
+        caractere
+        for caractere in texte
+        if unicodedata.category(caractere) != "Mn"
+    )
+
+    # Remplacer les espaces multiples par un seul espace
+    texte = " ".join(texte.split())
+
+    return texte
+
+
+# ==============================================================
+# NORMALISATION FILIÈRE
+# ==============================================================
+
+def normaliser_filiere(texte):
+    """
+    Normalise une filière pour permettre les comparaisons
+    même si le fichier Excel ne contient pas le code (IDA), (AD), etc.
+    """
+
+    texte = normaliser_texte(texte)
+
+    # Supprimer les codes entre parenthèses
+    # Exemple :
+    # INFORMATIQUE ET DEVELOPPEMENT D'APPLICATIONS (IDA)
+    # devient :
+    # INFORMATIQUE ET DEVELOPPEMENT D'APPLICATIONS
+    texte = re.sub(
+        r"\s*\([^)]*\)",
+        "",
+        texte
+    )
+
+    # Uniformiser les apostrophes restantes
+    texte = texte.replace("'", "")
+
+    # Supprimer les espaces multiples
+    texte = " ".join(texte.split())
+
+    return texte
+
+
+# ==============================================================
+# IMPORT DES ÉTUDIANTS EXCEL
+# ==============================================================
 
 def import_etudiants_excel(request):
 
@@ -1104,55 +1187,76 @@ def import_etudiants_excel(request):
     # ==========================================================
 
     if not fichier:
+
         messages.error(
             request,
             "Veuillez sélectionner un fichier Excel."
         )
-        return redirect("import_etudiants_excel")
+
+        return redirect(
+            "import_etudiants_excel"
+        )
 
     if not fichier.name.lower().endswith(".xlsx"):
+
         messages.error(
             request,
             "Format incorrect. Veuillez importer uniquement un fichier .xlsx."
         )
-        return redirect("import_etudiants_excel")
+
+        return redirect(
+            "import_etudiants_excel"
+        )
 
     # ==========================================================
     # 2. Lecture Excel
     # ==========================================================
 
     try:
+
         wb = load_workbook(
             fichier,
             data_only=True
         )
 
     except Exception as e:
+
         messages.error(
             request,
             f"Impossible de lire le fichier Excel : {e}"
         )
-        return redirect("import_etudiants_excel")
+
+        return redirect(
+            "import_etudiants_excel"
+        )
 
     # ==========================================================
     # 3. Vérification des feuilles
     # ==========================================================
 
     if not wb.sheetnames:
+
         messages.error(
             request,
             "Le fichier Excel ne contient aucune feuille."
         )
-        return redirect("import_etudiants_excel")
+
+        return redirect(
+            "import_etudiants_excel"
+        )
 
     ws = wb.active
 
     if ws.max_row < 2:
+
         messages.error(
             request,
             "Le fichier Excel ne contient aucune donnée étudiant."
         )
-        return redirect("import_etudiants_excel")
+
+        return redirect(
+            "import_etudiants_excel"
+        )
 
     # ==========================================================
     # 4. Vérification des colonnes
@@ -1178,10 +1282,23 @@ def import_etudiants_excel(request):
         for cell in ws[1]
     ]
 
-    # On ne garde que les 10 premières colonnes
     entetes_excel = entetes_excel[:10]
 
-    if entetes_excel != entetes_attendues:
+    # Normalisation des en-têtes
+    entetes_attendues_normalisees = [
+        normaliser_texte(entete)
+        for entete in entetes_attendues
+    ]
+
+    entetes_excel_normalisees = [
+        normaliser_texte(entete)
+        for entete in entetes_excel
+    ]
+
+    if (
+        entetes_excel_normalisees
+        != entetes_attendues_normalisees
+    ):
 
         messages.error(
             request,
@@ -1200,7 +1317,9 @@ def import_etudiants_excel(request):
             + " | ".join(entetes_excel)
         )
 
-        return redirect("import_etudiants_excel")
+        return redirect(
+            "import_etudiants_excel"
+        )
 
     # ==========================================================
     # 5. Préparation
@@ -1209,10 +1328,7 @@ def import_etudiants_excel(request):
     compteur = 0
     erreurs = []
 
-    # Matricules déjà rencontrés dans CE fichier
     matricules_fichier = set()
-
-    # Emails déjà rencontrés dans CE fichier
     emails_fichier = set()
 
     # ==========================================================
@@ -1230,30 +1346,33 @@ def import_etudiants_excel(request):
         try:
 
             # --------------------------------------------------
-            # Ligne complètement vide
+            # Ligne vide
             # --------------------------------------------------
 
             if not row or all(
-                value is None or str(value).strip() == ""
+                value is None
+                or str(value).strip() == ""
                 for value in row
             ):
+
                 continue
 
             # --------------------------------------------------
-            # Vérification nombre de colonnes
+            # Nombre de colonnes
             # --------------------------------------------------
 
             if len(row) < 10:
 
                 erreurs.append(
-                    f"Ligne {ligne}: nombre de colonnes insuffisant."
+                    f"Ligne {ligne}: "
+                    f"nombre de colonnes insuffisant."
                 )
 
                 continue
 
-            # --------------------------------------------------
-            # Lecture des données
-            # --------------------------------------------------
+            # ==================================================
+            # 7. Lecture des données
+            # ==================================================
 
             matricule = (
                 str(row[0]).strip()
@@ -1312,7 +1431,7 @@ def import_etudiants_excel(request):
             )
 
             # ==================================================
-            # 7. Vérification des champs obligatoires
+            # 8. Champs obligatoires
             # ==================================================
 
             champs_obligatoires = {
@@ -1327,7 +1446,8 @@ def import_etudiants_excel(request):
 
             champs_vides = [
                 champ
-                for champ, valeur in champs_obligatoires.items()
+                for champ, valeur
+                in champs_obligatoires.items()
                 if not valeur
             ]
 
@@ -1342,30 +1462,43 @@ def import_etudiants_excel(request):
                 continue
 
             # ==================================================
-            # 8. Vérification du matricule
+            # 9. Doublon matricule dans Excel
             # ==================================================
 
-            matricule_normalise = matricule.upper()
+            matricule_normalise = normaliser_texte(
+                matricule
+            )
 
             if matricule_normalise in matricules_fichier:
 
                 erreurs.append(
                     f"Ligne {ligne}: "
-                    f"matricule '{matricule}' en doublon "
-                    f"dans le fichier Excel."
+                    f"matricule '{matricule}' "
+                    f"en doublon dans le fichier Excel."
                 )
 
                 continue
 
-            matricules_fichier.add(matricule_normalise)
+            matricules_fichier.add(
+                matricule_normalise
+            )
 
             # ==================================================
-            # 9. Vérification doublon en base
+            # 10. Doublon matricule en base
             # ==================================================
 
-            if Etudiant.objects.filter(
-                matricule__iexact=matricule
-            ).exists():
+            etudiant_existant = None
+
+            for etudiant in Etudiant.objects.all():
+
+                if normaliser_texte(
+                    etudiant.matricule
+                ) == matricule_normalise:
+
+                    etudiant_existant = etudiant
+                    break
+
+            if etudiant_existant:
 
                 erreurs.append(
                     f"Ligne {ligne}: "
@@ -1376,51 +1509,77 @@ def import_etudiants_excel(request):
                 continue
 
             # ==================================================
-            # 10. Vérification email
+            # 11. Vérification email
             # ==================================================
 
             if email:
 
-                if email in emails_fichier:
+                email_normalise = normaliser_texte(
+                    email
+                )
+
+                if email_normalise in emails_fichier:
 
                     erreurs.append(
                         f"Ligne {ligne}: "
-                        f"email '{email}' en doublon dans le fichier."
+                        f"email '{email}' "
+                        f"en doublon dans le fichier."
                     )
 
                     continue
 
-                emails_fichier.add(email)
+                emails_fichier.add(
+                    email_normalise
+                )
 
-                if Etudiant.objects.filter(
-                    email__iexact=email
-                ).exists():
+                email_existant = False
+
+                for etudiant in Etudiant.objects.exclude(
+                    email__isnull=True
+                ):
+
+                    if not etudiant.email:
+                        continue
+
+                    if normaliser_texte(
+                        etudiant.email
+                    ) == email_normalise:
+
+                        email_existant = True
+                        break
+
+                if email_existant:
 
                     erreurs.append(
                         f"Ligne {ligne}: "
-                        f"email '{email}' déjà utilisé en base."
+                        f"email '{email}' "
+                        f"déjà utilisé en base."
                     )
 
                     continue
 
             # ==================================================
-            # 11. Vérification sexe
+            # 12. Vérification sexe
             # ==================================================
 
             if sexe not in ["M", "F"]:
 
                 erreurs.append(
-                    f"Ligne {ligne}: sexe '{sexe}' incorrect. "
+                    f"Ligne {ligne}: "
+                    f"sexe '{sexe}' incorrect. "
                     f"Valeurs autorisées : M ou F."
                 )
 
                 continue
 
             # ==================================================
-            # 12. Vérification date naissance
+            # 13. Date de naissance
             # ==================================================
 
-            if not isinstance(date_naissance, datetime):
+            if not isinstance(
+                date_naissance,
+                datetime
+            ):
 
                 erreurs.append(
                     f"Ligne {ligne}: "
@@ -1433,12 +1592,25 @@ def import_etudiants_excel(request):
             date_naissance = date_naissance.date()
 
             # ==================================================
-            # 13. Recherche de la classe
+            # 14. Recherche de la classe
             # ==================================================
 
-            classe = Classe.objects.filter(
-                nom__iexact=classe_nom
-            ).first()
+            classe = None
+
+            classe_excel_normalisee = normaliser_texte(
+                classe_nom
+            )
+
+            for c in Classe.objects.select_related(
+                "filiere_bts"
+            ):
+
+                if normaliser_texte(
+                    c.nom
+                ) == classe_excel_normalisee:
+
+                    classe = c
+                    break
 
             if classe is None:
 
@@ -1450,12 +1622,23 @@ def import_etudiants_excel(request):
                 continue
 
             # ==================================================
-            # 14. Recherche de la filière
-            # ==================================================
+            # 15. Recherche de la filière
+            # ==========================================================
 
-            filiere = Filierebts.objects.filter(
-                nom__iexact=filiere_nom
-            ).first()
+            filiere = None
+
+            filiere_excel_normalisee = normaliser_filiere(
+                filiere_nom
+            )
+
+            for f in Filierebts.objects.all():
+
+                if normaliser_filiere(
+                    f.nom
+                ) == filiere_excel_normalisee:
+
+                    filiere = f
+                    break
 
             if filiere is None:
 
@@ -1467,7 +1650,7 @@ def import_etudiants_excel(request):
                 continue
 
             # ==================================================
-            # 15. Vérification classe / filière
+            # 16. Vérification classe / filière
             # ==================================================
 
             if classe.filiere_bts_id != filiere.id:
@@ -1476,13 +1659,13 @@ def import_etudiants_excel(request):
                     f"Ligne {ligne}: "
                     f"la classe '{classe_nom}' "
                     f"n'appartient pas à la filière "
-                    f"'{filiere_nom}'."
+                    f"'{filiere.nom}'."
                 )
 
                 continue
 
             # ==================================================
-            # 16. Création de l'étudiant
+            # 17. Création de l'étudiant
             # ==================================================
 
             Etudiant.objects.create(
@@ -1513,11 +1696,12 @@ def import_etudiants_excel(request):
         except Exception as e:
 
             erreurs.append(
-                f"Ligne {ligne}: erreur inattendue : {str(e)}"
+                f"Ligne {ligne}: "
+                f"erreur inattendue : {str(e)}"
             )
 
     # ==========================================================
-    # 17. Messages de résultat
+    # 18. Résultat
     # ==========================================================
 
     if compteur > 0:
