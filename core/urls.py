@@ -67,7 +67,8 @@ urlpatterns = [
     path("saisie-groupee/",views.saisie_note_groupee,name="saisie_note_groupee"),
     path("bulletin/pdf/<int:etudiant_id>/<int:classe_id>/<int:semestre>/",views.download_bulletin_pdf,name="bulletin_pdf"),
     # urls.py
-
     path("etudiants/import-excel/",views.import_etudiants_excel, name="import_etudiants_excel"),
+    
+    path("dashboard/gestionnaire/",views.dashboard_gestionnaire,name="dashboard_gestionnaire"),
 
 ]

@@ -328,6 +328,7 @@ class Profile(models.Model):
         ('admin', 'Admin'),
         ('prof', 'Professeur'),
         ('etudiant', 'Etudiant'),
+        ("GESTIONNAIRE", "Gestionnaire"),
     )
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)

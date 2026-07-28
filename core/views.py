@@ -24,12 +24,13 @@ from .utils import generate_matricule
 from .services import (mention,)
 from .pdf_service import generate_bulletin_pdf
 from datetime import datetime
+from core.decorators import role_required
 
 # =========================
 # 🔐 LOGIN
 # =========================
 @csrf_protect
-def login_view(request):
+def login_viewAAAA(request):
 
     if request.method == "POST":
 
@@ -62,6 +63,200 @@ def login_view(request):
         })
 
     return render(request, "login.html")
+
+from django.views.decorators.csrf import csrf_protect
+
+
+# ==========================================================
+# 🔐 LOGIN
+# ==========================================================
+
+@csrf_protect
+def login_view(request):
+
+    # ==========================================================
+    # UTILISATEUR DÉJÀ CONNECTÉ
+    # ==========================================================
+
+    if request.user.is_authenticated:
+
+        profile = Profile.objects.filter(
+            user=request.user
+        ).first()
+
+        if not profile:
+
+            logout(request)
+
+            return render(
+                request,
+                "login.html",
+                {
+                    "error": "Profil utilisateur introuvable."
+                }
+            )
+
+        # Redirection selon le rôle
+        if profile.role == "ADMIN":
+
+            return redirect("dashboard_admin")
+
+        elif profile.role == "GESTIONNAIRE":
+
+            return redirect("dashboard_gestionnaire")
+
+        elif profile.role == "PROF":
+
+            return redirect("dashboard_prof")
+
+        elif profile.role == "ETUDIANT":
+
+            return redirect("dashboard_etudiant")
+
+        else:
+
+            logout(request)
+
+            return render(
+                request,
+                "login.html",
+                {
+                    "error": "Rôle utilisateur non reconnu."
+                }
+            )
+
+    # ==========================================================
+    # FORMULAIRE DE CONNEXION
+    # ==========================================================
+
+    if request.method == "POST":
+
+        username = request.POST.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.POST.get(
+            "password",
+            ""
+        )
+
+        # Vérification des champs
+        if not username or not password:
+
+            return render(
+                request,
+                "login.html",
+                {
+                    "error":
+                    "Veuillez renseigner votre identifiant "
+                    "et votre mot de passe."
+                }
+            )
+
+        # ======================================================
+        # AUTHENTIFICATION DJANGO
+        # ======================================================
+
+        user = authenticate(
+            request,
+            username=username,
+            password=password
+        )
+
+        if user is None:
+
+            return render(
+                request,
+                "login.html",
+                {
+                    "error":
+                    "Identifiant ou mot de passe incorrect."
+                }
+            )
+
+        # ======================================================
+        # CONNEXION
+        # ======================================================
+
+        login(
+            request,
+            user
+        )
+
+        # ======================================================
+        # RÉCUPÉRATION DU PROFIL
+        # ======================================================
+
+        profile = Profile.objects.filter(
+            user=user
+        ).first()
+
+        # Aucun profil
+        if not profile:
+
+            logout(request)
+
+            return render(
+                request,
+                "login.html",
+                {
+                    "error":
+                    "Profil utilisateur introuvable."
+                }
+            )
+
+        # ======================================================
+        # REDIRECTION SELON LE RÔLE
+        # ======================================================
+
+        if profile.role == "ADMIN":
+
+            return redirect(
+                "dashboard_admin"
+            )
+
+        elif profile.role == "GESTIONNAIRE":
+
+            return redirect(
+                "dashboard_gestionnaire"
+            )
+
+        elif profile.role == "PROF":
+
+            return redirect(
+                "dashboard_prof"
+            )
+
+        elif profile.role == "ETUDIANT":
+
+            return redirect(
+                "dashboard_etudiant"
+            )
+
+        # ======================================================
+        # RÔLE INCONNU
+        # ======================================================
+
+        logout(request)
+
+        return render(
+            request,
+            "login.html",
+            {
+                "error":
+                "Rôle utilisateur non reconnu."
+            }
+        )
+
+    # ==========================================================
+    # AFFICHAGE PAGE LOGIN
+    # ==========================================================
+
+    return render(
+        request,
+        "login.html"
+    )
 
 
 # =========================
@@ -180,6 +375,27 @@ def dashboard_etudiant(request):
     })
 
 
+# ==========================================================
+# 👨‍💼 DASHBOARD GESTIONNAIRE
+# ==========================================================
+
+@login_required(login_url="login")
+@role_required("GESTIONNAIRE")
+def dashboard_gestionnaire(request):
+
+    return render(
+        request,
+        "gestionnaire_dashboard.html",
+        {
+            "etudiants": Etudiant.objects.count(),
+            "classes": Classe.objects.count(),
+            "filieres": Filierebts.objects.count(),
+            "matieres": Matiere.objects.count(),
+        }
+    )
+
+
+
 # =========================
 # 📝 INSCRIPTION UTILISATEUR
 # =========================
@@ -231,6 +447,7 @@ def register_user(request):
 # =========================
 # 📊 BULLETIN ETUDIANT
 # =========================
+@role_required("ADMIN")
 @login_required
 def bulletin_etudiant(request):
 
@@ -251,7 +468,8 @@ def bulletin_etudiant(request):
 # =========================
 # 📄 PDF BULLETIN
 # =========================
-
+@role_required("ADMIN", "GESTIONNAIRE")
+@login_required(login_url="login")
 def etudiant_list(request):
 
     query = request.GET.get("q", "")
@@ -771,7 +989,7 @@ def bulletin_classe(request, classe_id):
         "data": data
     })
 
-
+@login_required(login_url="login")
 def bulletin_list(request):
 
     etudiants = Etudiant.objects.select_related("classe").all()
