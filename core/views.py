@@ -827,31 +827,37 @@ def classe_create(request):
 
 
 def matiere_list(request):
-    query = request.GET.get("q")
-    filiere_bts = request.GET.get("filiere_bts")
 
-    matieres = Matiere.objects.select_related("filiere_bts").order_by("-id")
+    filieres = Filierebts.objects.prefetch_related(
+        "matiere_set"
+    ).order_by("nom")
 
-    # 🔎 SEARCH
-    if query:
-        matieres = matieres.filter(
-            Q(code__icontains=query) |
-            Q(libelle__icontains=query)
-        )
 
-    # 🎯 FILTER BTS
-    if filiere_bts:
-        matieres = matieres.filter(filiere_bts_id=filiere_bts)
+    q = request.GET.get("q")
 
-    paginator = Paginator(matieres, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
 
-    return render(request, "matieres/list.html", {
-        "page_obj": page_obj,
-        "filiere_list": Filierebts.objects.all()
-    })
-    
+    if q:
+
+        filieres = filieres.filter(
+            matiere__libelle__icontains=q
+        ).distinct()
+
+
+
+    context = {
+
+        "filieres": filieres,
+
+        "total_matieres": Matiere.objects.count(),
+
+    }
+
+
+    return render(
+        request,
+        "matieres/list.html",
+        context
+    )
 
 def matiere_create(request):
     form = MatiereForm(request.POST or None)
