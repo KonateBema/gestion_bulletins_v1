@@ -1441,8 +1441,240 @@ def normaliser_filiere(texte):
 # IMPORT DES ÉTUDIANTS EXCEL
 # ==============================================================
 
+from datetime import datetime, date
+
+# ----------------------------------------------------------
+# Conversion flexible des dates
+# ----------------------------------------------------------
+
+def convertir_date(valeur):
+
+    if valeur is None:
+        return None
+
+    # Déjà une date Python
+    if isinstance(valeur, date) and not isinstance(valeur, datetime):
+        return valeur
+
+    # Date Excel (datetime)
+    if isinstance(valeur, datetime):
+        return valeur.date()
+
+    # Nombre Excel (parfois 45000, etc.)
+    if isinstance(valeur, (int, float)):
+        try:
+            return datetime.fromordinal(
+                datetime(1899, 12, 30).toordinal() + int(valeur)
+            ).date()
+        except Exception:
+            return None
+
+    # Texte
+    if isinstance(valeur, str):
+
+        texte = valeur.strip()
+
+        formats = [
+            "%d/%m/%Y",
+            "%d-%m-%Y",
+            "%Y-%m-%d",
+            "%Y/%m/%d",
+            "%d.%m.%Y",
+            "%d %m %Y",
+        ]
+
+        for fmt in formats:
+            try:
+                return datetime.strptime(texte, fmt).date()
+            except ValueError:
+                continue
+
+    return None
+
+
+# ----------------------------------------------------------
+# Importation des étudiants
+# ----------------------------------------------------------
 
 def import_etudiants_excel(request):
+
+    if request.method != "POST":
+        return render(request, "import_etudiants_excel.html")
+
+    fichier = request.FILES.get("excel_file")
+
+    if not fichier:
+        messages.error(
+            request,
+            "Veuillez sélectionner un fichier Excel."
+        )
+        return redirect("import_etudiants_excel")
+
+    if not fichier.name.lower().endswith(".xlsx"):
+        messages.error(
+            request,
+            "Format incorrect. Veuillez importer uniquement un fichier .xlsx."
+        )
+        return redirect("import_etudiants_excel")
+
+    try:
+        wb = load_workbook(fichier, data_only=True)
+    except Exception as e:
+        messages.error(
+            request,
+            f"Impossible de lire le fichier Excel : {e}"
+        )
+        return redirect("import_etudiants_excel")
+
+    ws = wb.active
+
+    compteur_creation = 0
+    compteur_modification = 0
+    erreurs = []
+
+    for ligne, row in enumerate(
+        ws.iter_rows(min_row=2, values_only=True),
+        start=2
+    ):
+
+        try:
+
+            if not row or all(
+                value is None or str(value).strip() == ""
+                for value in row
+            ):
+                continue
+
+            matricule = str(row[0]).strip() if row[0] else ""
+            nom = str(row[1]).strip() if row[1] else ""
+            prenoms = str(row[2]).strip() if row[2] else ""
+
+            # -----------------------------
+            # Date flexible
+            # -----------------------------
+            date_naissance = convertir_date(row[3])
+
+            if not date_naissance:
+
+                erreurs.append(
+                    f"Ligne {ligne}: date de naissance invalide."
+                )
+
+                continue
+
+            lieu_naissance = str(row[4]).strip() if row[4] else ""
+            sexe = str(row[5]).strip().upper() if row[5] else ""
+            telephone = str(row[6]).strip() if row[6] else ""
+            email = str(row[7]).strip().lower() if row[7] else ""
+            classe_nom = str(row[8]).strip() if row[8] else ""
+            filiere_nom = str(row[9]).strip() if row[9] else ""
+
+            # -----------------------------
+            # Recherche classe
+            # -----------------------------
+            classe = Classe.objects.filter(
+                nom__iexact=classe_nom
+            ).first()
+
+            if not classe:
+
+                erreurs.append(
+                    f"Ligne {ligne}: classe '{classe_nom}' introuvable."
+                )
+
+                continue
+
+            # -----------------------------
+            # Recherche filière
+            # -----------------------------
+            filiere = Filierebts.objects.filter(
+                nom__iexact=filiere_nom
+            ).first()
+
+            if not filiere:
+
+                erreurs.append(
+                    f"Ligne {ligne}: filière '{filiere_nom}' introuvable."
+                )
+
+                continue
+
+            # -----------------------------
+            # Étudiant existant ?
+            # -----------------------------
+            etudiant = Etudiant.objects.filter(
+                matricule__iexact=matricule
+            ).first()
+
+            if etudiant:
+
+                etudiant.nom = nom
+                etudiant.prenoms = prenoms
+                etudiant.date_naissance = date_naissance
+                etudiant.lieu_naissance = lieu_naissance
+                etudiant.sexe = sexe
+                etudiant.telephone = telephone
+                etudiant.email = email
+                etudiant.classe = classe
+                etudiant.filiere_bts = filiere
+                etudiant.save()
+
+                compteur_modification += 1
+
+            else:
+
+                Etudiant.objects.create(
+                    matricule=matricule,
+                    nom=nom,
+                    prenoms=prenoms,
+                    date_naissance=date_naissance,
+                    lieu_naissance=lieu_naissance,
+                    sexe=sexe,
+                    telephone=telephone,
+                    email=email,
+                    classe=classe,
+                    filiere_bts=filiere,
+                )
+
+                compteur_creation += 1
+
+        except Exception as e:
+
+            erreurs.append(
+                f"Ligne {ligne}: erreur inattendue : {e}"
+            )
+
+    # ----------------------------------------------------------
+    # Messages de résultat
+    # ----------------------------------------------------------
+
+    if compteur_creation:
+        messages.success(
+            request,
+            f"{compteur_creation} étudiant(s) créé(s) avec succès."
+        )
+
+    if compteur_modification:
+        messages.success(
+            request,
+            f"{compteur_modification} étudiant(s) mis à jour avec succès."
+        )
+
+    if erreurs:
+
+        messages.warning(
+            request,
+            f"{len(erreurs)} ligne(s) n'ont pas été importée(s)."
+        )
+
+        for erreur in erreurs:
+            messages.warning(request, erreur)
+
+    return redirect("etudiant_list")
+
+
+
+def import_etudiants_excelAAA(request):
 
     if request.method != "POST":
         return render(
@@ -2003,235 +2235,4 @@ def import_etudiants_excel(request):
 
     return redirect(
         "etudiant_list"
-    )
-
-
-
-def import_etudiants_excelAAAAA(request):
-
-    if request.method == "POST":
-
-        fichier = request.FILES.get("excel_file")
-
-        if not fichier:
-            messages.error(
-                request,
-                "Veuillez sélectionner un fichier Excel."
-            )
-            return redirect("import_etudiants_excel")
-
-
-        # Vérification extension
-        if not fichier.name.endswith(".xlsx"):
-
-            messages.error(
-                request,
-                "Veuillez importer un fichier Excel .xlsx"
-            )
-
-            return redirect("import_etudiants_excel")
-
-
-
-        try:
-
-            wb = load_workbook(
-                fichier,
-                data_only=True
-            )
-
-
-            # Vérifier les feuilles
-
-            if len(wb.sheetnames) == 0:
-
-                messages.error(
-                    request,
-                    "Le fichier Excel ne contient aucune feuille."
-                )
-
-                return redirect("import_etudiants_excel")
-
-
-            ws = wb.active
-
-
-
-        except Exception as e:
-
-            messages.error(
-                request,
-                f"Erreur lecture Excel : {e}"
-            )
-
-            return redirect("import_etudiants_excel")
-
-
-
-        compteur = 0
-        erreurs = []
-
-
-
-        # Vérifier les lignes
-
-        if ws.max_row < 2:
-
-            messages.error(
-                request,
-                "Le fichier Excel ne contient aucune donnée étudiant."
-            )
-
-            return redirect("import_etudiants_excel")
-
-
-
-
-        for ligne, row in enumerate(
-            ws.iter_rows(
-                min_row=2,
-                values_only=True
-            ),
-            start=2
-        ):
-
-
-            try:
-
-
-                if not row or row[0] is None:
-                    continue
-
-
-
-                matricule = str(row[0]).strip()
-
-                nom = str(row[1]).strip()
-
-                prenoms = str(row[2]).strip()
-
-                date_naissance = row[3]
-
-                lieu_naissance = str(row[4]).strip()
-
-                sexe = str(row[5]).upper().strip()
-
-
-                telephone = str(row[6]).strip()
-
-                email = str(row[7]).strip()
-
-
-                classe_nom = str(row[8]).strip()
-
-                filiere_nom = str(row[9]).strip()
-
-
-
-                # Recherche classe
-
-                classe = Classe.objects.filter(
-                    nom__iexact=classe_nom
-                ).first()
-
-
-
-                # Recherche filière
-
-                filiere = Filierebts.objects.filter(
-                    nom__iexact=filiere_nom
-                ).first()
-
-
-
-                if classe is None:
-
-                    erreurs.append(
-                        f"Ligne {ligne}: classe '{classe_nom}' introuvable"
-                    )
-
-                    continue
-
-
-
-                if filiere is None:
-
-                    erreurs.append(
-                        f"Ligne {ligne}: filière '{filiere_nom}' introuvable"
-                    )
-
-                    continue
-
-
-
-
-                Etudiant.objects.update_or_create(
-
-                    matricule=matricule,
-
-                    defaults={
-
-                        "nom": nom,
-
-                        "prenoms": prenoms,
-
-                        "date_naissance": date_naissance,
-
-                        "lieu_naissance": lieu_naissance,
-
-                        "sexe": sexe,
-
-                        "telephone": telephone,
-
-                        "email": email,
-
-                        "classe": classe,
-
-                        "filiere_bts": filiere,
-
-                    }
-
-                )
-
-
-                compteur += 1
-
-
-
-            except Exception as e:
-
-                erreurs.append(
-                    f"Ligne {ligne}: {str(e)}"
-                )
-
-
-
-
-        if compteur > 0:
-
-            messages.success(
-                request,
-                f"{compteur} étudiant(s) importé(s) avec succès."
-            )
-
-
-
-        for erreur in erreurs:
-
-            messages.warning(
-                request,
-                erreur
-            )
-
-
-
-        return redirect(
-            "etudiant_list"
-        )
-
-
-
-    return render(
-        request,
-        "import_etudiants_excel.html"
     )

@@ -1,47 +1,123 @@
 {% extends "base.html" %}
 
+{% block title %}
+Saisie groupée des notes BTS
+{% endblock %}
+
 {% block content %}
 
-<div class="container-fluid mt-4">
+<div class="container-fluid py-4">
 
-    <div class="card shadow">
+```
+<!-- =====================================================
+     HEADER
+====================================================== -->
 
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">
-                <i class="bi bi-pencil-square"></i>
-                Saisie groupée des notes BTS
-            </h4>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+
+    <div>
+
+        <h2 class="fw-bold mb-1">
+
+            <i class="bi bi-pencil-square text-primary"></i>
+
+            Saisie groupée des notes BTS
+
+        </h2>
+
+        <p class="text-muted mb-0">
+
+            Saisissez rapidement les notes de toute une classe
+
+        </p>
+
+    </div>
+
+
+    <div>
+
+        <a href="{% url 'note_list' %}"
+           class="btn btn-outline-secondary">
+
+            <i class="bi bi-journal-text"></i>
+
+            Liste des notes
+
+        </a>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     FILTRES
+====================================================== -->
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+
+    <div class="card-header bg-primary text-white py-3">
+
+        <div class="d-flex align-items-center">
+
+            <i class="bi bi-funnel-fill fs-5 me-2"></i>
+
+            <div>
+
+                <h5 class="mb-0 fw-bold">
+                    Sélection de la saisie
+                </h5>
+
+                <small class="opacity-75">
+                    Choisissez une classe, une matière et un semestre
+                </small>
+
+            </div>
+
         </div>
 
+    </div>
 
-        <div class="card-body">
+
+    <div class="card-body">
+
+        <form method="get">
+
+            <div class="row g-3">
 
 
-            <!-- FILTRE -->
-            <form method="get" class="row g-3 mb-4">
+                <!-- CLASSE -->
 
-                <div class="col-md-3">
+                <div class="col-lg-4">
+
                     <label class="form-label fw-bold">
+
+                        <i class="bi bi-people-fill text-primary"></i>
+
                         Classe
+
                     </label>
 
-                    <select name="classe" class="form-select" required>
+                    <select name="classe"
+                            class="form-select form-select-lg"
+                            required>
 
                         <option value="">
-                            -- Choisir la classe --
+                            -- Choisir une classe --
                         </option>
 
                         {% for classe in classes %}
 
-                        <option value="{{ classe.id }}"
-                        {% if request.GET.classe == classe.id|stringformat:"s" %}
-                            selected
-                        {% endif %}
-                        >
+                            <option value="{{ classe.id }}"
 
-                            {{ classe }}
+                                {% if request.GET.classe == classe.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}>
 
-                        </option>
+                                {{ classe }}
+
+                            </option>
 
                         {% endfor %}
 
@@ -51,30 +127,41 @@
 
 
 
-                <div class="col-md-3">
+                <!-- MATIÈRE -->
+
+                <div class="col-lg-4">
 
                     <label class="form-label fw-bold">
+
+                        <i class="bi bi-book-fill text-primary"></i>
+
                         Matière
+
                     </label>
 
-                    <select name="matiere" class="form-select" required>
+                    <select name="matiere"
+                            class="form-select form-select-lg"
+                            required>
 
                         <option value="">
                             -- Choisir la matière --
                         </option>
 
-
                         {% for matiere in matieres %}
 
-                        <option value="{{ matiere.id }}"
-                        {% if request.GET.matiere == matiere.id|stringformat:"s" %}
-                            selected
-                        {% endif %}
-                        >
+                            <option value="{{ matiere.id }}"
 
-                            {{ matiere.libelle }}
+                                {% if request.GET.matiere == matiere.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}>
 
-                        </option>
+                                {% if matiere.code %}
+                                    {{ matiere.code }} -
+                                {% endif %}
+
+                                {{ matiere.libelle }}
+
+                            </option>
 
                         {% endfor %}
 
@@ -84,232 +171,183 @@
 
 
 
+                <!-- SEMESTRE -->
 
-                <div class="col-md-2">
+                <div class="col-lg-2">
 
                     <label class="form-label fw-bold">
+
+                        <i class="bi bi-calendar3 text-primary"></i>
+
                         Semestre
+
                     </label>
 
-                    <select name="semestre" class="form-select">
+                    <select name="semestre"
+                            class="form-select form-select-lg">
 
                         <option value="1"
-                        {% if request.GET.semestre == "1" %}selected{% endif %}>
+                            {% if request.GET.semestre == "1" or not request.GET.semestre %}
+                                selected
+                            {% endif %}>
+
                             Semestre 1
+
                         </option>
-                    
-                    
+
                         <option value="2"
-                        {% if request.GET.semestre == "2" %}selected{% endif %}>
+                            {% if request.GET.semestre == "2" %}
+                                selected
+                            {% endif %}>
+
                             Semestre 2
+
                         </option>
-                    
+
                     </select>
 
                 </div>
 
 
 
-                <div class="col-md-2 d-flex align-items-end">
+                <!-- BOUTON -->
 
-                    <button class="btn btn-primary w-100">
+                <div class="col-lg-2 d-flex align-items-end">
+
+                    <button type="submit"
+                            class="btn btn-dark btn-lg w-100">
 
                         <i class="bi bi-search"></i>
+
                         Afficher
 
                     </button>
 
                 </div>
 
-
-            </form>
-
-
-
-            {% if etudiants %}
-
-
-            <!-- INFO -->
-            <div class="alert alert-info">
-
-                <strong>{{ etudiants|length }}</strong>
-                étudiant(s) trouvé(s)
-
             </div>
 
+        </form>
+
+    </div>
+
+</div>
 
 
 
-            <!-- RECHERCHE -->
-            <div class="mb-3">
-
-                <input 
-                    type="text"
-                    id="searchStudent"
-                    class="form-control"
-                    placeholder="Rechercher un étudiant..."
-                >
-
-            </div>
+{% if etudiants %}
 
 
+<!-- =====================================================
+     INFORMATIONS DE LA SAISIE
+====================================================== -->
+
+<div class="row g-3 mb-4">
 
 
+    <!-- ÉTUDIANTS -->
 
-            <!-- FORMULAIRE NOTES -->
+    <div class="col-md-4">
 
-            <form method="post">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
 
-                {% csrf_token %}
-     
-                <input type="hidden" name="classe" value="{{ request.GET.classe }}">
-                <input type="hidden" name="matiere" value="{{ request.GET.matiere }}">
-                <input type="hidden" name="semestre" value="{{ request.GET.semestre }}">
+            <div class="card-body d-flex align-items-center">
 
-                <div class="table-responsive">
+                <div class="stat-icon bg-primary-subtle text-primary">
 
-
-                <table class="table table-bordered table-hover align-middle"
-                       id="studentTable">
-
-
-                    <thead class="table-dark">
-
-                        <tr>
-
-                            <th>
-                                Matricule
-                            </th>
-
-                            <th>
-                                Étudiant
-                            </th>
-
-                            <th width="120">
-                                CC
-                            </th>
-
-                            <th width="120">
-                                Devoir
-                            </th>
-
-                            <th width="120">
-                                Examen
-                            </th>
-
-
-                        </tr>
-
-                    </thead>
-
-
-
-                    <tbody>
-
-
-                    {% for etudiant in etudiants %}
-
-
-                    <tr>
-
-
-                        <td>
-                            {{ etudiant.matricule }}
-                        </td>
-
-
-                        <td class="fw-bold">
-                            {{ etudiant.nom }}
-                            {{ etudiant.prenoms }}
-                        </td>
-
-
-
-                        <td>
-
-                            <input 
-                            type="number"
-                            min="0"
-                            max="20"
-                            step="0.01"
-                            name="cc_{{ etudiant.id }}"
-                            value="{{ etudiant.note_existante.cc|default:'' }}"
-                            class="form-control text-center">
-
-
-                        </td>
-
-
-
-                        <td>
-
-                            <input 
-                            type="number"
-                            min="0"
-                            max="20"
-                            step="0.01"
-                            name="devoir_{{ etudiant.id }}"
-                            value="{{ etudiant.note_existante.devoir|default:'' }}"
-                            class="form-control text-center">
-
-                        </td>
-
-
-
-                        <td>
-
-                            <input 
-                            type="number"
-                            min="0"
-                            max="20"
-                            step="0.01"
-                            name="examen_{{ etudiant.id }}"
-                            value="{{ etudiant.note_existante.examen|default:'' }}"
-                            class="form-control text-center">
-
-                        </td>
-
-
-                    </tr>
-
-
-                    {% endfor %}
-
-
-                    </tbody>
-
-
-                </table>
-
+                    <i class="bi bi-people-fill"></i>
 
                 </div>
 
+                <div class="ms-3">
 
+                    <small class="text-muted">
+                        Étudiants
+                    </small>
 
+                    <h4 class="fw-bold mb-0">
 
-                <div class="text-end">
+                        {{ etudiants|length }}
 
-
-                    <button class="btn btn-success btn-lg">
-
-                        <i class="bi bi-save"></i>
-
-                        Enregistrer les notes
-
-                    </button>
-
+                    </h4>
 
                 </div>
 
+            </div>
+
+        </div>
+
+    </div>
 
 
-            </form>
+
+    <!-- NOTES SAISIES -->
+
+    <div class="col-md-4">
+
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+
+            <div class="card-body d-flex align-items-center">
+
+                <div class="stat-icon bg-success-subtle text-success">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                </div>
+
+                <div class="ms-3">
+
+                    <small class="text-muted">
+                        Notes saisies
+                    </small>
+
+                    <h4 class="fw-bold mb-0"
+                        id="notesCount">
+
+                        0
+
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 
 
-            {% endif %}
+    <!-- RESTANTES -->
 
+    <div class="col-md-4">
 
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+
+            <div class="card-body d-flex align-items-center">
+
+                <div class="stat-icon bg-warning-subtle text-warning">
+
+                    <i class="bi bi-exclamation-circle-fill"></i>
+
+                </div>
+
+                <div class="ms-3">
+
+                    <small class="text-muted">
+                        À compléter
+                    </small>
+
+                    <h4 class="fw-bold mb-0"
+                        id="remainingCount">
+
+                        {{ etudiants|length }}
+
+                    </h4>
+
+                </div>
+
+            </div>
 
         </div>
 
@@ -319,29 +357,1127 @@
 
 
 
+<!-- =====================================================
+     CONTEXTE
+====================================================== -->
+
+<div class="alert alert-primary border-0 rounded-4 shadow-sm">
+
+    <div class="d-flex align-items-center">
+
+        <div class="fs-2 me-3">
+
+            <i class="bi bi-info-circle-fill"></i>
+
+        </div>
+
+        <div>
+
+            <strong>
+                Saisie des notes
+            </strong>
+
+            <div class="small">
+
+                Les notes doivent être comprises entre
+                <strong>0 et 20</strong>.
+
+                Utilisez la touche
+                <kbd>Tab</kbd>
+                pour passer rapidement au champ suivant.
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     RECHERCHE
+====================================================== -->
+
+<div class="card border-0 shadow-sm rounded-4 mb-3">
+
+    <div class="card-body">
+
+        <div class="row align-items-center g-3">
+
+
+            <div class="col-lg-8">
+
+                <div class="input-group input-group-lg">
+
+                    <span class="input-group-text bg-white">
+
+                        <i class="bi bi-search"></i>
+
+                    </span>
+
+                    <input
+                        type="text"
+                        id="searchStudent"
+                        class="form-control"
+                        placeholder="Rechercher par matricule, nom ou prénom..."
+                        autocomplete="off"
+                    >
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        id="clearSearch">
+
+                        <i class="bi bi-x-lg"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-4 text-lg-end">
+
+                <span class="text-muted">
+
+                    <span id="visibleCount">
+                        {{ etudiants|length }}
+                    </span>
+
+                    étudiant(s) affiché(s)
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     FORMULAIRE NOTES
+====================================================== -->
+
+<form method="post"
+      id="notesForm">
+
+    {% csrf_token %}
+
+
+    <input type="hidden"
+           name="classe"
+           value="{{ request.GET.classe }}">
+
+
+    <input type="hidden"
+           name="matiere"
+           value="{{ request.GET.matiere }}">
+
+
+    <input type="hidden"
+           name="semestre"
+           value="{{ request.GET.semestre }}">
+
+
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+
+        <!-- HEADER TABLE -->
+
+        <div class="card-header bg-white py-3">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+
+                        <i class="bi bi-table text-primary"></i>
+
+                        Liste des étudiants
+
+                    </h5>
+
+                    <small class="text-muted">
+
+                        Saisissez les notes directement dans le tableau.
+
+                    </small>
+
+                </div>
+
+
+                <span class="badge bg-primary rounded-pill px-3 py-2">
+
+                    <i class="bi bi-mortarboard-fill"></i>
+
+                    Saisie groupée
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TABLE -->
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-hover align-middle mb-0"
+                id="studentTable">
+
+
+                <thead class="table-dark sticky-top">
+
+                    <tr>
+
+                        <th class="text-center">
+                            #
+                        </th>
+
+                        <th>
+                            Matricule
+                        </th>
+
+                        <th>
+                            Étudiant
+                        </th>
+
+                        <th class="text-center note-column">
+                            CC /20
+                        </th>
+
+                        <th class="text-center note-column">
+                            Devoir /20
+                        </th>
+
+                        <th class="text-center note-column">
+                            Examen /20
+                        </th>
+
+                        <th class="text-center">
+                            Moyenne
+                        </th>
+
+                        <th class="text-center">
+                            État
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+
+                <tbody>
+
+
+                {% for etudiant in etudiants %}
+
+                    <tr class="student-row"
+                        data-student="{{ etudiant.id }}">
+
+
+                        <!-- NUMÉRO -->
+
+                        <td class="text-center text-muted fw-bold">
+
+                            {{ forloop.counter }}
+
+                        </td>
+
+
+                        <!-- MATRICULE -->
+
+                        <td>
+
+                            <span class="badge bg-light text-dark border">
+
+                                {{ etudiant.matricule }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- ÉTUDIANT -->
+
+                        <td>
+
+                            <div class="fw-bold">
+
+                                {{ etudiant.nom }}
+
+                            </div>
+
+                            <small class="text-muted">
+
+                                {{ etudiant.prenoms }}
+
+                            </small>
+
+                        </td>
+
+
+
+                        <!-- CC -->
+
+                        <td>
+
+                            <input
+                                type="number"
+                                min="0"
+                                max="20"
+                                step="0.01"
+                                name="cc_{{ etudiant.id }}"
+                                value="{{ etudiant.note_existante.cc|default:'' }}"
+                                class="form-control text-center note-input"
+                                data-type="cc"
+                                placeholder="--"
+                            >
+
+                        </td>
+
+
+
+                        <!-- DEVOIR -->
+
+                        <td>
+
+                            <input
+                                type="number"
+                                min="0"
+                                max="20"
+                                step="0.01"
+                                name="devoir_{{ etudiant.id }}"
+                                value="{{ etudiant.note_existante.devoir|default:'' }}"
+                                class="form-control text-center note-input"
+                                data-type="devoir"
+                                placeholder="--"
+                            >
+
+                        </td>
+
+
+
+                        <!-- EXAMEN -->
+
+                        <td>
+
+                            <input
+                                type="number"
+                                min="0"
+                                max="20"
+                                step="0.01"
+                                name="examen_{{ etudiant.id }}"
+                                value="{{ etudiant.note_existante.examen|default:'' }}"
+                                class="form-control text-center note-input"
+                                data-type="examen"
+                                placeholder="--"
+                            >
+
+                        </td>
+
+
+
+                        <!-- MOYENNE -->
+
+                        <td class="text-center">
+
+                            <span
+                                class="badge bg-secondary moyenne-badge">
+
+                                --
+
+                            </span>
+
+                        </td>
+
+
+
+                        <!-- ÉTAT -->
+
+                        <td class="text-center">
+
+                            <span class="status-badge badge bg-warning text-dark">
+
+                                À compléter
+
+                            </span>
+
+                        </td>
+
+
+                    </tr>
+
+                {% endfor %}
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+
+        <!-- FOOTER -->
+
+        <div class="card-footer bg-white py-3">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+
+                <div class="text-muted small">
+
+                    <i class="bi bi-lightbulb text-warning"></i>
+
+                    <strong>Astuce :</strong>
+
+                    utilisez
+
+                    <kbd>Tab</kbd>
+
+                    pour passer rapidement d'une note à l'autre.
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-success btn-lg px-4"
+                    id="saveButton">
+
+                    <i class="bi bi-save-fill"></i>
+
+                    Enregistrer les notes
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</form>
+
+
+{% else %}
+
+
+<!-- =====================================================
+     ÉTAT INITIAL
+====================================================== -->
+
+<div class="card border-0 shadow-sm rounded-4">
+
+    <div class="card-body text-center py-5">
+
+        <div class="display-1 text-primary mb-3">
+
+            <i class="bi bi-journal-check"></i>
+
+        </div>
+
+        <h4 class="fw-bold">
+
+            Prêt pour la saisie
+
+        </h4>
+
+        <p class="text-muted mb-0">
+
+            Sélectionnez une classe, une matière et un semestre
+            pour afficher les étudiants.
+
+        </p>
+
+    </div>
+
+</div>
+
+{% endif %}
+```
+
+</div>
+
+<!-- =====================================================
+     STYLE
+====================================================== -->
+
+<style>
+
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+
+
+    .stat-icon {
+
+        width: 50px;
+        height: 50px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        font-size: 22px;
+
+    }
+
+
+    .note-input {
+
+        min-width: 100px;
+
+        font-weight: 600;
+
+        font-size: 16px;
+
+        border-radius: 8px;
+
+    }
+
+
+    .note-input:focus {
+
+        border-color: #0d6efd;
+
+        box-shadow:
+            0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+
+    }
+
+
+    .note-input.note-valid {
+
+        border-color: #198754;
+
+        background-color: #f0fff5;
+
+    }
+
+
+    .note-input.note-invalid {
+
+        border-color: #dc3545;
+
+        background-color: #fff5f5;
+
+    }
+
+
+    .moyenne-badge {
+
+        min-width: 70px;
+
+        font-size: 14px;
+
+    }
+
+
+    .status-badge {
+
+        min-width: 95px;
+
+    }
+
+
+    .student-row:hover {
+
+        background-color: #f8faff;
+
+    }
+
+
+    .student-row.has-error {
+
+        background-color: #fff8f8;
+
+    }
+
+
+    .student-row.complete {
+
+        background-color: #f6fff8;
+
+    }
+
+
+    .table th {
+
+        white-space: nowrap;
+
+    }
+
+
+    .note-column {
+
+        min-width: 120px;
+
+    }
+
+
+    kbd {
+
+        background-color: #212529;
+
+        color: white;
+
+        padding: 3px 7px;
+
+        border-radius: 4px;
+
+    }
+
+
+    @media (max-width: 768px) {
+
+        .note-input {
+
+            min-width: 80px;
+
+        }
+
+    }
+
+</style>
+
+<!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
+
 <script>
 
-document
-.getElementById("searchStudent")
-?.addEventListener("keyup", function(){
+document.addEventListener("DOMContentLoaded", function () {
 
-    let value = this.value.toLowerCase();
 
-    document
-    .querySelectorAll("#studentTable tbody tr")
-    .forEach(function(row){
+    const searchInput =
+        document.getElementById("searchStudent");
 
-        row.style.display =
-        row.innerText.toLowerCase().includes(value)
-        ? ""
-        : "none";
+
+    const clearSearch =
+        document.getElementById("clearSearch");
+
+
+    const rows =
+        document.querySelectorAll(".student-row");
+
+
+    const noteInputs =
+        document.querySelectorAll(".note-input");
+
+
+    const notesCount =
+        document.getElementById("notesCount");
+
+
+    const remainingCount =
+        document.getElementById("remainingCount");
+
+
+    const visibleCount =
+        document.getElementById("visibleCount");
+
+
+    const form =
+        document.getElementById("notesForm");
+
+
+    /*
+     * --------------------------------------------------
+     * CALCUL DE LA MOYENNE
+     * --------------------------------------------------
+     *
+     * À adapter si ta formule Django est différente.
+     *
+     * Ici :
+     *
+     * CC      = 30%
+     * Devoir  = 20%
+     * Examen  = 50%
+     *
+     */
+
+    function calculateAverage(row) {
+
+
+        const cc =
+            parseFloat(
+                row.querySelector('[data-type="cc"]').value
+            );
+
+
+        const devoir =
+            parseFloat(
+                row.querySelector('[data-type="devoir"]').value
+            );
+
+
+        const examen =
+            parseFloat(
+                row.querySelector('[data-type="examen"]').value
+            );
+
+
+        const moyenneBadge =
+            row.querySelector(".moyenne-badge");
+
+
+        const statusBadge =
+            row.querySelector(".status-badge");
+
+
+        const values = [
+            cc,
+            devoir,
+            examen
+        ];
+
+
+        const hasInvalid =
+            values.some(function(value) {
+
+                return !isNaN(value) &&
+                       (value < 0 || value > 20);
+
+            });
+
+
+        if (hasInvalid) {
+
+            moyenneBadge.textContent = "Erreur";
+
+            moyenneBadge.className =
+                "badge bg-danger moyenne-badge";
+
+            statusBadge.textContent =
+                "Note invalide";
+
+            statusBadge.className =
+                "status-badge badge bg-danger";
+
+            row.classList.add("has-error");
+
+            row.classList.remove("complete");
+
+            return;
+
+        }
+
+
+        /*
+         * Si aucune note n'est saisie
+         */
+
+        if (
+            isNaN(cc) &&
+            isNaN(devoir) &&
+            isNaN(examen)
+        ) {
+
+            moyenneBadge.textContent = "--";
+
+            moyenneBadge.className =
+                "badge bg-secondary moyenne-badge";
+
+            statusBadge.textContent =
+                "À compléter";
+
+            statusBadge.className =
+                "status-badge badge bg-warning text-dark";
+
+            row.classList.remove("has-error");
+            row.classList.remove("complete");
+
+            return;
+
+        }
+
+
+        /*
+         * Calcul
+         */
+
+        const ccValue =
+            isNaN(cc) ? 0 : cc;
+
+
+        const devoirValue =
+            isNaN(devoir) ? 0 : devoir;
+
+
+        const examenValue =
+            isNaN(examen) ? 0 : examen;
+
+
+        const moyenne =
+            (ccValue * 0.30) +
+            (devoirValue * 0.20) +
+            (examenValue * 0.50);
+
+
+        moyenneBadge.textContent =
+            moyenne.toFixed(2);
+
+
+        /*
+         * Toutes les notes sont présentes
+         */
+
+        const complete =
+            !isNaN(cc) &&
+            !isNaN(devoir) &&
+            !isNaN(examen);
+
+
+        if (complete) {
+
+            row.classList.remove("has-error");
+            row.classList.add("complete");
+
+
+            if (moyenne >= 10) {
+
+                moyenneBadge.className =
+                    "badge bg-success moyenne-badge";
+
+                statusBadge.textContent =
+                    "Validé";
+
+                statusBadge.className =
+                    "status-badge badge bg-success";
+
+            }
+            else {
+
+                moyenneBadge.className =
+                    "badge bg-danger moyenne-badge";
+
+                statusBadge.textContent =
+                    "Échec";
+
+                statusBadge.className =
+                    "status-badge badge bg-danger";
+
+            }
+
+        }
+        else {
+
+            row.classList.remove("has-error");
+            row.classList.remove("complete");
+
+            moyenneBadge.className =
+                "badge bg-warning text-dark moyenne-badge";
+
+            statusBadge.textContent =
+                "Incomplet";
+
+            statusBadge.className =
+                "status-badge badge bg-warning text-dark";
+
+        }
+
+    }
+
+
+
+    /*
+     * --------------------------------------------------
+     * COMPTEUR DES NOTES
+     * --------------------------------------------------
+     */
+
+    function updateCounters() {
+
+
+        let completed = 0;
+
+
+        rows.forEach(function(row) {
+
+
+            const inputs =
+                row.querySelectorAll(".note-input");
+
+
+            const filled =
+                Array.from(inputs).filter(function(input) {
+
+                    return input.value.trim() !== "";
+
+                }).length;
+
+
+            if (filled === 3) {
+
+                completed++;
+
+            }
+
+        });
+
+
+        const total =
+            rows.length;
+
+
+        notesCount.textContent =
+            completed;
+
+
+        remainingCount.textContent =
+            total - completed;
+
+    }
+
+
+
+    /*
+     * --------------------------------------------------
+     * ÉVÉNEMENT SUR LES NOTES
+     * --------------------------------------------------
+     */
+
+    noteInputs.forEach(function(input) {
+
+
+        input.addEventListener("input", function() {
+
+
+            let value =
+                parseFloat(this.value);
+
+
+            if (
+                !isNaN(value) &&
+                (value < 0 || value > 20)
+            ) {
+
+                this.classList.add("note-invalid");
+
+            }
+            else {
+
+                this.classList.remove("note-invalid");
+
+            }
+
+
+            const row =
+                this.closest(".student-row");
+
+
+            calculateAverage(row);
+
+            updateCounters();
+
+        });
+
+
+        /*
+         * Sélection automatique du contenu
+         * lorsque l'utilisateur clique
+         */
+
+        input.addEventListener("focus", function() {
+
+            this.select();
+
+        });
 
     });
 
+
+
+    /*
+     * --------------------------------------------------
+     * RECHERCHE ÉTUDIANT
+     * --------------------------------------------------
+     */
+
+    if (searchInput) {
+
+
+        searchInput.addEventListener(
+            "input",
+            function() {
+
+
+                const value =
+                    this.value
+                    .toLowerCase()
+                    .trim();
+
+
+                let visible = 0;
+
+
+                rows.forEach(function(row) {
+
+
+                    const text =
+                        row.innerText.toLowerCase();
+
+
+                    if (text.includes(value)) {
+
+                        row.style.display = "";
+
+                        visible++;
+
+                    }
+                    else {
+
+                        row.style.display = "none";
+
+                    }
+
+                });
+
+
+                visibleCount.textContent =
+                    visible;
+
+            }
+
+        );
+
+    }
+
+
+
+    /*
+     * --------------------------------------------------
+     * EFFACER RECHERCHE
+     * --------------------------------------------------
+     */
+
+    if (clearSearch) {
+
+
+        clearSearch.addEventListener(
+            "click",
+            function() {
+
+
+                searchInput.value = "";
+
+
+                rows.forEach(function(row) {
+
+                    row.style.display = "";
+
+                });
+
+
+                visibleCount.textContent =
+                    rows.length;
+
+
+                searchInput.focus();
+
+            }
+
+        );
+
+    }
+
+
+
+    /*
+     * --------------------------------------------------
+     * CALCUL INITIAL
+     * --------------------------------------------------
+     */
+
+    rows.forEach(function(row) {
+
+        calculateAverage(row);
+
+    });
+
+
+    updateCounters();
+
+
+
+    /*
+     * --------------------------------------------------
+     * CONFIRMATION ENREGISTREMENT
+     * --------------------------------------------------
+     */
+
+    if (form) {
+
+
+        form.addEventListener(
+            "submit",
+            function(event) {
+
+
+                const incomplete =
+                    Array.from(rows).filter(function(row) {
+
+
+                        const inputs =
+                            row.querySelectorAll(".note-input");
+
+
+                        return Array.from(inputs).some(function(input) {
+
+                            return input.value.trim() === "";
+
+                        });
+
+                    });
+
+
+                if (incomplete.length > 0) {
+
+
+                    const confirmSave =
+                        confirm(
+
+                            "Attention : " +
+                            incomplete.length +
+                            " étudiant(s) ont des notes incomplètes.\n\n" +
+                            "Voulez-vous quand même enregistrer ?"
+
+                        );
+
+
+                    if (!confirmSave) {
+
+                        event.preventDefault();
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    }
+
 });
 
-
 </script>
-
 
 {% endblock %}
