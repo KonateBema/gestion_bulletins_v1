@@ -70,5 +70,6 @@ urlpatterns = [
     path("etudiants/import-excel/",views.import_etudiants_excel, name="import_etudiants_excel"),
     
     path("dashboard/gestionnaire/",views.dashboard_gestionnaire,name="dashboard_gestionnaire"),
+    path("ajax/matieres-par-classe/",views.matieres_par_classe,name="matieres_par_classe"),
 
 ]

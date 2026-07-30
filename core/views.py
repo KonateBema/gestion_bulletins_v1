@@ -25,6 +25,7 @@ from .services import (mention,)
 from .pdf_service import generate_bulletin_pdf
 from datetime import datetime
 from core.decorators import role_required
+from django.http import JsonResponse
 
 # =========================
 # 🔐 LOGIN
@@ -827,7 +828,7 @@ def classe_create(request):
     })
 
 
-def matiere_list(request):
+def matiere_listAAA(request):
 
     filieres = Filierebts.objects.prefetch_related(
         "matiere_set"
@@ -859,6 +860,50 @@ def matiere_list(request):
         "matieres/list.html",
         context
     )
+
+from django.core.paginator import Paginator
+from django.db.models import Q
+
+def matiere_list(request):
+
+    q = request.GET.get("q", "")
+    filiere_id = request.GET.get("filiere_bts", "")
+
+    matieres = Matiere.objects.select_related(
+        "filiere_bts"
+    ).order_by(
+        "filiere_bts__nom",
+        "libelle"
+    )
+
+    if q:
+        matieres = matieres.filter(
+            Q(libelle__icontains=q) |
+            Q(code__icontains=q)
+        )
+
+    if filiere_id:
+        matieres = matieres.filter(
+            filiere_bts_id=filiere_id
+        )
+
+    paginator = Paginator(matieres, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "page_obj": page_obj,
+        "total_matieres": matieres.count(),
+        "filiere_list": Filierebts.objects.order_by("nom"),
+        "filiere_selectionnee": filiere_id,
+    }
+
+    return render(
+        request,
+        "matieres/list.html",
+        context, 
+    )
+
 
 def matiere_create(request):
     form = MatiereForm(request.POST or None)
@@ -1681,3 +1726,28 @@ def import_etudiants_excel(request):
 
 
 
+def matieres_par_classe(request):
+    classe_id = request.GET.get("classe")
+
+    if not classe_id:
+        return JsonResponse([], safe=False)
+
+    try:
+        classe = Classe.objects.select_related("filiere_bts").get(pk=classe_id)
+    except Classe.DoesNotExist:
+        return JsonResponse([], safe=False)
+
+    matieres = Matiere.objects.filter(
+        filiere_bts=classe.filiere_bts
+    ).order_by("libelle")
+
+    data = [
+        {
+            "id": m.id,
+            "code": m.code,
+            "libelle": m.libelle,
+        }
+        for m in matieres
+    ]
+
+    return JsonResponse(data, safe=False)

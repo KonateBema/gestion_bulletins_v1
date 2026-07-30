@@ -100,6 +100,7 @@ Saisie groupée des notes BTS
                     </label>
 
                     <select name="classe"
+                            id="classeSelect"
                             class="form-select form-select-lg"
                             required>
 
@@ -139,7 +140,8 @@ Saisie groupée des notes BTS
 
                     </label>
 
-                    <select name="matiere"
+                    <select  id="matiereSelect"
+                             name="matiere"
                             class="form-select form-select-lg"
                             required>
 
@@ -1194,60 +1196,34 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
     }
-
-
-
     /*
      * --------------------------------------------------
      * COMPTEUR DES NOTES
      * --------------------------------------------------
      */
-
     function updateCounters() {
-
-
         let completed = 0;
-
-
         rows.forEach(function(row) {
-
-
             const inputs =
                 row.querySelectorAll(".note-input");
-
-
             const filled =
                 Array.from(inputs).filter(function(input) {
 
                     return input.value.trim() !== "";
-
                 }).length;
 
-
             if (filled === 3) {
-
                 completed++;
-
             }
-
         });
-
-
         const total =
             rows.length;
-
-
         notesCount.textContent =
             completed;
-
-
         remainingCount.textContent =
             total - completed;
 
     }
-
-
-
     /*
      * --------------------------------------------------
      * ÉVÉNEMENT SUR LES NOTES
@@ -1255,14 +1231,9 @@ document.addEventListener("DOMContentLoaded", function () {
      */
 
     noteInputs.forEach(function(input) {
-
-
         input.addEventListener("input", function() {
-
-
             let value =
                 parseFloat(this.value);
-
 
             if (
                 !isNaN(value) &&
@@ -1270,97 +1241,59 @@ document.addEventListener("DOMContentLoaded", function () {
             ) {
 
                 this.classList.add("note-invalid");
-
             }
             else {
 
                 this.classList.remove("note-invalid");
 
             }
-
-
             const row =
                 this.closest(".student-row");
-
-
             calculateAverage(row);
-
             updateCounters();
-
         });
-
-
         /*
          * Sélection automatique du contenu
          * lorsque l'utilisateur clique
          */
-
         input.addEventListener("focus", function() {
-
             this.select();
 
         });
 
     });
 
-
-
-    /*
-     * --------------------------------------------------
-     * RECHERCHE ÉTUDIANT
-     * --------------------------------------------------
-     */
-
     if (searchInput) {
-
-
         searchInput.addEventListener(
             "input",
             function() {
-
-
                 const value =
                     this.value
                     .toLowerCase()
                     .trim();
 
-
                 let visible = 0;
-
-
                 rows.forEach(function(row) {
-
-
                     const text =
                         row.innerText.toLowerCase();
-
-
                     if (text.includes(value)) {
-
                         row.style.display = "";
-
                         visible++;
-
                     }
                     else {
-
                         row.style.display = "none";
 
                     }
 
                 });
 
-
                 visibleCount.textContent =
                     visible;
-
             }
 
         );
 
     }
-
-
 
     /*
      * --------------------------------------------------
@@ -1369,114 +1302,95 @@ document.addEventListener("DOMContentLoaded", function () {
      */
 
     if (clearSearch) {
-
-
         clearSearch.addEventListener(
             "click",
             function() {
-
-
                 searchInput.value = "";
-
-
                 rows.forEach(function(row) {
-
                     row.style.display = "";
-
                 });
-
-
                 visibleCount.textContent =
                     rows.length;
-
-
                 searchInput.focus();
-
             }
-
         );
 
     }
-
-
-
     /*
      * --------------------------------------------------
      * CALCUL INITIAL
      * --------------------------------------------------
      */
-
     rows.forEach(function(row) {
-
         calculateAverage(row);
-
     });
-
-
     updateCounters();
-
-
-
     /*
      * --------------------------------------------------
      * CONFIRMATION ENREGISTREMENT
      * --------------------------------------------------
      */
-
     if (form) {
-
-
         form.addEventListener(
             "submit",
             function(event) {
-
-
                 const incomplete =
                     Array.from(rows).filter(function(row) {
-
-
                         const inputs =
                             row.querySelectorAll(".note-input");
-
-
                         return Array.from(inputs).some(function(input) {
-
                             return input.value.trim() === "";
-
                         });
-
                     });
-
-
                 if (incomplete.length > 0) {
-
-
                     const confirmSave =
                         confirm(
-
                             "Attention : " +
                             incomplete.length +
                             " étudiant(s) ont des notes incomplètes.\n\n" +
                             "Voulez-vous quand même enregistrer ?"
-
                         );
-
-
                     if (!confirmSave) {
-
                         event.preventDefault();
-
                     }
-
                 }
-
             }
-
         );
-
     }
-
 });
+
+const classeSelect = document.getElementById("classeSelect");
+const matiereSelect = document.getElementById("matiereSelect");
+
+if (classeSelect) {
+
+    classeSelect.addEventListener("change", function () {
+        const classeId = this.value;
+        matiereSelect.innerHTML =
+            '<option value="">Chargement...</option>';
+
+        if (!classeId) {
+            matiereSelect.innerHTML =
+                '<option value="">-- Choisir la matière --</option>';
+            return;
+        }
+
+        fetch(`/ajax/matieres-par-classe/?classe=${classeId}`)
+            .then(response => response.json())
+            .then(data => {
+                matiereSelect.innerHTML =
+                    '<option value="">-- Choisir la matière --</option>';
+                data.forEach(function(matiere) {
+                    const option =
+                        document.createElement("option");
+                    option.value = matiere.id;
+                    option.textContent =
+                        `${matiere.code} - ${matiere.libelle}`;
+                    matiereSelect.appendChild(option);
+                });
+            });
+    });
+}
 
 </script>
 

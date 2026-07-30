@@ -97,38 +97,30 @@
                 </div>
 
 
-
-                <div class="col-md-5">
-
-
-                    <select name="filiere_bts" class="form-select">
-
-                        <option value="">
-                            Toutes les filières
-                        </option>
-                    
-                    
-                        {% for f in filiere_list %}
-                    
-                            <option value="{{ f.id }}"
-                            
-                            {% if filiere_selectionnee|stringformat:"s" == f.id|stringformat:"s" %}
-                                selected
-                            {% endif %}
-                            
-                            >
-                    
-                                {{ f.nom }}
-                    
-                            </option>
-                    
-                    
-                        {% endfor %}
-                    
-                    
-                    </select>
-
-
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                
+                        <div class="d-flex flex-wrap gap-2">
+                
+                            <a href="{% url 'matiere_list' %}"
+                               class="btn {% if not filiere_selectionnee %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                Toutes
+                            </a>
+                
+                            {% for f in filiere_list %}
+                
+                                <a href="?filiere_bts={{ f.id }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                                   class="btn {% if filiere_selectionnee|stringformat:'s' == f.id|stringformat:'s' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                
+                                    {{ f.nom }}
+                
+                                </a>
+                
+                            {% endfor %}
+                
+                        </div>
+                
+                    </div>
                 </div>
 
 
