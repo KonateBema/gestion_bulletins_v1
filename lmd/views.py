@@ -15,12 +15,7 @@ from .pdf_droit_prive_service import generer_bulletin_droit_prive_pdf
 from .pdf_tronc_commun_service import generer_bulletin_tronc_commun_pdf
 from .models import MasterUE,EtudiantMaster , CandidatRattrapage ,FiliereLMD
 from .models import MasterECUE, NoteMaster
-# from .pdf_masters import generer_bulletin_masters_pdf
-# from .pdf_licence_qhse import generer_bulletin_licence_qhse_pdf
-# from .services.pdf_tronc_commun_service import pdf_tronc_commun_service
-# from .services.pdf_droit_prive_service import pdf_droit_prive_service
-# from .services.pdf_licence_qhse import pdf_licence_qhse
-
+from openpyxl import load_workbook
 
 
 from reportlab.lib import colors
@@ -3948,51 +3943,6 @@ def tronc_commun_etudiants(request):
         context
     )
 
-def tronc_commun_ueBBB(request):
-
-    ues = UE.objects.filter(
-        filiere__libelle="Gestion et Droit"
-    ).prefetch_related(
-        "ecues"
-    ).order_by(
-        "code"
-    )
-
-    return render(
-        request,
-        "lmd/trom_commun/ue.html",
-        {
-            "ues": ues,
-            "titre": "UE / ECUE Tronc Commun L1-L2 Droit & Gestion"
-        }
-    )
-
-def tronc_commun_ueDD(request):
-
-    semestre = request.GET.get("semestre", "S1")
-
-    if semestre not in ["S1", "S2"]:
-        semestre = "S1"
-
-    ues = UE.objects.filter(
-        filiere__libelle="Gestion et Droit",
-        semestre=semestre
-    ).prefetch_related(
-        "ecues"
-    ).order_by(
-        "code"
-    )
-
-    return render(
-        request,
-        "lmd/trom_commun/ue.html",
-        {
-            "ues": ues,
-            "semestre": semestre,
-            "titre": "UE / ECUE Tronc Commun L1-L2 Droit & Gestion"
-        }
-    )
-
 def tronc_commun_ue(request):
 
     # ============================
@@ -4033,81 +3983,8 @@ def tronc_commun_ue(request):
             "titre": "UE / ECUE Tronc Commun L1-L2 Droit & Gestion"
         }
     )
-def tronc_commun_notesENS(request):
-
-    filiere = get_object_or_404(
-        FiliereLMD,
-        Q(libelle="Gestion et Droit") |
-        Q(libelle="Droit et Gestion")
-    )
-
-    etudiants = EtudiantLMD.objects.filter(
-        filiere=filiere,
-        niveau__in=["L1", "L2"]
-    )
-
-
-    ecues = ECUE.objects.filter(
-        ue__filiere=filiere
-    ).order_by(
-        "code"
-    )
-
-
-    notes = NoteLMD.objects.filter(
-        etudiant__in=etudiants,
-        ecue__in=ecues
-    )
-
-
-    # Indexation des notes existantes
-    notes_existantes = {}
-
-    for note in notes:
-
-        notes_existantes[
-            (
-                note.etudiant_id,
-                note.ecue_id
-            )
-        ] = note
-
-
-
-    # Préparation affichage des notes
-    for etudiant in etudiants:
-
-        etudiant.notes_affichage = []
-
-        for ecue in ecues:
-
-            note = notes_existantes.get(
-                (
-                    etudiant.id,
-                    ecue.id
-                )
-            )
-
-
-            etudiant.notes_affichage.append(
-                {
-                    "ecue_id": ecue.id,
-                    "cc": note.cc if note else "",
-                    "examen": note.examen if note else "",
-                }
-            )
-
-
-    return render(
-        request,
-        "lmd/trom_commun/notes.html",
-        {
-            "etudiants": etudiants,
-            "ecues": ecues,
-        }
-    )
-
-def tronc_commun_notes(request):
+    
+def tronc_commun_notesDDD(request):
 
     # ==============================
     # SEMESTRE SELECTIONNE
@@ -4249,11 +4126,214 @@ def tronc_commun_notes(request):
         }
     )
 
+def tronc_commun_notes(request):
 
+    # ==============================
+    # SEMESTRE SELECTIONNE
+    # ==============================
+
+    semestre = request.GET.get(
+        "semestre",
+        "S1"
+    )
+
+    if semestre not in ["S1", "S2"]:
+        semestre = "S1"
+
+
+    # ==============================
+    # FILIERE TRONC COMMUN
+    # ==============================
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        Q(libelle="Gestion et Droit") |
+        Q(libelle="Droit et Gestion")
+    )
+
+
+    # ==============================
+    # ENREGISTREMENT DES NOTES
+    # ==============================
+
+    if request.method == "POST":
+
+        etudiants_post = EtudiantLMD.objects.filter(
+            filiere=filiere,
+            niveau__in=["L1", "L2"]
+        )
+
+        ecues_post = ECUE.objects.filter(
+            ue__filiere=filiere,
+            ue__semestre=semestre
+        )
+
+
+        for etudiant in etudiants_post:
+
+            for ecue in ecues_post:
+
+
+                cc = request.POST.get(
+                    f"cc_{etudiant.id}_{ecue.id}"
+                )
+
+                examen = request.POST.get(
+                    f"examen_{etudiant.id}_{ecue.id}"
+                )
+
+
+                # éviter de créer des notes vides
+
+                if cc == "" and examen == "":
+                    continue
+
+
+                cc = float(cc) if cc else 0
+                examen = float(examen) if examen else 0
+
+
+                moyenne = (
+                    (cc * 0.4) +
+                    (examen * 0.6)
+                )
+
+
+                NoteLMD.objects.update_or_create(
+
+                    etudiant=etudiant,
+
+                    ecue=ecue,
+
+                    semestre=semestre,
+
+                    session="1",
+
+                    defaults={
+
+                        "cc": cc,
+
+                        "examen": examen,
+
+                        "moyenne": round(
+                            moyenne,
+                            2
+                        )
+
+                    }
+                )
+
+
+        messages.success(
+            request,
+            "Les notes du tronc commun ont été enregistrées avec succès."
+        )
+
+
+        return redirect(
+            f"{request.path}?semestre={semestre}"
+        )
+
+
+    # ==============================
+    # ETUDIANTS L1 / L2
+    # ==============================
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau__in=["L1", "L2"]
+    ).order_by(
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+
+    # ==============================
+    # ECUE DU SEMESTRE
+    # ==============================
+
+    ecues = ECUE.objects.filter(
+        ue__filiere=filiere,
+        ue__semestre=semestre
+    ).select_related(
+        "ue"
+    ).order_by(
+        "code"
+    )
+
+
+    # ==============================
+    # NOTES EXISTANTES
+    # ==============================
+
+    notes = NoteLMD.objects.filter(
+        etudiant__in=etudiants,
+        ecue__in=ecues,
+        semestre=semestre,
+        session="1"
+    )
+
+
+    notes_existantes = {}
+
+    for note in notes:
+
+        notes_existantes[
+            (
+                note.etudiant_id,
+                note.ecue_id
+            )
+        ] = note
+
+
+
+    # ==============================
+    # PREPARATION AFFICHAGE
+    # ==============================
+
+    for etudiant in etudiants:
+
+        etudiant.notes_affichage = []
+
+
+        for ecue in ecues:
+
+            note = notes_existantes.get(
+                (
+                    etudiant.id,
+                    ecue.id
+                )
+            )
+
+
+            etudiant.notes_affichage.append({
+
+                "ecue_id": ecue.id,
+
+                "cc": note.cc if note else "",
+
+                "examen": note.examen if note else "",
+
+                "moyenne": note.moyenne if note else "",
+
+            })
+
+
+    return render(
+        request,
+        "lmd/trom_commun/notes.html",
+        {
+            "etudiants": etudiants,
+            "ecues": ecues,
+            "semestre": semestre,
+            "filiere": filiere,
+        }
+    )
 # =====================================================
 # TRONC COMMUN L1/L2 - DROIT + GESTION
 # =====================================================
-def liste_etudiants_tronc_commun(request):
+def liste_etudiants_tronc_communAAA(request):
 
     etudiants = EtudiantLMD.objects.filter(
         Q(filiere__libelle__icontains="Droit")
@@ -4273,10 +4353,56 @@ def liste_etudiants_tronc_commun(request):
 
     return render(
         request,
-        "lmd/tronc_commun/etudiants.html",
+        "lmd/trom_commun/etudiants.html",
         {
             "etudiants": etudiants,
             "titre":"Tronc Commun Droit & Gestion L1-L2"
+        }
+    )
+
+def liste_etudiants_tronc_commun(request):
+
+    niveau_filtre = request.GET.get(
+        "niveau",
+        ""
+    )
+
+
+    etudiants = EtudiantLMD.objects.filter(
+        Q(filiere__libelle__icontains="Droit")
+        |
+        Q(filiere__libelle__icontains="Gestion"),
+        niveau__in=[
+            "L1",
+            "L2",
+            "Licence 1",
+            "Licence 2"
+        ]
+    )
+
+
+    # Filtre niveau
+    if niveau_filtre:
+
+        etudiants = etudiants.filter(
+            niveau=niveau_filtre
+        )
+
+
+    etudiants = etudiants.order_by(
+        "niveau",
+        "nom"
+    )
+
+    return render(
+        request,
+        "lmd/trom_commun/etudiants.html",
+        {
+            "etudiants": etudiants,
+
+            "titre": "Tronc Commun Droit & Gestion L1-L2",
+
+            "niveau_filtre": niveau_filtre,
         }
     )
 # Vue spéciale Droit
@@ -4289,7 +4415,7 @@ def tronc_commun_droit(request):
 
     return render(
         request,
-        "lmd/tronc_commun/etudiants.html",
+        "lmd/trom_commun/etudiants.html",
         {
             "etudiants":etudiants,
             "titre":"Tronc Commun Droit L1-L2"
@@ -4309,7 +4435,7 @@ def tronc_commun_gestion(request):
 
     return render(
         request,
-        "lmd/tronc_commun/etudiants.html",
+        "lmd/trom_commun/etudiants.html",
         {
             "etudiants":etudiants,
             "titre":"Tronc Commun Gestion L1-L2"
@@ -4335,69 +4461,11 @@ def bulletin_tronc_commun_list(request):
 
     return render(
         request,
-        "lmd/tronc_commun/bulletins.html",
+        "lmd/trom_commun/bulletins.html",
         {
             "etudiants":etudiants
         }
     )    
-
-def liste_etudiants_tronc_commun(request):
-
-    etudiants = EtudiantLMD.objects.filter(
-        filiere__libelle="Gestion et Droit",
-        niveau__in=["L1", "L2"]
-    ).order_by(
-        "niveau",
-        "nom",
-        "prenoms"
-    )
-
-
-    return render(
-        request,
-        "lmd/trom_commun/etudiants.html",
-        {
-            "etudiants": etudiants,
-            "titre": "Étudiants Tronc Commun Gestion et Droit L1-L2"
-        }
-    )
-
-def bulletin_tronc_commun_pdfBBBB(request, id, semestre):
-
-    etudiant = get_object_or_404(
-        EtudiantLMD,
-        id=id
-    )
-
-    # Accepte "1", "2", "S1" ou "S2"
-    if not str(semestre).startswith("S"):
-        semestre = f"S{semestre}"
-
-    pdf_dir = os.path.join(
-        settings.MEDIA_ROOT,
-        "bulletins"
-    )
-
-    os.makedirs(
-        pdf_dir,
-        exist_ok=True
-    )
-
-    fichier = os.path.join(
-        pdf_dir,
-        f"bulletin_{etudiant.matricule}_{semestre}.pdf"
-    )
-
-    generer_bulletin_tronc_commun_pdf(
-        etudiant,
-        semestre,
-        fichier
-    )
-
-    return FileResponse(
-        open(fichier, "rb"),
-        content_type="application/pdf"
-    )
 
 def bulletin_tronc_commun_pdf(request, id, semestre):
 
@@ -4420,8 +4488,9 @@ def bulletin_tronc_commun_pdf(request, id, semestre):
 
     generer_bulletin_tronc_commun_pdf(
         etudiant,
-        file_path,
-        semestre
+        semestre,
+        file_path
+        
         
     )
   
@@ -4500,7 +4569,7 @@ def tronc_commun_update(request, pk):
             )
 
             return redirect(
-                "liste_bulletins_tronc_commun"
+                "liste_etudiants_tronc_commun"
             )
 
     else:
@@ -5712,4 +5781,95 @@ def bulletin_rattrapage_pdf(request, id, semestre):
         return HttpResponse(
             "Aucun service PDF trouvé pour cette filière"
         )    
+        
+def import_tronc_commun_excel(request):
+    if request.method == "POST":
+
+        fichier = request.FILES.get("excel_file")
+
+        if not fichier:
+            messages.error(request, "Veuillez sélectionner un fichier Excel.")
+            return redirect("import_tronc_commun_excel")
+
+        if not fichier.name.endswith(".xlsx"):
+            messages.error(request, "Le fichier doit être au format .xlsx")
+            return redirect("import_tronc_commun_excel")
+
+        wb = load_workbook(fichier)
+        ws = wb.active
+
+        importes = 0
+        erreurs = []
+
+        for numero, ligne in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+
+            matricule = str(ligne[0]).strip() if ligne[0] else ""
+            nom = str(ligne[1]).strip().upper() if ligne[1] else ""
+            prenoms = str(ligne[2]).strip().title() if ligne[2] else ""
+            sexe = str(ligne[3]).strip().upper() if ligne[3] else ""
+            niveau = str(ligne[4]).strip().upper() if ligne[4] else ""
+            filiere_nom = str(ligne[5]).strip() if ligne[5] else ""
+
+            if not matricule:
+                erreurs.append(f"Ligne {numero}: matricule vide.")
+                continue
+
+            if EtudiantLMD.objects.filter(matricule=matricule).exists():
+                erreurs.append(f"Ligne {numero}: {matricule} existe déjà.")
+                continue
+
+            filiere = FiliereLMD.objects.filter(libelle__iexact=filiere_nom).first()
+
+            if not filiere:
+                erreurs.append(
+                    f"Ligne {numero}: filière '{filiere_nom}' introuvable."
+                )
+                continue
+
+            EtudiantLMD.objects.create(
+                matricule=matricule,
+                nom=nom,
+                prenoms=prenoms,
+                sexe=sexe,
+                niveau=niveau,
+                filiere=filiere,
+            )
+
+            importes += 1
+
+        if importes:
+            messages.success(
+                request,
+                f"{importes} étudiant(s) importé(s) avec succès."
+            )
+
+        for err in erreurs:
+            messages.warning(request, err)
+
+        return redirect("liste_etudiants_tronc_commun")
+
+    return render(
+        request,
+        "lmd/trom_commun/import_excel.html",
+    )
+    
+
+
+def tronc_commun_delete(request, id):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id
+    )
+
+    etudiant.delete()
+
+    messages.success(
+        request,
+        "Étudiant supprimé avec succès."
+    )
+
+    return redirect(
+        "liste_etudiants_tronc_commun"
+    )
 

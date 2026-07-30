@@ -226,9 +226,7 @@ urlpatterns = [
    path("l3/gestion/ue/",views.l3_gestion_ue, name="l3_gestion_ue"),
    path("l3/gestion/ue/add/", views.l3_gestion_ue_add,name="l3_gestion_ue_add"),
    path("l3/gestion/ue/<int:pk>/edit/",views.l3_gestion_ue_edit,name="l3_gestion_ue_edit"),
-
    path("l3/gestion/ue/<int:pk>/delete/", views.l3_gestion_ue_delete,name="l3_gestion_ue_delete"),
-
       # ===============================
 # L3 SCIENCES DE GESTION - ECUE
 # ===============================
@@ -292,54 +290,24 @@ urlpatterns = [
   path("master/",views.master_dashboard,name="master_dashboard"),
   path("master/<int:id>/ue/",views.master_ue,name="master_ue"),
   path("master/ue/<int:id>/ecue/",views.master_ecue,name="master_ecue"),
-#   path("master/ecue/<int:id>/notes/",views.master_saisie_notes,name="master_saisie_notes"),
-path(
-    "master/ecue/<int:id>/notes/",
-    views.master_saisie_notes_ecue,
-    name="master_saisie_notes_ecue"
-),
-path(
-    "master/notes/",
-    views.master_saisie_notes,
-    name="master_saisie_notes"
-),
-  # ==========================
-# MASTER NOTES
-# ==========================
+  path("master/ecue/<int:id>/notes/",views.master_saisie_notes_ecue,name="master_saisie_notes_ecue"),
+  path("master/notes/",views.master_saisie_notes,name="master_saisie_notes"),
 
-path(
-    "master/ecue/<int:id>/notes/",
-    views.master_saisie_notes,
-    name="master_saisie_notes"
-),
-  # ==========================
-# MASTER ETUDIANTS
-# ==========================
-   path(
-    "master/notes/",
-    views.master_saisie_notes,
-    name="master_saisie_notes"
-),
-   path(
-    "master/ecue/<int:id>/notes/",
-    views.master_saisie_notes_ecue,
-    name="master_saisie_notes_ecue"
-),
+
+  path("master/ecue/<int:id>/notes/",views.master_saisie_notes,name="master_saisie_notes"),
+
+  path("master/notes/",views.master_saisie_notes,name="master_saisie_notes"),
+  path("master/ecue/<int:id>/notes/",views.master_saisie_notes_ecue,name="master_saisie_notes_ecue"),
 
 
   path("master/etudiants/",views.master_etudiant_list,name="master_etudiant_list"),
   path("master/etudiant/add/",views.master_etudiant_add,name="master_etudiant_add"),
   path("master/etudiant/<int:id>/edit/",views.master_etudiant_edit,name="master_etudiant_edit"),
   path("master/etudiant/<int:id>/delete/",views.master_etudiant_delete,name="master_etudiant_delete"),
-  
   path("master/programmes/add/",views.master_programme_add,name="master_programme_add"),
   
 #   path("master/ue/add/",views.master_ue_add,name="master_ue_add"),
-  path(
-    "master/<int:id>/ue/add/",
-    views.master_ue_add,
-    name="master_ue_add"
-),
+  path("master/<int:id>/ue/add/",views.master_ue_add,name="master_ue_add"),
   path("master/<int:id>/ue/add/",views.master_ue_add,name="master_ue_add"),
   path("master/ue/edit/<int:id>/",views.master_ue_edit,name="master_ue_edit"),
   path("master/ue/delete/<int:id>/",views.master_ue_delete,name="master_ue_delete"),
@@ -352,95 +320,36 @@ path(
   path("master/programmes/add/",views.master_programme_add,name="master_programme_add"),
 
   path("master/programmes/<int:id>/edit/",views.master_programme_edit,name="master_programme_edit"),
-
   path("master/programmes/<int:id>/delete/",views.master_programme_delete,name="master_programme_delete"),
+
+  path("master/bulletin/<int:id>/<str:semestre>/",views.master_bulletin_pdf,name="master_bulletin_pdf"),
+
+  path("bulletin/qhse/<int:pk>/<str:semestre>/",views.imprimer_bulletin_licence_qhse,name="imprimer_bulletin_licence_qhse"),
   
-  # path("master/bulletins/<int:id>/pdf/",views.master_bulletin_pdf, name="master_bulletin_pdf"),
-  path(
-    "master/bulletin/<int:id>/<str:semestre>/",
-    views.master_bulletin_pdf,
-    name="master_bulletin_pdf"
-),
-  # path("licence/qhse/bulletin/<int:pk>/",views.imprimer_bulletin_licence_qhse,name="imprimer_bulletin_licence_qhse"),
-  # path("bulletin/qhse/<int:pk>/<str:semestre>/",views.imprimer_bulletin_licence_qhse,name="imprimer_bulletin_licence_qhse"),
-  path(
-    "bulletin/qhse/<int:pk>/<str:semestre>/",
-    views.imprimer_bulletin_licence_qhse,
-    name="imprimer_bulletin_licence_qhse"
-),
+  path("l3/qhse/etudiants/<int:pk>/update/",views.l3_qhse_etudiant_update,name="l3_qhse_etudiant_update"),
+  path("tronc-commun/ue/add/",views.l3_tc_ue_add,name="l3_tc_ue_add"),
+  path("tronc-commun/ecue/add/<int:ue_id>/",views.l3_tc_ecue_add,name="l3_tc_ecue_add"),
+
+  path("tronc-commun/ecue/<int:pk>/update/",views.l3_tc_ecue_update,name="l3_tc_ecue_update"),
+  path("tronc-commun/ue/<int:pk>/update/",views.l3_tc_ue_update,name="l3_tc_ue_update"),
+  path("tronc-commun/ue/<int:pk>/delete/",views.l3_tc_ue_delete,name="l3_tc_ue_delete"),
+
+  path("tronc-commun/ecue/<int:pk>/delete/",views.l3_tc_ecue_delete,name="l3_tc_ecue_delete"),
+  path("tronc-commun/ue/",views.tronc_commun_ue,name="l3_tc_ue_list"),
+  path("rattrapage/",views.rattrapage_liste,name="rattrapage_liste"),
+
+  path("rattrapage/saisie/<int:id>/",views.saisie_rattrapage,name="saisie_rattrapage"),
+  path("rattrapage/",views.rattrapage_liste,name="rattrapage_liste"),
+  
+  path("bulletin-rattrapage/pdf/<int:id>/",views.bulletin_rattrapage_pdf,name="bulletin_rattrapage_pdf"),
+  path("bulletin-rattrapage/pdf/<int:id>/<str:semestre>/",views.bulletin_rattrapage_pdf,name="bulletin_rattrapage_pdf"),
+
+  path( "tronc-commun/import/",views.import_tronc_commun_excel,name="import_tronc_commun_excel"),
   
   path(
-    "l3/qhse/etudiants/<int:pk>/update/",
-    views.l3_qhse_etudiant_update,
-    name="l3_qhse_etudiant_update"),
-  path(
-    "tronc-commun/ue/add/",
-    views.l3_tc_ue_add,
-    name="l3_tc_ue_add",
-    ),
-  path(
-    "tronc-commun/ecue/add/<int:ue_id>/",
-    views.l3_tc_ecue_add,
-    name="l3_tc_ecue_add"
-  ),
-
-
-  path(
-    "tronc-commun/ecue/<int:pk>/update/",
-    views.l3_tc_ecue_update,
-    name="l3_tc_ecue_update"
-   ),
-  path(
-    "tronc-commun/ue/<int:pk>/update/",
-    views.l3_tc_ue_update,
-    name="l3_tc_ue_update"
-),
-
-
-path(
-    "tronc-commun/ue/<int:pk>/delete/",
-    views.l3_tc_ue_delete,
-    name="l3_tc_ue_delete"
-),
-
-
-  path(
-    "tronc-commun/ecue/<int:pk>/delete/",
-    views.l3_tc_ecue_delete,
-    name="l3_tc_ecue_delete"
-  ),
-  path(
-    "tronc-commun/ue/",
-    views.tronc_commun_ue,
-    name="l3_tc_ue_list"
-   ),
-  path(
-"rattrapage/",
-views.rattrapage_liste,
-name="rattrapage_liste"
-),
-
-
-path(
-"rattrapage/saisie/<int:id>/",
-views.saisie_rattrapage,
-name="saisie_rattrapage"
-),
-path(
-    "rattrapage/",
-    views.rattrapage_liste,
-    name="rattrapage_liste"
-),
-  
- path(
-    "bulletin-rattrapage/pdf/<int:id>/",
-    views.bulletin_rattrapage_pdf,
-    name="bulletin_rattrapage_pdf"
-),
- path(
-    "bulletin-rattrapage/pdf/<int:id>/<str:semestre>/",
-    views.bulletin_rattrapage_pdf,
-    name="bulletin_rattrapage_pdf"
+    "tronc-commun/supprimer/<int:id>/",
+    views.tronc_commun_delete,
+    name="tronc_commun_delete"
 ),
 
 ]

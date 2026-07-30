@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="card shadow border-0 rounded-4">
+
+        <div class="card-header bg-success text-white">
+
+            <h4>
+                <i class="bi bi-file-earmark-excel-fill"></i>
+                Import des étudiants Tronc Commun
+            </h4>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+                <div class="mb-4">
+
+                    <label class="form-label fw-bold">
+
+                        Choisir un fichier Excel
+
+                    </label>
+
+                    <input
+                        type="file"
+                        class="form-control"
+                        name="excel_file"
+                        accept=".xlsx"
+                        required>
+
+                </div>
+
+                <div class="alert alert-info">
+
+                    <b>Colonnes attendues :</b>
+
+                    <table class="table table-bordered mt-3">
+
+                        <tr>
+                            <th>Matricule</th>
+                            <th>Nom</th>
+                            <th>Prénoms</th>
+                            <th>Sexe</th>
+                            <th>Niveau</th>
+                            <th>Filière</th>
+                        </tr>
+
+                    </table>
+
+                </div>
+
+                <button class="btn btn-success">
+
+                    <i class="bi bi-upload"></i>
+
+                    Importer
+
+                </button>
+
+                <a href="{% url 'liste_etudiants_tronc_commun' %}"
+                   class="btn btn-secondary">
+
+                    Retour
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

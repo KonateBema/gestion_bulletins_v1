@@ -28,7 +28,7 @@
 
                     <p class="text-muted mb-0">
 
-                        Gestion des étudiants du tronc commun 
+                        Gestion des étudiants du tronc commun
                         <strong>Droit & Gestion</strong>
 
                     </p>
@@ -36,34 +36,25 @@
                 </div>
 
 
-
                 <div class="d-flex align-items-center gap-2">
 
-
                     <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">
-
                         <i class="bi bi-people-fill me-1"></i>
-
                         {{ etudiants|length }} étudiants
-
                     </span>
 
-
-
-                    <a href="{% url 'tronc_commun_add' %}" 
-                       class="btn btn-success rounded-pill px-4 shadow-sm">
-
-
-                        <i class="bi bi-person-plus-fill me-1"></i>
-
-                        Ajouter
-
-
+                    <a href="{% url 'import_tronc_commun_excel' %}"
+                        class="btn btn-outline-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-file-earmark-excel-fill me-2"></i>
+                        Importer Excel
                     </a>
 
+                    <a href="{% url 'tronc_commun_add' %}" class="btn btn-success rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-person-plus-fill me-2"></i>
+                        Ajouter
+                    </a>
 
                 </div>
-
 
             </div>
 
@@ -99,7 +90,7 @@
 
 
 
-                <div class="input-group input-group-sm" style="max-width:320px;">
+                <!-- <div class="input-group input-group-sm" style="max-width:320px;">
 
 
                     <span class="input-group-text bg-white">
@@ -109,24 +100,101 @@
                     </span>
 
 
-                    <input type="text"
-                           id="search"
-                           class="form-control"
-                           placeholder="Rechercher un étudiant...">
+                    <input type="text" id="search" class="form-control" placeholder="Rechercher un étudiant...">
 
 
+                </div> -->
+
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+
+
+                    <!-- Nombre étudiants -->
+                    <span class="badge bg-primary rounded-pill px-3 py-2">
+                
+                        <i class="bi bi-people-fill me-1"></i>
+                
+                        {{ etudiants|length }} étudiant(s)
+                
+                    </span>
+                
+                
+                
+                    <!-- Filtre niveau -->
+                    <form method="GET" class="d-flex gap-2">
+                
+                
+                        <select name="niveau"
+                                class="form-select form-select-sm shadow-sm"
+                                onchange="this.form.submit()">
+                
+                
+                            <option value="">
+                                🎓 Tous les niveaux
+                            </option>
+                
+                
+                            <option value="L1"
+                            {% if niveau_filtre == "L1" %}selected{% endif %}>
+                
+                                Licence 1
+                
+                            </option>
+                
+                
+                            <option value="L2"
+                            {% if niveau_filtre == "L2" %}selected{% endif %}>
+                
+                                Licence 2
+                
+                            </option>
+                
+                
+                        </select>
+                
+                
+                        {% if niveau_filtre %}
+                
+                        <a href="{% url 'liste_etudiants_tronc_commun' %}"
+                           class="btn btn-outline-secondary btn-sm">
+                
+                            <i class="bi bi-x-circle"></i>
+                
+                        </a>
+                
+                        {% endif %}
+                
+                
+                    </form>
+                
+                
+                
+                    <!-- Recherche -->
+                    <div class="input-group input-group-sm shadow-sm"
+                         style="width:260px;">
+                
+                
+                        <span class="input-group-text bg-white">
+                
+                            <i class="bi bi-search text-primary"></i>
+                
+                        </span>
+                
+                
+                        <input type="text"
+                               id="search"
+                               class="form-control"
+                               placeholder="Nom, matricule...">
+                
+                
+                    </div>
+                
+                
                 </div>
-
-
 
             </div>
 
 
         </div>
-
-
-
-
 
         <div class="card-body p-0">
 
@@ -165,7 +233,7 @@
                     <tbody>
 
 
-                    {% for e in etudiants %}
+                        {% for e in etudiants %}
 
 
                         <tr>
@@ -207,31 +275,31 @@
 
                                 {% if e.niveau == "L1" %}
 
-                                    <span class="badge bg-success rounded-pill px-3">
+                                <span class="badge bg-success rounded-pill px-3">
 
-                                        Licence 1
+                                    Licence 1
 
-                                    </span>
+                                </span>
 
 
                                 {% elif e.niveau == "L2" %}
 
 
-                                    <span class="badge bg-warning text-dark rounded-pill px-3">
+                                <span class="badge bg-warning text-dark rounded-pill px-3">
 
-                                        Licence 2
+                                    Licence 2
 
-                                    </span>
+                                </span>
 
 
                                 {% else %}
 
 
-                                    <span class="badge bg-secondary rounded-pill px-3">
+                                <span class="badge bg-secondary rounded-pill px-3">
 
-                                        {{ e.niveau }}
+                                    {{ e.niveau }}
 
-                                    </span>
+                                </span>
 
 
                                 {% endif %}
@@ -267,8 +335,7 @@
 
 
                                     <a href="{% url 'tronc_commun_update' e.id %}"
-                                       class="btn btn-sm btn-outline-warning"
-                                       title="Modifier">
+                                        class="btn btn-sm btn-outline-warning" title="Modifier">
 
 
                                         <i class="bi bi-pencil-square"></i>
@@ -276,20 +343,14 @@
 
                                     </a>
 
+                                    <!-- Supprimer -->
+                                    <a href="{% url 'tronc_commun_delete' e.id %}" class="btn btn-sm btn-outline-danger"
+                                        title="Supprimer"
+                                        onclick="return confirm('Voulez-vous vraiment supprimer cet étudiant ?');">
 
-
-
-                                    <a href="{% url 'bulletin_tronc_commun_pdf' e.id %}"
-                                       target="_blank"
-                                       class="btn btn-sm btn-outline-danger"
-                                       title="Imprimer bulletin">
-
-
-                                        <i class="bi bi-file-earmark-pdf-fill"></i>
-
+                                        <i class="bi bi-trash-fill"></i>
 
                                     </a>
-
 
                                 </div>
 
@@ -302,7 +363,7 @@
 
 
 
-                    {% empty %}
+                        {% empty %}
 
 
 
@@ -329,7 +390,7 @@
 
 
 
-                    {% endfor %}
+                        {% endfor %}
 
 
 
@@ -358,33 +419,33 @@
 <script>
 
 
-document
-.getElementById("search")
-.addEventListener("keyup", function(){
-
-
-    let recherche = this.value.toLowerCase();
-
-
-
     document
-    .querySelectorAll("#tableEtudiants tbody tr")
-    .forEach(function(ligne){
+        .getElementById("search")
+        .addEventListener("keyup", function () {
 
 
-        ligne.style.display =
-            ligne.innerText
-            .toLowerCase()
-            .includes(recherche)
-            ? ""
-            : "none";
-
-
-    });
+            let recherche = this.value.toLowerCase();
 
 
 
-});
+            document
+                .querySelectorAll("#tableEtudiants tbody tr")
+                .forEach(function (ligne) {
+
+
+                    ligne.style.display =
+                        ligne.innerText
+                            .toLowerCase()
+                            .includes(recherche)
+                            ? ""
+                            : "none";
+
+
+                });
+
+
+
+        });
 
 
 </script>
