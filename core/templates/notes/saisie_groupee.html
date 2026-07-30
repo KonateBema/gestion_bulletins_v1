@@ -8,7 +8,6 @@ Saisie groupée des notes BTS
 
 <div class="container-fluid py-4">
 
-```
 <!-- =====================================================
      HEADER
 ====================================================== -->
@@ -16,94 +15,56 @@ Saisie groupée des notes BTS
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
 
     <div>
-
         <h2 class="fw-bold mb-1">
-
             <i class="bi bi-pencil-square text-primary"></i>
-
             Saisie groupée des notes BTS
 
         </h2>
-
         <p class="text-muted mb-0">
-
             Saisissez rapidement les notes de toute une classe
-
         </p>
-
     </div>
-
 
     <div>
-
         <a href="{% url 'note_list' %}"
            class="btn btn-outline-secondary">
-
             <i class="bi bi-journal-text"></i>
-
             Liste des notes
-
         </a>
-
     </div>
-
 </div>
-
-
 
 <!-- =====================================================
      FILTRES
 ====================================================== -->
-
 <div class="card border-0 shadow-sm rounded-4 mb-4">
-
     <div class="card-header bg-primary text-white py-3">
-
         <div class="d-flex align-items-center">
-
             <i class="bi bi-funnel-fill fs-5 me-2"></i>
-
             <div>
-
                 <h5 class="mb-0 fw-bold">
                     Sélection de la saisie
                 </h5>
-
                 <small class="opacity-75">
                     Choisissez une classe, une matière et un semestre
                 </small>
-
             </div>
 
         </div>
-
     </div>
-
-
     <div class="card-body">
-
         <form method="get">
-
             <div class="row g-3">
-
-
                 <!-- CLASSE -->
-
                 <div class="col-lg-4">
-
                     <label class="form-label fw-bold">
-
                         <i class="bi bi-people-fill text-primary"></i>
-
                         Classe
-
                     </label>
-
                     <select name="classe"
                             id="classeSelect"
                             class="form-select form-select-lg"
                             required>
-
                         <option value="">
                             -- Choisir une classe --
                         </option>
@@ -125,8 +86,6 @@ Saisie groupée des notes BTS
                     </select>
 
                 </div>
-
-
 
                 <!-- MATIÈRE -->
 
@@ -168,35 +127,21 @@ Saisie groupée des notes BTS
                         {% endfor %}
 
                     </select>
-
                 </div>
-
-
-
                 <!-- SEMESTRE -->
-
                 <div class="col-lg-2">
-
                     <label class="form-label fw-bold">
-
                         <i class="bi bi-calendar3 text-primary"></i>
-
                         Semestre
-
                     </label>
-
                     <select name="semestre"
                             class="form-select form-select-lg">
-
                         <option value="1"
                             {% if request.GET.semestre == "1" or not request.GET.semestre %}
                                 selected
                             {% endif %}>
-
                             Semestre 1
-
                         </option>
-
                         <option value="2"
                             {% if request.GET.semestre == "2" %}
                                 selected
@@ -205,13 +150,9 @@ Saisie groupée des notes BTS
                             Semestre 2
 
                         </option>
-
                     </select>
 
                 </div>
-
-
-
                 <!-- BOUTON -->
 
                 <div class="col-lg-2 d-flex align-items-end">
@@ -222,23 +163,14 @@ Saisie groupée des notes BTS
                         <i class="bi bi-search"></i>
 
                         Afficher
-
                     </button>
-
                 </div>
-
             </div>
-
         </form>
-
     </div>
-
 </div>
 
-
-
 {% if etudiants %}
-
 
 <!-- =====================================================
      INFORMATIONS DE LA SAISIE
@@ -246,15 +178,10 @@ Saisie groupée des notes BTS
 
 <div class="row g-3 mb-4">
 
-
     <!-- ÉTUDIANTS -->
-
     <div class="col-md-4">
-
         <div class="card border-0 shadow-sm rounded-4 h-100">
-
             <div class="card-body d-flex align-items-center">
-
                 <div class="stat-icon bg-primary-subtle text-primary">
 
                     <i class="bi bi-people-fill"></i>
@@ -407,18 +334,11 @@ Saisie groupée des notes BTS
     <div class="card-body">
 
         <div class="row align-items-center g-3">
-
-
             <div class="col-lg-8">
-
                 <div class="input-group input-group-lg">
-
                     <span class="input-group-text bg-white">
-
                         <i class="bi bi-search"></i>
-
                     </span>
-
                     <input
                         type="text"
                         id="searchStudent"
@@ -426,23 +346,15 @@ Saisie groupée des notes BTS
                         placeholder="Rechercher par matricule, nom ou prénom..."
                         autocomplete="off"
                     >
-
                     <button
                         type="button"
                         class="btn btn-outline-secondary"
                         id="clearSearch">
-
                         <i class="bi bi-x-lg"></i>
-
                     </button>
-
                 </div>
-
             </div>
-
-
             <div class="col-lg-4 text-lg-end">
-
                 <span class="text-muted">
 
                     <span id="visibleCount">
@@ -450,18 +362,11 @@ Saisie groupée des notes BTS
                     </span>
 
                     étudiant(s) affiché(s)
-
                 </span>
-
             </div>
-
         </div>
-
     </div>
-
 </div>
-
-
 
 <!-- =====================================================
      FORMULAIRE NOTES
@@ -472,34 +377,24 @@ Saisie groupée des notes BTS
 
     {% csrf_token %}
 
-
     <input type="hidden"
            name="classe"
            value="{{ request.GET.classe }}">
-
 
     <input type="hidden"
            name="matiere"
            value="{{ request.GET.matiere }}">
 
-
     <input type="hidden"
            name="semestre"
            value="{{ request.GET.semestre }}">
 
-
-
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
 
-
         <!-- HEADER TABLE -->
-
         <div class="card-header bg-white py-3">
-
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-
                 <div>
-
                     <h5 class="fw-bold mb-1">
 
                         <i class="bi bi-table text-primary"></i>
@@ -507,15 +402,11 @@ Saisie groupée des notes BTS
                         Liste des étudiants
 
                     </h5>
-
                     <small class="text-muted">
 
                         Saisissez les notes directement dans le tableau.
-
                     </small>
-
                 </div>
-
 
                 <span class="badge bg-primary rounded-pill px-3 py-2">
 
@@ -528,9 +419,6 @@ Saisie groupée des notes BTS
             </div>
 
         </div>
-
-
-
         <!-- TABLE -->
 
         <div class="table-responsive">
@@ -543,10 +431,6 @@ Saisie groupée des notes BTS
                 <thead class="table-dark sticky-top">
 
                     <tr>
-
-                        <th class="text-center">
-                            #
-                        </th>
 
                         <th>
                             Matricule
@@ -563,80 +447,48 @@ Saisie groupée des notes BTS
                         <th class="text-center note-column">
                             Devoir /20
                         </th>
-
                         <th class="text-center note-column">
                             Examen /20
                         </th>
-
                         <th class="text-center">
                             Moyenne
                         </th>
-
                         <th class="text-center">
                             État
                         </th>
-
                     </tr>
-
                 </thead>
-
-
-
                 <tbody>
-
-
                 {% for etudiant in etudiants %}
 
                     <tr class="student-row"
                         data-student="{{ etudiant.id }}">
 
-
-                        <!-- NUMÉRO -->
-
-                        <td class="text-center text-muted fw-bold">
-
-                            {{ forloop.counter }}
-
-                        </td>
-
-
                         <!-- MATRICULE -->
-
                         <td>
-
                             <span class="badge bg-light text-dark border">
 
                                 {{ etudiant.matricule }}
 
                             </span>
-
                         </td>
-
-
                         <!-- ÉTUDIANT -->
 
                         <td>
-
                             <div class="fw-bold">
 
                                 {{ etudiant.nom }}
 
                             </div>
-
                             <small class="text-muted">
 
                                 {{ etudiant.prenoms }}
 
                             </small>
-
                         </td>
-
-
-
                         <!-- CC -->
 
                         <td>
-
                             <input
                                 type="number"
                                 min="0"
@@ -648,15 +500,10 @@ Saisie groupée des notes BTS
                                 data-type="cc"
                                 placeholder="--"
                             >
-
                         </td>
-
-
-
                         <!-- DEVOIR -->
 
                         <td>
-
                             <input
                                 type="number"
                                 min="0"
@@ -670,13 +517,8 @@ Saisie groupée des notes BTS
                             >
 
                         </td>
-
-
-
                         <!-- EXAMEN -->
-
                         <td>
-
                             <input
                                 type="number"
                                 min="0"
@@ -688,273 +530,157 @@ Saisie groupée des notes BTS
                                 data-type="examen"
                                 placeholder="--"
                             >
-
                         </td>
-
-
 
                         <!-- MOYENNE -->
 
                         <td class="text-center">
-
                             <span
                                 class="badge bg-secondary moyenne-badge">
-
                                 --
-
                             </span>
 
                         </td>
-
-
 
                         <!-- ÉTAT -->
 
                         <td class="text-center">
-
                             <span class="status-badge badge bg-warning text-dark">
 
                                 À compléter
-
                             </span>
-
                         </td>
 
-
                     </tr>
-
                 {% endfor %}
 
-
                 </tbody>
-
             </table>
-
         </div>
 
-
-
         <!-- FOOTER -->
-
         <div class="card-footer bg-white py-3">
-
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
 
-
                 <div class="text-muted small">
-
                     <i class="bi bi-lightbulb text-warning"></i>
-
                     <strong>Astuce :</strong>
-
                     utilisez
-
                     <kbd>Tab</kbd>
-
                     pour passer rapidement d'une note à l'autre.
 
                 </div>
-
-
                 <button
                     type="submit"
                     class="btn btn-success btn-lg px-4"
                     id="saveButton">
-
                     <i class="bi bi-save-fill"></i>
-
                     Enregistrer les notes
-
                 </button>
-
             </div>
-
         </div>
-
     </div>
-
 </form>
 
-
 {% else %}
-
 
 <!-- =====================================================
      ÉTAT INITIAL
 ====================================================== -->
-
 <div class="card border-0 shadow-sm rounded-4">
-
     <div class="card-body text-center py-5">
-
         <div class="display-1 text-primary mb-3">
-
             <i class="bi bi-journal-check"></i>
 
         </div>
-
         <h4 class="fw-bold">
-
             Prêt pour la saisie
-
         </h4>
-
         <p class="text-muted mb-0">
-
             Sélectionnez une classe, une matière et un semestre
             pour afficher les étudiants.
-
         </p>
-
     </div>
-
 </div>
 
 {% endif %}
-```
 
 </div>
-
 <!-- =====================================================
      STYLE
 ====================================================== -->
-
 <style>
-
     .rounded-4 {
         border-radius: 1rem !important;
     }
-
-
     .stat-icon {
-
         width: 50px;
         height: 50px;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         border-radius: 12px;
-
         font-size: 22px;
-
     }
-
-
     .note-input {
-
         min-width: 100px;
-
         font-weight: 600;
-
         font-size: 16px;
-
         border-radius: 8px;
-
     }
-
-
     .note-input:focus {
-
         border-color: #0d6efd;
-
         box-shadow:
             0 0 0 0.2rem rgba(13, 110, 253, 0.15);
-
     }
-
-
     .note-input.note-valid {
-
         border-color: #198754;
-
         background-color: #f0fff5;
-
     }
-
 
     .note-input.note-invalid {
-
         border-color: #dc3545;
-
         background-color: #fff5f5;
-
     }
-
-
     .moyenne-badge {
-
         min-width: 70px;
-
         font-size: 14px;
-
     }
-
-
     .status-badge {
-
         min-width: 95px;
-
     }
-
 
     .student-row:hover {
-
         background-color: #f8faff;
-
     }
-
-
     .student-row.has-error {
-
         background-color: #fff8f8;
-
     }
-
-
     .student-row.complete {
 
         background-color: #f6fff8;
 
     }
-
-
     .table th {
 
         white-space: nowrap;
 
     }
-
-
     .note-column {
-
         min-width: 120px;
-
     }
-
 
     kbd {
-
         background-color: #212529;
-
         color: white;
-
         padding: 3px 7px;
-
         border-radius: 4px;
-
     }
 
-
     @media (max-width: 768px) {
-
         .note-input {
-
             min-width: 80px;
-
         }
-
     }
 
 </style>
@@ -967,38 +693,29 @@ Saisie groupée des notes BTS
 
 document.addEventListener("DOMContentLoaded", function () {
 
-
     const searchInput =
         document.getElementById("searchStudent");
-
 
     const clearSearch =
         document.getElementById("clearSearch");
 
-
     const rows =
         document.querySelectorAll(".student-row");
-
 
     const noteInputs =
         document.querySelectorAll(".note-input");
 
-
     const notesCount =
         document.getElementById("notesCount");
-
 
     const remainingCount =
         document.getElementById("remainingCount");
 
-
     const visibleCount =
         document.getElementById("visibleCount");
 
-
     const form =
         document.getElementById("notesForm");
-
 
     /*
      * --------------------------------------------------
@@ -1014,43 +731,31 @@ document.addEventListener("DOMContentLoaded", function () {
      * Examen  = 50%
      *
      */
-
     function calculateAverage(row) {
-
 
         const cc =
             parseFloat(
                 row.querySelector('[data-type="cc"]').value
             );
 
-
         const devoir =
             parseFloat(
                 row.querySelector('[data-type="devoir"]').value
             );
 
-
         const examen =
             parseFloat(
                 row.querySelector('[data-type="examen"]').value
             );
-
-
         const moyenneBadge =
             row.querySelector(".moyenne-badge");
-
-
         const statusBadge =
             row.querySelector(".status-badge");
-
-
         const values = [
             cc,
             devoir,
             examen
         ];
-
-
         const hasInvalid =
             values.some(function(value) {
 
@@ -1059,29 +764,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
             });
 
-
         if (hasInvalid) {
-
             moyenneBadge.textContent = "Erreur";
-
             moyenneBadge.className =
                 "badge bg-danger moyenne-badge";
-
             statusBadge.textContent =
                 "Note invalide";
-
             statusBadge.className =
                 "status-badge badge bg-danger";
 
             row.classList.add("has-error");
-
             row.classList.remove("complete");
-
             return;
-
         }
-
-
         /*
          * Si aucune note n'est saisie
          */
@@ -1093,7 +788,6 @@ document.addEventListener("DOMContentLoaded", function () {
         ) {
 
             moyenneBadge.textContent = "--";
-
             moyenneBadge.className =
                 "badge bg-secondary moyenne-badge";
 
@@ -1105,48 +799,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
             row.classList.remove("has-error");
             row.classList.remove("complete");
-
             return;
-
         }
-
 
         /*
          * Calcul
          */
-
         const ccValue =
             isNaN(cc) ? 0 : cc;
-
 
         const devoirValue =
             isNaN(devoir) ? 0 : devoir;
 
-
         const examenValue =
             isNaN(examen) ? 0 : examen;
-
 
         const moyenne =
             (ccValue * 0.30) +
             (devoirValue * 0.20) +
             (examenValue * 0.50);
 
-
         moyenneBadge.textContent =
             moyenne.toFixed(2);
-
-
         /*
          * Toutes les notes sont présentes
          */
-
         const complete =
             !isNaN(cc) &&
             !isNaN(devoir) &&
             !isNaN(examen);
-
-
         if (complete) {
 
             row.classList.remove("has-error");
@@ -1175,9 +856,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 statusBadge.className =
                     "status-badge badge bg-danger";
-
             }
-
         }
         else {
 
@@ -1194,7 +873,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 "status-badge badge bg-warning text-dark";
 
         }
-
     }
     /*
      * --------------------------------------------------
@@ -1229,7 +907,6 @@ document.addEventListener("DOMContentLoaded", function () {
      * ÉVÉNEMENT SUR LES NOTES
      * --------------------------------------------------
      */
-
     noteInputs.forEach(function(input) {
         input.addEventListener("input", function() {
             let value =
@@ -1239,13 +916,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 !isNaN(value) &&
                 (value < 0 || value > 20)
             ) {
-
                 this.classList.add("note-invalid");
             }
             else {
-
                 this.classList.remove("note-invalid");
-
             }
             const row =
                 this.closest(".student-row");
@@ -1271,7 +945,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     this.value
                     .toLowerCase()
                     .trim();
-
                 let visible = 0;
                 rows.forEach(function(row) {
                     const text =
@@ -1282,19 +955,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                     else {
                         row.style.display = "none";
-
                     }
-
                 });
 
                 visibleCount.textContent =
                     visible;
             }
-
         );
-
     }
-
     /*
      * --------------------------------------------------
      * EFFACER RECHERCHE
@@ -1391,7 +1059,6 @@ if (classeSelect) {
             });
     });
 }
-
 </script>
 
 {% endblock %}
