@@ -107,12 +107,12 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     file_path = os.path.join(output_dir, f"bulletin_{etudiant.matricule}.pdf")
 
     doc = SimpleDocTemplate(
-        file_path,
-        pagesize=A4,
-        leftMargin=1.2 * cm,
-        rightMargin=1.2 * cm,
-        topMargin=1.2 * cm,
-        bottomMargin=1.2 * cm
+       file_path,
+       pagesize=A4,
+       leftMargin=0.8 * cm,
+       rightMargin=0.8 * cm,
+       topMargin=0.7 * cm,
+       bottomMargin=0.7 * cm
     )
 
     elements = []
@@ -125,8 +125,8 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     "style_ministere",
     parent=SMALL,
     fontName="Helvetica-Bold",
-    fontSize=8,
-    leading=10,
+    fontSize=6,
+    leading=7,
     alignment=TA_LEFT,
     spaceAfter=0,
     spaceBefore=0,
@@ -145,7 +145,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
             <b>RÉPUBLIQUE DE CÔTE D'IVOIRE</b><br/>
             Union - Discipline - Travail
             </para>
-        """, SMALL)
+        """, style_ministere)
     ]
     ], colWidths=[9*cm, 9*cm])
 
@@ -169,7 +169,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         <para align="right">
          <b>ANNÉE ACADÉMIQUE : 2025 - 2026</b>
         </para>
-    """, SMALL))
+    """, style_ministere))
 
     # elements.append(Spacer(1, 10))
     # =====================================================
@@ -194,6 +194,8 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     fontSize=9,
     leading=11,
    )
+   
+
     # =====================================================
     # CADRE UNIVERSITÉ
     # =====================================================
@@ -201,19 +203,20 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         [[
             logo,
             Paragraph("""
-                <b>UNIVERSITÉ INTER. DE COCODY</b><br/><br/><br/>
-                &nbsp;&nbsp;&nbsp;BP Abidjan - Côte d'Ivoire<br/><br/>
-                &nbsp;&nbsp;&nbsp;Tel: +225 07 78 63 74 00<br/><br/>
-                &nbsp;&nbsp;&nbsp;Tél. fixe : 27 XX XX XX<br/><br/>
-                &nbsp;&nbsp;&nbsp;site: www.uci-ci.com<br/><br/>
-                &nbsp;&nbsp;&nbsp;Email: uicinfos@gmail.com<br/>
+                <b>UNIVERSITÉ INTER. DE COCODY</b><br/>
+                BP Abidjan - Côte d'Ivoire<br/>
+                Tel: +225 07 78 63 74 00<br/>
+                Tél. fixe : 27 XX XX XX<br/>
+                site: www.uci-ci.com<br/>
+                Email: uicinfos@gmail.com
            """, style_universite)
         ]],
         # colWidths=[0.5 * cm, 7.5 * cm],
         colWidths=[1.7 * cm, 6.5 * cm],
-     
+        rowHeights=[3.2 * cm]   # hauteur fixe
         # rowHeights=[3.7 * cm]
     )
+    
 
     cadre_universite.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
@@ -229,11 +232,22 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
          # Padding du logo
         ("LEFTPADDING", (0, 0), (0, 0), 5),
         ("RIGHTPADDING", (0, 0), (0, 0), 5),
+        
+         # réduire les marges internes
+        ("TOPPADDING", (0,0), (-1,-1), 2),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 2),
+
+        ("LEFTPADDING", (1,0), (1,0), 8),
+
+        ("LEFTPADDING", (0,0), (0,0), 3),
+        ("RIGHTPADDING", (0,0), (0,0), 3),
     ]))
 
     # =====================================================
     # CADRE ÉTUDIANT
     # =====================================================
+  
+    
     nom_classe = classe.nom.strip()
     if classe.filiere_bts:
         nom_filiere = classe.filiere_bts.nom.strip()
@@ -256,13 +270,11 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         ["Date et lieu de naiss", date_lieu],
         ["Sexe", getattr(etudiant, "sexe", "")],
         ["Classe", nom_classe],
-        # ["Filière", etudiant.filiere_bts.nom],
-        ["Filière", Paragraph(etudiant.filiere_bts.nom.replace(" ", "<br/>", 1),
-        SMALL
-       )],
+        ["Filière",  etudiant.filiere_bts.nom[:23]],
         ["Redoublant", "NON"],
       ],
     colWidths=[3.5 * cm, 6.5 * cm],
+    rowHeights=[0.45*cm]*7   # hauteur de chaque ligne
 )
 
     cadre_etudiant.setStyle(TableStyle([
@@ -273,6 +285,9 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f7f7f7")),
+         # réduire hauteur interne
+       ("TOPPADDING", (0,0), (-1,-1), 1),
+       ("BOTTOMPADDING", (0,0), (-1,-1), 1),
     ]))
 
     # =====================================================
@@ -593,6 +608,12 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # Centrage
     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+     # Réduction hauteur des lignes
+    ("TOPPADDING", (0,0), (-1,-1), 0.5),
+    ("BOTTOMPADDING", (0,0), (-1,-1), 0.5),
+     # Réduction espace horizontal
+    ("LEFTPADDING", (0,0), (-1,-1), 1),
+    ("RIGHTPADDING", (0,0), (-1,-1), 1),
    
    ]
 
@@ -835,17 +856,81 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     
 
    ]))
+    
+    FOOTER = ParagraphStyle(
+    "FOOTER",
+    parent=SMALL,
+    fontSize=7,
+    leading=9,
+    alignment=1,
+    textColor=colors.grey,
+    fontName="Helvetica"
+)
 
     elements.append(visa_table)
+    elements.append(Spacer(1, 10))
     # =====================================================
-    # FOOTER
-    # =====================================================
-    elements.append(Spacer(1, 8))
-    # elements.append(Paragraph(
-    #     f"Edité le {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-    #     SMALL
-    # ))
+# FOOTER PROFESSIONNEL
+# =====================================================
 
+    elements.append(Spacer(1, 10))
+
+
+    footer_table = Table(
+      [[
+         Paragraph(
+            """
+            <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/>
+            Cocody 2 Plateaux - Abidjan Côte d'Ivoire<br/>
+            Tel : (+225) 07 78 63 74 00 | Email : uicinfos@gmail.com<br/>
+            Document édité le %s
+            """ 
+            % datetime.now().strftime("%d/%m/%Y à %H:%M"),
+            FOOTER
+         )
+     ]],
+    colWidths=[18 * cm]
+   )
+
+
+    footer_table.setStyle(TableStyle([
+
+    # Ligne supérieure
+      (
+         "LINEABOVE",
+         (0,0),
+         (-1,-1),
+         0.5,
+         colors.grey
+      ),
+
+     ("ALIGN",
+      (0,0),
+      (-1,-1),
+      "CENTER"
+     ),
+
+     ("VALIGN",
+      (0,0),
+      (-1,-1),
+      "MIDDLE"
+     ),
+
+     ("TOPPADDING",
+      (0,0),
+      (-1,-1),
+      5
+     ),
+
+     ("BOTTOMPADDING",
+      (0,0),
+      (-1,-1),
+      2
+     ),
+
+  ]))
+
+    elements.append(footer_table)
     doc.build(elements)
 
     return file_path
