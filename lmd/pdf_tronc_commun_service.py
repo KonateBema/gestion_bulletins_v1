@@ -12,6 +12,9 @@ from .models import  UE, NoteLMD
 from reportlab.platypus import HRFlowable
 from reportlab.pdfgen import canvas
 from .models import SaisieNoteLMD
+from .services import (
+    calcul_moyenne_etudiant,
+)
 # =========================================================
 # STYLES
 # =========================================================
@@ -117,7 +120,12 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
         ])
     elements = []
 
-
+    style_universite = ParagraphStyle(
+    "style_universite",
+    parent=SMALL,
+    fontSize=9,
+    leading=11,
+   )
     # =========================================================
     # HEADER REPUBLIQUE
     # =========================================================
@@ -130,13 +138,13 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
         Paragraph("""
         <para align="center">
        <b>
-       <font color="#002147" size="11">
+       <font color="#002147">
         MINISTÈRE DE L'ENSEIGNEMENT <br/>SUPÉRIEUR
         ET DE LA <br/>RECHERCHE SCIENTIFIQUE
         </font>
         </b>
         </para>
-        """, SMALL),
+        """, style_universite),
          logo,
         
         Paragraph("""
@@ -144,7 +152,7 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
         <b>RÉPUBLIQUE DE CÔTE D'IVOIRE</b><br/>
         Union - Discipline - Travail
         </para>
-        """, SMALL)
+        """, style_universite)
       ]], colWidths=[7 * cm,2.5 * cm,  7 * cm])
     
     header_table.setStyle(TableStyle([
@@ -189,7 +197,7 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
         ANNÉE SCOLAIRE : {annee}
         </b>
        </para>
-       """, SMALL))
+       """, style_universite))
 
     elements.append(HRFlowable(
          width="40%",
@@ -213,14 +221,23 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
     # CADRE UNIVERSITE DOMAINE : SCIENCES ECONOMIQUE 
     # =========================================================
     # specialite = etudiant.filiere.nom if etudiant.filiere else "TRONC COMMUN"
+    HAUTEUR_HEADER = 3.3 * cm
     specialite = etudiant.filiere.libelle if etudiant.filiere else "TRONC COMMUN"
-    cadre_universite = Table([[
-        Paragraph(f"""
-            <b>DOMAINE : <br/> TROMS COMMUN </b><br/>
-             <b></b><br/><br/>
-             <b>SPECIALITE :</b><br/> {specialite}<br/>
-        """, SMALL)
-    ]], colWidths=[8 * cm], rowHeights=[3.7 * cm])
+    
+    cadre_universite = Table(
+    [[
+        logo,
+        Paragraph("""
+            <b>UNIVERSITÉ INTER. DE COCODY</b><br/><br/>
+            <b>DOMAINE :  TROMS COMMUN </b><br/>
+            <b>SPECIALITE :</b> TROMS COMMUN<br/>
+            Site: www.uci-ci.com<br/>
+            Email: uicinfos@gmail.com
+        """, style_universite)
+    ]],
+    colWidths=[1.7 * cm, 6.5 * cm],
+    rowHeights=[3.2 * cm]   # hauteur fixe
+    )
 
     cadre_universite.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
@@ -229,82 +246,94 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
         ("TOPPADDING", (0, 2), (-1, 2), 12),  # espace avant SPÉCIALITÉ
+         # réduire les marges internes
+        ("TOPPADDING", (0,0), (-1,-1), 2),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 2),
+        ("LEFTPADDING", (1,0), (1,0), 8),
+
+        ("LEFTPADDING", (0,0), (0,0), 3),
+        ("RIGHTPADDING", (0,0), (0,0), 3),
+
+        
+        
     ]))
 
     elements.append(Spacer(1, 10))
     # =========================================================
     # LOGO CENTER
     # =========================================================
-
-    # logo_center = Table([[logo]], colWidths=[2.5 * cm])
-    # logo_center.setStyle(TableStyle([
-    #     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-    #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    # ]))
-
+    date_lieu = (
+    f"{etudiant.date_naissance.strftime('%d/%m/%Y')} à {etudiant.lieu_naissance}"
+    if etudiant.date_naissance and etudiant.lieu_naissance
+    else etudiant.date_naissance.strftime("%d/%m/%Y")
+    if etudiant.date_naissance
+    else ""
+    )
 
     # =========================================================
     # ETUDIANT
     # =========================================================
-     
-    # date_naissance = (
-    # etudiant.date_naissance.strftime("%d/%m/%Y")
-    # if etudiant.date_naissance
-    # else "Non renseignée"
-    # )
+    etudiant_data = [
+    # ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
+    ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"[:21]],
+    ["Matricule", etudiant.matricule],
+    # ["Né(e) le / à", date_lieu],
+    ["Date/lieu de naissance", date_lieu],
+    ["Sexe", getattr(etudiant, "sexe", "")],
+    ["Niveau", etudiant.get_niveau_display()],
+    ["Filière", etudiant.filiere],
+   ]
+    
+    HAUTEUR_HEADER = 3.3 * cm
+    NB_LIGNES = len(etudiant_data)
 
-    # lieu = etudiant.lieu_naissance or "-"
-
-
-    cadre_etudiant = Table([
-        [
-        Paragraph("<b>Nom et Prénoms</b>", SMALL),
-        Paragraph(f"{etudiant.nom} {etudiant.prenoms}", SMALL)],
-        [
-        Paragraph("<b>Date de naissance</b>", SMALL),
-        Paragraph(
-            f"{safe_date(etudiant.date_naissance)}",
-            SMALL
-        )
-       ],
-
-        # lieu = etudiant.lieu_naissance or "-"
-
-        # Paragraph(f"{date_naissance} à {lieu}", SMALL)
-        [Paragraph("<b>Sexe</b>", SMALL),Paragraph(etudiant.get_sexe_display(), SMALL)],
-        [Paragraph("<b>Matricule</b>", SMALL), Paragraph(str(etudiant.matricule), SMALL)],
-        [Paragraph("<b>Statut</b>", SMALL),Paragraph(etudiant.statut, SMALL)],
-        # [Paragraph("<b>Filière</b>", SMALL), Paragraph(str(etudiant.filiere), SMALL)],
-        # [Paragraph("<b>Niveau</b>", SMALL), Paragraph(str(etudiant.niveau), SMALL)],
-        [Paragraph("<b>Niveau</b>", SMALL), 
-         Paragraph(etudiant.get_niveau_display(), SMALL)],
-    ], colWidths=[5 * cm, 3.5 * cm])
-
+    cadre_etudiant = Table(
+    etudiant_data,
+    # colWidths=[3*cm, 5.8*cm],
+    colWidths=[4*cm, 6.8*cm],   # avant : [3*cm, 5.8*cm]
+    rowHeights=[HAUTEUR_HEADER / NB_LIGNES] * NB_LIGNES
+    )
     cadre_etudiant.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
         ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
         # ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+         # Police
+        ("FONTNAME", (0, 0), (0, -1), "Courier-Bold"),
+        ("FONTNAME", (1, 0), (1, -1), "Courier"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+         # Alignement
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ALIGN", (0, 0), (0, -1), "LEFT"),
+        ("ALIGN", (1, 0), (1, -1), "LEFT"),
+         # Marges internes
+        ("TOPPADDING", (0, 0), (-1, -1), 2),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+         # Coins arrondis
+        ("ROUNDEDCORNERS", [6, 6, 6, 6]),
         ("PADDING", (0, 0), (-1, -1), 6),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
+          # réduire hauteur interne
+        #  ("TOPPADDING", (0,0), (-1,-1), 1),
+        #  ("BOTTOMPADDING", (0,0), (-1,-1), 1),
     ]))
-
-
-    # =========================================================
-    # HEADER GLOBAL
-    # =========================================================
+    
+    page_width = A4[0]
+    usable_width = page_width - doc.leftMargin - doc.rightMargin
 
     header_global = Table(
-        [[cadre_universite, cadre_etudiant]],
-        colWidths=[12 * cm, 8 * cm],
-        rowHeights=[3.5 * cm]
+    [[cadre_universite, cadre_etudiant]],
+    colWidths=[
+        usable_width * 0.45,
+        usable_width * 0.55,
+      ]
     )
 
-    # header_global.setStyle(TableStyle([
-    #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    # ]))
+    header_global.setStyle(TableStyle([
+    ("VALIGN", (0,0), (-1,-1), "TOP"),
+    ]))
     header_global.setStyle(TableStyle([
     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
@@ -372,41 +401,6 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
         table_style.append(("TOPPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("BOTTOMPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("TEXTCOLOR", (0, row_index), (-1, row_index), colors.green))
-        # premiere ligne /colonne
-        # table_style.append(("SPAN", (0, 1), (0, 2)))
-        # table_style.append(("SPAN", (0, 1), (0, 3)))
-        
-#          #  ligne /colonne 2 (FUSION EU)
-#         table_style.append(("SPAN", (1, 1), (1, 2)))
-
-#         table_style.append(("SPAN", (1, 3), (1, 4)))
-#         table_style.append(("SPAN", (1, 6), (1, 7)))
-#         # table_style.append(("SPAN", (1, 8), (1, 9)))
-#         table_style.append(("SPAN", (1, 11), (1, 12)))
-#    #  ligne /colonne 2 (FUSION CRÉDIT UE)
-#         table_style.append(("SPAN", (4, 1), (4, 2)))
-#         table_style.append(("SPAN", (6, 1), (6, 2)))
-#      # lignes 3 et 4
-#         table_style.append(("SPAN", (4, 3), (4, 4)))
-#         table_style.append(("SPAN", (6, 3), (6, 4)))
-#         # lignes 6 et 7
-#         table_style.append(("SPAN", (4, 6), (4, 7)))
-#         table_style.append(("SPAN", (6, 6), (6, 7)))
-#          # lignes 8 et 9
-#         # table_style.append(("SPAN", (4, 8), (4, 9)))
-#         # table_style.append(("SPAN", (6, 8), (6, 9)))
-#          # lignes 11 et 12
-#         table_style.append(("SPAN", (4, 11), (4, 12)))
-#         table_style.append(("SPAN", (6, 11), (6, 12)))
-#          # lignes 13 et 14
-#         table_style.append(("SPAN", (4, 13), (4, 14)))
-#         table_style.append(("SPAN", (6, 13), (6, 14)))
-
-        
-
-        # table_style.append(("SPAN", (4, 1), (4, 3)))
-        # table_style.append(("SPAN", (6, 1), (6, 2)))
-        
 
     compteur_ue = 0
     for ue in ues: 
@@ -554,6 +548,7 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
             somme_ponderee += credit_ecue * moy_ecue
             credit_total_ue += credit_ecue
             moy_ue = round(somme_ponderee / credit_total_ue, 2) if credit_total_ue else 0
+            # moy_ue = round(somme_ecue / nombre_ecue,2)
             
 
             somme_ue += moy_ecue
@@ -665,9 +660,9 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
 
     recap_final_table = Table([
         [
-            Paragraph("<b>Récapitulatif</b>", SMALL),
+            Paragraph("<b>Récapitulatif du travail</b>", SMALL),
             Paragraph("<b>Responsable</b>", SMALL),
-            Paragraph("<b>Année</b>", SMALL),
+            Paragraph("<b>Année de validation</b>", SMALL),
             Paragraph("<b>Décision</b>", SMALL),
         ],
         [
@@ -686,10 +681,10 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
             # Paragraph("Dr.JERRY TAFOTIE", SMALL),
             Paragraph("""Dr.JERRY TAFOTIE<br/><br/>M. N'GORAN CELESTIN""",SMALL),
             # Paragraph("2025 - 2026", SMALL),
-            Paragraph(f"ANNÉE SCOLAIRE : {annee}", SMALL),
+            Paragraph(f"{annee}", SMALL),
             Paragraph(decision_globale, SMALL),
         ]
-    ], colWidths=[8.5 * cm, 4 * cm, 4 * cm, 4 * cm], # ✅ IMPORTANT : 2 lignes = 2 hauteurs
+    ], colWidths=[7.5 * cm, 4 * cm, 5 * cm, 4 * cm], # ✅ IMPORTANT : 2 lignes = 2 hauteurs
        rowHeights=[0.8 * cm, 2.7 * cm])
 
     recap_final_table.setStyle(TableStyle([
@@ -712,27 +707,68 @@ def generer_bulletin_tronc_commun_pdf(etudiant, semestre,file_path):
     # =========================================================
     # SIGNATURE
     # =========================================================
+    # =========================================================
+# SIGNATURE
+# =========================================================
 
-    signature_table = Table([[
-        Paragraph("<b>RESPONSABLE</b><br/>", styles["Normal"]),
-        # Paragraph("<b>VISA</b><br/>", styles["Normal"]),
-        # Paragraph("<b>VISA</b><br/><br/>""M. N'GORAN CELESTIN",styles["Normal"]),
-        Paragraph("<b>VISA</b><br/><br/>""Dr.JERRY TAFOTIE<br/><br/>M. N'GORAN CELESTIN""",styles["Normal"]),
-    ]], colWidths=[8 * cm, 8 * cm], rowHeights=[3 * cm])
+    moyenne = calcul_moyenne_etudiant(etudiant, semestre)
+
+    if moyenne >= 10:
+        decision = """
+        ☑ Validé(e)<br/>
+        ☐ Non validé(e)<br/>
+        ☐ Validé(e) par compensation
+        """
+    elif moyenne >= 8:
+         decision = """
+         ☐ Validé(e)<br/>
+         ☐ Non validé(e)<br/>
+         ☑ Validé(e) par compensation
+        """
+    else:
+        decision = """
+        ☐ Validé(e)<br/>
+        ☑ Non validé(e)<br/>
+        ☐ Validé(e) par compensation
+        """
+
+    decision_paragraph = Paragraph(
+        f"""
+       <b>DÉCISION</b><br/><br/>
+        {decision}
+        """,
+       SMALL
+      )
+
+    visa_paragraph = Paragraph(
+      """
+      <b>VISA DU CHEF D'ÉTABLISSEMENT</b><br/><br/>
+      """,
+      SMALL
+    )
+
+    signature_table = Table(
+       [[decision_paragraph, visa_paragraph]],
+       colWidths=[8 * cm, 8 * cm],
+       rowHeights=[3 * cm]
+     )
 
     signature_table.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 1, colors.black),
+       ("BOX", (0, 0), (-1, -1), 1, colors.black),
         ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LINEBEFORE", (1, 0), (1, -1), 0.8, colors.HexColor("#333333")),
-    ]))
+       ("VALIGN", (0, 0), (-1, -1), "TOP"),
+       ("LINEBEFORE", (1, 0), (1, -1), 0.8, colors.HexColor("#333333")),
+       ("LEFTPADDING", (0, 0), (-1, -1), 8),
+       ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+       ("TOPPADDING", (0, 0), (-1, -1), 8),
+      ]))
 
     elements.append(Spacer(1, 15))
-    
     elements.append(signature_table)
+  
     
     # =========================================================
-    # BUILD
+    # BUILD  
     # =========================================================
      
     doc.build(elements)
