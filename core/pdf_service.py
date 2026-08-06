@@ -881,9 +881,8 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
          Paragraph(
             """
             <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/>
-            Cocody 2 Plateaux - Abidjan Côte d'Ivoire<br/>
-            Tel : (+225) 07 78 63 74 00 | Email : uicinfos@gmail.com<br/>
-            Document édité le %s
+            Cocody 2 Plateaux - Abidjan Côte d'Ivoire / Tel : (+225) 07 78 63 74 00 | Email : uicinfos@gmail.com<br/>
+            édité le %s
             """ 
             % datetime.now().strftime("%d/%m/%Y à %H:%M"),
             FOOTER
@@ -891,8 +890,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
      ]],
     colWidths=[18 * cm]
    )
-
-
+    
     footer_table.setStyle(TableStyle([
 
     # Ligne supérieure

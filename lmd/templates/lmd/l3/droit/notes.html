@@ -5,62 +5,74 @@
 
 <style>
     .notes-card {
-        border-radius: 18px;
+        border-radius: 20px;
         overflow: hidden;
     }
 
 
     .notes-header {
         background: linear-gradient(135deg, #0d6efd, #6610f2);
-        padding: 25px;
+        padding: 30px;
+        color: white !important;
+        box-shadow:0 5px 15px rgba(0,0,0,.15);
+    }
+
+
+    .notes-header h3,
+    .notes-header p,
+    .notes-header strong,
+    .notes-header i {
+        color: white !important;
+    }
+
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 15px;
     }
 
 
     .student-row {
-        transition: .25s ease;
+        transition: .3s ease;
     }
 
 
     .student-row:hover {
-        background-color: #f8f9fa;
-        transform: translateX(6px);
+        background: #f8f9ff;
+        transform: translateX(5px);
     }
 
 
     .matricule-badge {
-        padding: 8px 14px;
+
+        padding: 8px 15px;
         border-radius: 20px;
         font-size: .85rem;
+
     }
 
 
     .note-input {
+
+        height: 45px;
         border-radius: 12px;
         text-align: center;
         font-weight: 600;
-        height: 42px;
+
     }
 
 
     .note-input:focus {
 
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25);
+        border-color: #6610f2;
+        box-shadow: 0 0 0 .2rem rgba(102, 16, 242, .2);
 
-    }
-
-
-    .input-group-text {
-
-        background: #e9ecef;
-        font-weight: bold;
     }
 
 
     .save-btn {
 
         border-radius: 30px;
-        padding: 12px 40px;
+        padding: 12px 25px;
         font-weight: 600;
 
     }
@@ -72,7 +84,24 @@
         vertical-align: middle;
 
     }
+
+
+    .table tbody td {
+
+        vertical-align: middle;
+
+    }
+
+
+    .ecue-box {
+
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 15px;
+
+    }
 </style>
+
 
 {% endblock %}
 
@@ -88,22 +117,38 @@
     <div class="card shadow-lg border-0 notes-card">
 
 
-        <div class="notes-header text-white">
+
+        <!-- HEADER -->
+
+        <div class="notes-header" style="background:linear-gradient(135deg,#0d6efd,#6610f2); color:white !important;">
+
+            <h3 class="mb-2" style="color:white !important;">
+
+                <i class="bi bi-pencil-square"></i>
+
+                Saisie des notes - Droit Privé
+
+            </h3>
 
 
-            <h4 class="mb-1">
+            <p class="mb-0" style="color:white !important;">
 
-                📝 Saisie des notes
+                <i class="bi bi-mortarboard"></i>
 
-            </h4>
+                Niveau :
+
+                <strong>{{ niveau }}</strong>
 
 
-            <p class="mb-0 opacity-75">
+                &nbsp; | &nbsp;
 
-                ECUE :
-                <strong>
-                    {{ ecue.libelle }}
-                </strong>
+
+                <i class="bi bi-calendar3"></i>
+
+                Semestre :
+
+                <strong>{{ semestre }}</strong>
+
 
             </p>
 
@@ -112,19 +157,201 @@
 
 
 
-        <div class="card-body p-4">
+
+
+        <!-- FILTRE -->
+
+
+        <div class="card-body filter-card m-3">
+
+
+            <form method="get" class="row g-3">
+
+
+                <div class="col-md-4">
+
+
+                    <label class="fw-bold mb-2">
+
+                        <i class="bi bi-layers"></i>
+                        Niveau
+
+                    </label>
+
+
+                    <select name="niveau" class="form-select">
+
+
+                        <option value="L1" {% if niveau == "L1" %}selected{% endif %}>
+                            Licence 1
+                        </option>
+
+
+                        <option value="L2" {% if niveau == "L2" %}selected{% endif %}>
+                            Licence 2
+                        </option>
+
+
+                        <option value="L3" {% if niveau == "L3" %}selected{% endif %}>
+                            Licence 3
+                        </option>
+
+
+                    </select>
+
+
+                </div>
 
 
 
-            <form method="post">
+
+
+                <div class="col-md-4">
+
+
+                    <label class="fw-bold mb-2">
+
+                        <i class="bi bi-book"></i>
+                        Semestre
+
+                    </label>
+
+
+                    <select name="semestre" class="form-select">
+
+
+                        <option value="S1" {% if semestre == "S1" %}selected{% endif %}>
+                            Semestre 1
+                        </option>
+
+
+                        <option value="S2" {% if semestre == "S2" %}selected{% endif %}>
+                            Semestre 2
+                        </option>
+
+
+                        <option value="S3" {% if semestre == "S3" %}selected{% endif %}>
+                            Semestre 3
+                        </option>
+
+
+                        <option value="S4" {% if semestre == "S4" %}selected{% endif %}>
+                            Semestre 4
+                        </option>
+
+
+                        <option value="S5" {% if semestre == "S5" %}selected{% endif %}>
+                            Semestre 5
+                        </option>
+
+
+                        <option value="S6" {% if semestre == "S6" %}selected{% endif %}>
+                            Semestre 6
+                        </option>
+
+
+                    </select>
+
+
+                </div>
+
+
+
+
+                <div class="col-md-2 d-flex align-items-end">
+
+
+                    <button class="btn btn-primary w-100 save-btn">
+
+                        <i class="bi bi-search"></i>
+
+                        Filtrer
+
+                    </button>
+
+
+                </div>
+
+
+            </form>
+
+
+        </div>
+
+
+
+
+
+
+        <!-- FORMULAIRE -->
+
+
+        <div class="card-body">
+
+
+            <form method="post" action="{% url 'droit_prive_note_add' %}">
 
 
                 {% csrf_token %}
 
 
-                <!-- ECUE obligatoire pour NoteLMD -->
 
-                <input type="hidden" name="ecue_id" value="{{ ecue.id }}">
+                <input type="hidden" name="niveau" value="{{ niveau }}">
+
+
+
+                <input type="hidden" name="semestre" value="{{ semestre }}">
+
+
+
+
+
+
+                <div class="ecue-box mb-4">
+
+
+                    <label class="fw-bold mb-2">
+
+
+                        <i class="bi bi-journal-text"></i>
+
+                        Choisir une ECUE
+
+
+                    </label>
+
+
+
+                    <select name="ecue_id" class="form-select" required>
+
+
+                        <option value="">
+                            -- Choisir une ECUE --
+                        </option>
+
+
+                        {% for ecue in ecues %}
+
+
+                        <option value="{{ ecue.id }}">
+
+
+                            {{ ecue.code }} - {{ ecue.libelle }}
+
+
+                        </option>
+
+
+                        {% endfor %}
+
+
+                    </select>
+
+
+                </div>
+
+
+
 
 
 
@@ -132,13 +359,14 @@
                 <div class="table-responsive">
 
 
-                    <table class="table table-hover align-middle">
+                    <table class="table table-hover">
 
 
                         <thead class="table-dark">
 
 
                             <tr>
+
 
                                 <th>
                                     Matricule
@@ -172,6 +400,7 @@
 
 
 
+
                         <tbody>
 
 
@@ -179,9 +408,7 @@
                             {% for e in etudiants %}
 
 
-
                             <tr class="student-row">
-
 
 
                                 <td>
@@ -218,21 +445,9 @@
                                 <td>
 
 
-                                    <div class="input-group">
-
-
-                                        <input type="number" min="0" max="20" step="0.01" name="cc_{{ e.id }}"
-                                            class="form-control note-input" placeholder="0.00">
-
-
-                                        <span class="input-group-text">
-
-                                            /20
-
-                                        </span>
-
-
-                                    </div>
+                                    <input type="number" name="cc_{{ e.id }}" min="0" max="20" step="0.01"
+                                        class="form-control note-input" value="{{ e.cc|default:'' }}"
+                                        placeholder="0.00">
 
 
                                 </td>
@@ -244,21 +459,9 @@
                                 <td>
 
 
-                                    <div class="input-group">
-
-
-                                        <input type="number" min="0" max="20" step="0.01" name="examen_{{ e.id }}"
-                                            class="form-control note-input" placeholder="0.00">
-
-
-                                        <span class="input-group-text">
-
-                                            /20
-
-                                        </span>
-
-
-                                    </div>
+                                    <input type="number" name="examen_{{ e.id }}" min="0" max="20" step="0.01"
+                                        class="form-control note-input" value="{{ e.examen|default:'' }}"
+                                        placeholder="0.00">
 
 
                                 </td>
@@ -272,17 +475,17 @@
                             {% empty %}
 
 
-
                             <tr>
+
 
                                 <td colspan="5">
 
 
-                                    <div class="alert alert-warning text-center mb-0">
+                                    <div class="alert alert-warning text-center">
 
+                                        <i class="bi bi-exclamation-triangle"></i>
 
-                                        ⚠️ Aucun étudiant trouvé pour cette classe
-
+                                        Aucun étudiant trouvé pour ce niveau.
 
                                     </div>
 
@@ -310,44 +513,74 @@
 
 
 
-                <!-- <div class="text-end mt-4">
 
-
-                <button 
-                    type="submit"
-                    class="btn btn-success save-btn shadow"
-                >
-
-                    💾 Enregistrer les notes
-
-                </button>
-
-
-            </div> -->
 
                 <div class="d-flex justify-content-between mt-4">
 
-                    <a href="{% url 'l3_droit_prive_notes_detail' %}" class="btn btn-primary save-btn shadow">
-                        👁️ Voir les notes enregistrées
-                    </a>
 
-                    <button type="submit" class="btn btn-success save-btn shadow">
-                        💾 Enregistrer les notes
+                    <div>
+
+
+                        <a href="{% url 'droit_prive_notes_detail' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+                            class="btn btn-info text-white save-btn">
+
+
+                            <i class="bi bi-eye"></i>
+
+                            Voir les notes
+
+
+                        </a>
+
+
+
+
+                        <a href="{% url 'droit_prive_notes' %}" class="btn btn-outline-secondary save-btn">
+
+
+                            <i class="bi bi-arrow-left"></i>
+
+                            Retour
+
+
+                        </a>
+
+
+                    </div>
+
+
+
+
+
+                    <button type="submit" class="btn btn-success save-btn">
+
+
+                        <i class="bi bi-save"></i>
+
+                        Enregistrer
+
+
                     </button>
 
+
+
                 </div>
+
+
+
 
             </form>
 
 
-
         </div>
+
 
 
     </div>
 
 
 </div>
+
 
 
 {% endblock %}

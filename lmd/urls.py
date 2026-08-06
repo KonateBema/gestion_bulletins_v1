@@ -127,7 +127,13 @@ urlpatterns = [
   
     path("l3/droit/ue/",views.l3_droit_ue,name="l3_droit_ue"),
     path("l3/droit/notes/",views.l3_droit_notes,name="l3_droit_notes"),
-
+#     path(
+#     "l3/droit/notes/<int:ecue_id>/",
+#     views.l3_droit_notes,
+#     name="l3_droit_notes"
+# ),
+    path("droit-prive/notes/save/",views.droit_prive_note_add,name="droit_prive_note_add"),
+    
     path("l3/droit/bulletins/",views.l3_droit_bulletins,name="l3_droit_bulletins"),
 
     path("l3/gestion/etudiants/",views.l3_gestion_etudiants,name="l3_gestion_etudiants"),
@@ -165,7 +171,12 @@ urlpatterns = [
 
 
  
-   path("l3/droit/etudiants/",views.l3_droit_etudiants,name="l3_droit_etudiants"),
+  #  path("l3/droit/etudiants/",views.l3_droit_etudiants,name="l3_droit_etudiants"),
+   path(
+    "droit-prive/etudiants/",
+    views.droit_prive_etudiants,
+    name="droit_prive_etudiants"
+),
    path("l3/droit/etudiants/add/",views.l3_droit_etudiant_add,name="l3_droit_etudiant_add"),
    path("l3/droit/etudiants/<int:pk>/edit/",views.l3_droit_etudiant_update,name="l3_droit_etudiant_update"),
    path("l3/droit/etudiants/<int:pk>/delete/",views.l3_droit_etudiant_delete,name="l3_droit_etudiant_delete"),
@@ -185,23 +196,17 @@ urlpatterns = [
    path("l3/droit/ecue/<int:pk>/delete/",views.l3_droit_ecue_delete,name="l3_droit_ecue_delete"),
 
    path("l3/droit/saisie-notes/<int:ecue_id>/",views.l3_droit_saisie_notes,name="l3_droit_saisie_notes"),
-   path("l3/droit/notes/",views.l3_droit_notes,name="l3_droit_notes"),
+
+   path( "droit-prive/notes/",views.l3_droit_notes,name="droit_prive_notes"),
+   path("droit-prive/notes/detail/",views.droit_prive_notes_detail,name="droit_prive_notes_detail"),
 
    path("l3/droit-prive/notes/detail/",views.l3_droit_prive_notes_detail,name="l3_droit_prive_notes_detail"),
     # path("l3/droit-prive/bulletins/",views.bulletin_l3_droit_prive,name="bulletin_l3_droit_prive"),
    path("l3/droit-prive/bulletins/",views.liste_bulletins_l3_droit_prive,name="bulletin_l3_droit_prive"),
 
-
    path("l3/droit/ecue/delete/<int:pk>/",views.l3_droit_ecue_delete,name="l3_droit_ecue_delete"),
-
-    # path("l3/droit-prive/bulletin/<int:pk>/",views.imprimer_bulletin_l3_droit_prive,name="imprimer_bulletin_l3_droit_prive"),
-  #  path("l3/droit-prive/bulletin/<int:pk>/",views.imprimer_bulletin_l3_droit_prive, name="imprimer_bulletin_l3_droit_prive"),
    
-   path(
-    "l3-droit-prive/bulletin/<int:id>/<str:semestre>/",
-    views.imprimer_bulletin_l3_droit_prive,
-    name="imprimer_bulletin_l3_droit_prive",
-    ),
+   path("l3-droit-prive/bulletin/<int:id>/<str:semestre>/",views.imprimer_bulletin_l3_droit_prive,name="imprimer_bulletin_l3_droit_prive",),
    
    
    path("l3/sciences-gestion/etudiants/",views.l3_sciences_gestion_etudiants,name="l3_sciences_gestion_etudiants"),
@@ -250,10 +255,20 @@ urlpatterns = [
    path("tronc-commun/etudiants/",views.liste_etudiants_tronc_commun,name="liste_etudiants_tronc_commun"),
    path("tronc-commun/etudiant/add/",views.ajouter_etudiant_tronc_commun,name="ajouter_etudiant_tronc_commun"),
 
-  # ===============================
-# TRONC COMMUN L1-L2
-# ===============================
+
   path("tronc-commun/etudiants/",views.tronc_commun_etudiants,name="tronc_commun_etudiants"),
+  path("droit-prive/etudiants/import/",views.l3_droit_etudiant_import,name="l3_droit_etudiant_import"),
+  path("droit-prive/etudiants/modele-excel/",views.l3_droit_etudiant_modele_excel,name="l3_droit_etudiant_modele_excel"),
+ path(
+    "bulletin/droit-prive/<int:id>/<str:semestre>/",
+    views.imprimer_bulletin_l3_droit_prive,
+    name="imprimer_bulletin_l3_droit_prive"
+),
+ path(
+    "bulletin/droit-prive/<int:id>/<str:semestre>/",
+    views.imprimer_bulletin_droit_prive,
+    name="imprimer_bulletin_droit_prive"
+),
 
   path("tronc-commun/ue/",views.tronc_commun_ue,name="tronc_commun_ue"),
   # path("tronc-commun/notes/",views.tronc_commun_notes, name="tronc_commun_notes"),
@@ -351,5 +366,22 @@ urlpatterns = [
     views.tronc_commun_delete,
     name="tronc_commun_delete"
 ),
-
+  
+  
+  path(
+    "droit-prive/etudiants/",
+    views.droit_prive_etudiants,
+    name="droit_prive_etudiants"
+),
+  
+  path(
+    "bulletin/<int:id>/<str:semestre>/",
+    views.imprimer_bulletin_lmd,
+    name="imprimer_bulletin_lmd"
+),
+path(
+    "bulletin/<int:id>/<str:semestre>/",
+    views.imprimer_bulletin_lmd,
+    name="imprimer_bulletin_lmd"
+)
 ]

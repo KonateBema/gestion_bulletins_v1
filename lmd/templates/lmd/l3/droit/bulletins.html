@@ -17,7 +17,7 @@
 
                 <h3 class="fw-bold text-primary mb-1">
 
-                    📑 Bulletins - L3 Droit Privé
+                    📑 Bulletins - Droit Privé (L1 • L2 • L3)
 
                 </h3>
 
@@ -57,24 +57,17 @@
 
     <div class="card shadow border-0">
 
-
         <div class="card-header bg-dark text-white">
-
 
             <h5 class="mb-0">
 
                 <i class="bi bi-file-earmark-pdf"></i>
 
-                Liste des étudiants
+                Liste des étudiants Droit Privé
 
             </h5>
 
-
         </div>
-
-
-
-
 
         <div class="card-body p-0">
 
@@ -119,24 +112,13 @@
 
                         </tr>
 
-
                     </thead>
-
-
-
-
 
                     <tbody>
 
-
                         {% for e in etudiants %}
 
-
-
                         <tr>
-
-
-
                             <td class="fw-bold">
 
                                 <span class="badge bg-info text-dark">
@@ -145,23 +127,13 @@
 
                                 </span>
 
-
                             </td>
-
-
-
-
 
                             <td class="fw-semibold">
 
                                 {{ e.nom }}
 
-
                             </td>
-
-
-
-
 
                             <td>
 
@@ -169,103 +141,78 @@
 
 
                             </td>
-
-
-
-
-
                             <td>
-
-
                                 <span class="badge bg-primary">
 
                                     {{ e.niveau }}
-
                                 </span>
 
-
                             </td>
-
-
-
-
-
                             <td class="text-center">
 
-                                <a href="{% url 'imprimer_bulletin_l3_droit_prive' e.id 'S1' %}"
+                                <!-- <a href="{% url 'imprimer_bulletin_droit_prive' e.id 'S1' %}"
                                     class="btn btn-success btn-sm shadow-sm me-2">
                                     <i class="bi bi-printer"></i>
                                     Semestre 1
                                 </a>
 
-                                <a href="{% url 'imprimer_bulletin_l3_droit_prive' e.id 'S2' %}"
+                                <a href="{% url 'imprimer_bulletin_droit_prive' e.id 'S2' %}"
                                     class="btn btn-primary btn-sm shadow-sm">
                                     <i class="bi bi-printer"></i>
                                     Semestre 2
-                                </a>
+                                </a> -->
+                                <a href="{% url 'imprimer_bulletin_lmd' e.id 'S1' %}"
+   class="btn btn-success btn-sm shadow-sm me-2">
+
+    <i class="bi bi-printer"></i>
+    Semestre 1
+
+</a>
+
+
+<a href="{% url 'imprimer_bulletin_lmd' e.id 'S2' %}"
+   class="btn btn-primary btn-sm shadow-sm">
+
+    <i class="bi bi-printer"></i>
+    Semestre 2
+
+</a>
 
                             </td>
 
 
 
                         </tr>
-
-
 
 
                         {% empty %}
 
 
-
-
                         <tr>
-
-
                             <td colspan="5" class="text-center py-5 text-muted">
-
 
                                 <i class="bi bi-person-x fs-2"></i>
 
-
                                 <br>
-
 
                                 Aucun étudiant enregistré.
 
-
                             </td>
-
 
                         </tr>
 
-
-
-
                         {% endfor %}
-
-
-
 
                     </tbody>
 
-
-
                 </table>
-
 
             </div>
 
-
         </div>
-
 
     </div>
 
-
-
-
-
 </div>
-
 
 {% endblock %}

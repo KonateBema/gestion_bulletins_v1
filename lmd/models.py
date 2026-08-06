@@ -9,6 +9,17 @@ from core.models import Classe, Filiere, Niveau, Etudiant
 # =====================
 
 class UE(models.Model):
+    
+    niveau = models.CharField(
+    max_length=2,
+    choices=[
+        ("L1", "Licence 1"),
+        ("L2", "Licence 2"),
+        ("L3", "Licence 3"),
+       ],
+        default="L1"
+    
+     )
 
     SEMESTRE_CHOICES = (
         ("S1", "Semestre 1"),
@@ -52,6 +63,9 @@ class UE(models.Model):
         choices=SEMESTRE_CHOICES,
         default="S1"
     )
+    ordre = models.PositiveIntegerField(default=1)
+    class Meta:
+        ordering = ["ordre"]
 
     def __str__(self):
         return f"{self.code} - {self.libelle}"
@@ -71,6 +85,7 @@ class ECUE(models.Model):
     libelle = models.CharField(max_length=200)
     coefficient = models.IntegerField(default=1)
     credit = models.IntegerField(default=1)
+    ordre = models.IntegerField(default=1)
 
     semestre = models.CharField(
         max_length=5,

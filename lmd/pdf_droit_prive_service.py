@@ -7,14 +7,11 @@ from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import A4
 from django.conf import settings
 import os
-from lmd.models import EtudiantLMD
-from .models import  UE, NoteLMD
+from .models import  UE, ECUE,NoteLMD
 from reportlab.platypus import HRFlowable
-from reportlab.pdfgen import canvas
 from .models import SaisieNoteLMD
-# =========================================================
-# STYLES
-# =========================================================
+from django.db.models import Prefetch
+
 def safe_date(date):
     return date.strftime("%d/%m/%Y") if date else "Non renseignée"
 styles = getSampleStyleSheet()
@@ -33,15 +30,11 @@ TITLE = ParagraphStyle(
 SMALL = ParagraphStyle(
     "SMALL",
     parent=styles["Normal"],
-    fontSize=9,
-    leading=11,
+    fontSize=8,
+    leading=10,
     fontName="Courier-Bold",
 )
 
-
-# =========================================================
-# HELPERS
-# =========================================================
 
 def get_image(path, width, height, fallback):
     if path and os.path.exists(path):
@@ -57,8 +50,8 @@ def add_footer(canvas, doc):
         "UNIVERSITÉ INTERNATIONALE DE COCODY",
         "Arrêté n°487/MESRS/DGSE du 29/12/2015",
         "Siège Social : Cocody 2 Plateaux, Teme Tranche non loin du café de Versailles",
-        "04 B.P ABJ 04, Côte d'Ivoire",
-        "Email : uicinfos@gmail.com | Tel : (+225) 27 22 52 28 84 - 07 78 63 74 00"
+       
+        
     ]
 
     y = 2.2 * cm  # position du footer
@@ -71,34 +64,39 @@ def add_footer(canvas, doc):
         y -= 0.35 * cm
 
     canvas.restoreState()
-
-# =========================================================
-# GENERATION PDF
-# =========================================================
+    
 
 def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
+    
+    somme_ue = 0
+    total_credit = 0
+    credits_obtenus = 0
+    moyenne_generale = 0
+    moyennes_ues = []   # <-- ajouter cette ligne
 
     ues = (
          UE.objects
          .filter(
-              filiere=etudiant.filiere
+              filiere=etudiant.filiere,
+              semestre=semestre,
+              niveau=etudiant.niveau
        )
        .select_related("grande_unite")
-       .prefetch_related("ecues")
-       .order_by(
-            "grande_unite__nom",
-            "code"
-        )
-      )
-    
-    
+       .prefetch_related(
+          Prefetch(
+            "ecues",
+             queryset=ECUE.objects.order_by("ordre")
+            )
+       )
+       .order_by("ordre")
+    )
+    somme_ue = 0
+    count = 0
+    total_credit = 0
+    credits_obtenus = 0
+    moyenne_generale = 0
 
-    print("=" * 50)
-    print("ETUDIANT :", etudiant.nom)
-    print("FILIERE :", etudiant.filiere)
-    print("NB UE :", ues.count())
-
-    # doc = SimpleDocTemplate(file_path, pagesize=A4)
+    
     doc = SimpleDocTemplate(
     file_path,
     pagesize=A4,
@@ -118,18 +116,11 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
          id='normal'
      )
 
-    # doc = SimpleDocTemplate(file_path, pagesize=A4)
 
     doc.addPageTemplates([
           PageTemplate(id='main', frames=frame, onPage=add_footer)
         ])
     elements = []
-
-
-    # =========================================================
-    # HEADER REPUBLIQUE
-    # =========================================================
-    # logo_header_path = os.path.join(settings.BASE_DIR, "core/static/logo.jpeg")
     logo_path = os.path.join(settings.BASE_DIR, "core/static/logo.jpeg")
     logo = get_image(logo_path, 1.8* cm, 1.8 * cm, "LOGO")
 
@@ -168,7 +159,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]))
     
-
     elements.append(header_table)
 
     elements.append(Spacer(1, 14))
@@ -207,10 +197,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
          spaceAfter=10,
          hAlign='CENTER'
         ))
-    # =========================================================
-    # CADRE UNIVERSITE DOMAINE : SCIENCES ECONOMIQUE 
-    # =========================================================
-    # specialite = etudiant.filiere.nom if etudiant.filiere else "TRONC COMMUN"
+
     specialite = etudiant.filiere.libelle if etudiant.filiere else " DROIT PRIVE"
     cadre_universite = Table([[
         Paragraph(f"""
@@ -233,12 +220,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     # =========================================================
     # LOGO CENTER
     # =========================================================
-
-    # logo_center = Table([[logo]], colWidths=[2.5 * cm])
-    # logo_center.setStyle(TableStyle([
-    #     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-    #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    # ]))
     cadre_etudiant = Table([
         [
         Paragraph("<b>Nom et Prénoms</b>", SMALL),
@@ -257,8 +238,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         [Paragraph("<b>Sexe</b>", SMALL),Paragraph(etudiant.get_sexe_display(), SMALL)],
         [Paragraph("<b>Matricule</b>", SMALL), Paragraph(str(etudiant.matricule), SMALL)],
         [Paragraph("<b>Statut</b>", SMALL),Paragraph(etudiant.statut, SMALL)],
-        # [Paragraph("<b>Filière</b>", SMALL), Paragraph(str(etudiant.filiere), SMALL)],
-        # [Paragraph("<b>Niveau</b>", SMALL), Paragraph(str(etudiant.niveau), SMALL)],
         [Paragraph("<b>Niveau</b>", SMALL), 
          Paragraph(etudiant.get_niveau_display(), SMALL)],
     ], colWidths=[5 * cm, 3.5 * cm])
@@ -266,7 +245,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     cadre_etudiant.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
         ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
-        # ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
         ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -275,19 +253,11 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     ]))
 
 
-    # =========================================================
-    # HEADER GLOBAL
-    # =========================================================
-
     header_global = Table(
         [[cadre_universite, cadre_etudiant]],
         colWidths=[12 * cm, 8 * cm],
         rowHeights=[3.5 * cm]
     )
-
-    # header_global.setStyle(TableStyle([
-    #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    # ]))
     header_global.setStyle(TableStyle([
     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
@@ -300,44 +270,35 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     elements.append(header_global)
     elements.append(Spacer(1, 10))
 
-    TITLE_GREEN = ParagraphStyle(
-    "TITLE_GREEN",
-    parent=styles["Normal"],
-    fontSize=14,
-    leading=16,
-    alignment=1,
-    spaceAfter=10,
-    textColor=colors.green,
-    fontName="Helvetica-Bold"
-    )
     elements.append(Spacer(1, 10))
-    # elements.append(
-    # Paragraph("BULLETIN DE NOTES - 1er SEMESTRE", TITLE_GREEN)
-    # )
-    # =========================================================
-    # TABLE BULLETIN
-    # =========================================================
-
-    data = [["CODE","UE:UNITES D'ENSEIGNEMENTS","ECUE","CRÉDIT\nECUE","CRÉDIT\nUE","MOY\nECUE","MOY\nUE","DÉCISION"]]
-
-    somme_generale = 0
-    total_ue = 0
-    ue_validees = 0
-    ue_non_validees = 0
-    credits_total = 0
-    credits_obtenus = 0
-    somme_ponderee_ue = 0
-    total_credit_ue = 0
+    
+    data = [["CODE","UE:UNITES D'ENSEIGNEMENTS","ECUE","CRÉD\nECUE","CRÉD\nUE","MOY\nECUE","MOY\nUE","DÉCISION"]]
+    table_style = []
     ecues_total = 0
     ecues_validees = 0
-    row_index = 1  # 0 = header
-    table_style = []
-    row_index_control = 0
-    index = 1  # juste après header du tableau
-    ecues_non_validees = 0
+    ue_validees = 0
+    credits_total = 0
+    credits_obtenus = 0
+    total_ue = 0
+    ecues_validees = 0
+    credits_total = 0
+    credits_obtenus = 0
+    credits_restants = 0
     credits_ecue_total = 0
     credits_ecue_acquis = 0
-     
+    moyenne_generale = 0
+    stats = {
+    "ue_total":0,
+    "ue_validees":0,
+    "credits_total":0,
+    "credits_obtenus":0,
+    "ecues_total":0,
+    "ecues_validees":0,
+    "credits_ecue_total":0,
+    "credits_ecue_obtenus":0,
+    "moyenne_generale":0,
+    }
+  
     def add_section(title, data, table_style):
         row_index = len(data)
         table_style.append(("SPAN", (0, row_index), (2, row_index)))
@@ -349,46 +310,33 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         table_style.append(("TOPPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("BOTTOMPADDING", (0, row_index), (-1, row_index), 6))
         table_style.append(("TEXTCOLOR", (0, row_index), (-1, row_index), colors.green))
-        # premiere ligne /colonne
-        # table_style.append(("SPAN", (0, 1), (0, 2)))
-        # table_style.append(("SPAN", (0, 1), (0, 3)))
-        
-         #  ligne /colonne 2 (FUSION EU)
-        table_style.append(("SPAN", (1, 1), (1, 2)))
 
-        table_style.append(("SPAN", (1, 3), (1, 4)))
-        table_style.append(("SPAN", (1, 6), (1, 7)))
-        table_style.append(("SPAN", (1, 8), (1, 9)))
-        table_style.append(("SPAN", (1, 11), (1, 12)))
-   #  ligne /colonne 2 (FUSION CRÉDIT UE)
-        table_style.append(("SPAN", (4, 1), (4, 2)))
-        table_style.append(("SPAN", (6, 1), (6, 2)))
-     # lignes 3 et 4
-        table_style.append(("SPAN", (4, 3), (4, 4)))
-        table_style.append(("SPAN", (6, 3), (6, 4)))
-        # lignes 6 et 7
-        table_style.append(("SPAN", (4, 6), (4, 7)))
-        table_style.append(("SPAN", (6, 6), (6, 7)))
-         # lignes 8 et 9
-        table_style.append(("SPAN", (4, 8), (4, 9)))
-        table_style.append(("SPAN", (6, 8), (6, 9)))
-         # lignes 11 et 12
-        table_style.append(("SPAN", (4, 11), (4, 12)))
-        table_style.append(("SPAN", (6, 11), (6, 12)))
-         # lignes 13 et 14
-        table_style.append(("SPAN", (4, 13), (4, 14)))
-        table_style.append(("SPAN", (6, 13), (6, 14)))
-
-        
-
-        table_style.append(("SPAN", (4, 1), (4, 3)))
-        table_style.append(("SPAN", (6, 1), (6, 2)))
-        
-
-    compteur_ue = 0
     grande_unite_actuelle = None
+    somme_moyennes = 0
+    nb_ue = 0
+    somme_ue = 0
+    moyenne_ue = 0      # <-- ajouter ceci
+    somme = 0
+    coef = 0
     for ue in ues: 
+        ecues = ue.ecues.all()
         
+        if not ecues.exists():
+            continue
+        
+        lignes_ue = []
+        premiere_ligne = True
+        somme_ue = 0
+        count = 0
+        somme = 0
+        coef = 0
+      
+        count = 0
+        stats["ue_total"] += 1
+        stats["credits_total"] += ue.credit
+        
+      
+             
         if ue.grande_unite != grande_unite_actuelle:
            grande_unite_actuelle = ue.grande_unite
            data.append([
@@ -417,113 +365,127 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
                   ("FONTNAME",(0,ligne),(7,ligne),"Helvetica-Bold")
             )
                
-        
         ecues = ue.ecues.all()
-        print(len(data))
-        print(data[:3])
         somme_ue = 0
         count = 0
-        lignes = []
         credit_ue = getattr(ue, "credit", 6)
-        somme_ponderee = 0
-        credit_total_ue = 0
-
         premiere_ligne = True
-        
         somme = 0
         coef = 0
+        if count > 0:
+             moy_ue = round(somme_ue / count, 2)
+        else:
+            moy_ue = 0
+            
+        
+        if coef > 0:
+              moyenne_ue = round(somme / coef, 2)
+        else:
+              moyenne_ue = 0
+              
+        somme_moyennes += moyenne_ue
+        nb_ue += 1
+
         for ecue in ecues:
-            ecues_total += 1
+           
             note = NoteLMD.objects.filter(
                 etudiant=etudiant,
                 ecue=ecue,
                 semestre=semestre,
                 session="1"
             ).first()
-            row_index = len(data)
+            moy_ecue = float(note.moyenne) if note and note.moyenne is not None else 0.0
+            if moy_ecue >= 10:
+                 stats["ecues_validees"] += 1
+                 stats["credits_ecue_obtenus"] += ecue.credit
+                 
             moyenne = note.moyenne if note else 0
             somme += moyenne * ecue.coefficient
             coef += ecue.coefficient
-            moyenne_ue = round(somme/coef,2) if coef else 0
-            moy_ecue = float(note.moyenne) if note and note.moyenne is not None else 0.0
+           
+            moyenne_ue = (round(somme / coef, 2)if coef > 0 else 0)
             # ✔ ECUE validéeCODE
-            credits_ecue_total += ecue.credit
-            ecues_total += 1
-            
-            if moy_ecue >= 10:
-                 ecues_validees += 1
-                 credits_ecue_acquis += ecue.credit
-            else:
-                  ecues_non_validees += 1  
-                 
-            credit_ecue = ecue.credit
-             # ✔ pondération correcte
-            somme_ponderee += credit_ecue * moy_ecue
-            credit_total_ue += credit_ecue
-            moy_ue = round(somme_ponderee / credit_total_ue, 2) if credit_total_ue else 0
-            
-
+            moyennes_ues.append(moyenne_ue)
             somme_ue += moy_ecue
             count += 1
-
-            lignes.append([
-                ue.code if premiere_ligne else "",
-                ue.libelle if premiere_ligne else "",
-                ecue.libelle,
-                # getattr(ecue, "credit", 0),
-                ecue.credit,
-                credit_ue,
-                round(moy_ecue, 2),
-                "",
-                "",
-                
-            ])
+          
+            if moyenne_ue >= 10:
+               stats["ue_validees"] += 1
+               stats["credits_obtenus"] += ue.credit
+               decision = Paragraph("<font color='green'><b>VALIDÉE</b></font>",SMALL)
+            else:
+               decision = Paragraph("<font color='red'><b>NON VALI</b></font>",SMALL)   
+            
+            lignes_ue.append([
+            Paragraph(ue.code if premiere_ligne else "", SMALL),
+            Paragraph(ue.libelle if premiere_ligne else "", SMALL),
+            Paragraph(ecue.libelle, SMALL),
+            Paragraph(str(ecue.credit), SMALL),
+            Paragraph(str(ue.credit) if premiere_ligne else "", SMALL),
+            Paragraph(f"{moyenne:.2f}", SMALL),
+            Paragraph(f"{moyenne_ue:.2f}" if premiere_ligne else "", SMALL),
+            decision if premiere_ligne else ""
+             ])
+            
+            stats["ecues_total"] += 1
+            stats["credits_ecue_total"] += ecue.credit
 
             premiere_ligne = False
-            # insert_index += 1   # 🔥 chaque ECUE ajoute une ligne
-
-        if count == 0:
-             continue
             
-        moy_ue = round(somme_ue / count, 2)
-        # decision = "VALIDÉE" if moy_ue >= 10 else "NON VALIDÉE"
-        decision = (
+            if count == 0:
+                continue
+                        
+        debut = len(data)
+        for ligne in lignes_ue:
+             data.append(ligne)
+        fin = len(data)-1
+             # fusion des cellules UE
+        for col in [0,1,4,6,7]:    
+                 table_style.append(
+                       (
+                       "SPAN",
+                       (col,debut),
+                       (col,fin)
+                    )
+                      )
+        couleur = colors.green if moyenne_ue >= 10 else colors.red
+        table_style.append(
+                  ("TEXTCOLOR",(7,debut),(7,fin),couleur)
+                  )
+        table_style.append(
+                 ("FONTNAME",(7,debut),(7,fin),"Helvetica-Bold")
+                   )  
+         
+    if count > 0:
+           moy_ue = round(somme_ue / count, 2)
+    else:
+             moy_ue = 0
+
+    if coef > 0:
+            moyenne_ue = round(somme / coef, 2)
+    else:
+            moyenne_ue = 0
+
+
+    somme_moyennes += moyenne_ue
+    nb_ue += 1         
+            
+
+    decision = (
             '<para align="center"><font color="green"><b>VALIDÉE</b></font></para>'
             if moy_ue >= 10
             else '<para align="center"><font color="red"><b>NON VALI</b></font></para>'
         )
 
-        credits_total += credit_ue
-
-        if moy_ue >= 10:
-            ue_validees += 1
-            credits_obtenus += credit_ue
-          
-        else:
-            ue_non_validees += 1
-
-        somme_generale += moy_ue
-        total_ue += 1
-
-        for r in lignes:
-            r[6] = moy_ue
-            # r[7] = decision
-            r[7] = Paragraph(decision, SMALL)
-            data.append(r)
-
-
-    moyenne_generale = round(somme_generale / total_ue, 2) if total_ue else 0
-
-    credits_restants = credits_total - credits_obtenus
     table = Table(data, colWidths=[
-        1.4 * cm,
-        6 * cm,
-        6 * cm,
-        1.4 * cm,
-        1.4 * cm,
-        1.5 * cm,
-        1 * cm,
-        2.1 * cm
+        1.4 * cm,   # Code
+        6 * cm,   # UE
+        6 * cm,   # ECUE
+        1.1 * cm,   # Crédit ECUE
+        1.1 * cm,   # Crédit UE
+        1.5 * cm,   # Moy ECUE
+        1.5 * cm,   # Moy UE
+        2.1 * cm    # Décision
     ],
     rowHeights=[30] + [15] * (len(data) - 1)
     )
@@ -531,11 +493,9 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-        # ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("ALIGN", (1, 1), (-1, -1), "CENTER"),
-        # ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("PADDING", (0, 0), (-1, -1), 4),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
@@ -543,18 +503,21 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
     elements.append(table)
     elements.append(Spacer(1, 10))
-    credits_ue_total = credits_total
-    credits_ue_acquis = credits_obtenus
+    
+    # credits_ue_total = credits_total
+    credits_ue_total = stats["credits_total"]
+    credits_ue_acquis = stats["credits_obtenus"]
+    credits_ecue_total = stats["credits_ecue_total"]
+    redits_ecue_acquis = stats["credits_ecue_obtenus"]
+    
     credits_ue_restants = credits_ue_total - credits_ue_acquis
     credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
     
     
-    # =========================================================
-    # RECAP TABLE (TA DEMANDE EXACTE)
-    # =========================================================
+    
+    
     rang = "-"
 
-    
     if credits_ue_restants == 0 and credits_ecue_restants == 0:
         decision_globale = (
              '<para align="center">'
@@ -568,8 +531,23 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
                '</para>'
         )
          
-         
+    ecues_total = stats["ecues_total"]
+    ecues_validees = stats["ecues_validees"] 
+    total_ue = stats["ue_total"]
+    ue_validees = stats["ue_validees"]
 
+    credits_total = stats["credits_total"]
+    credits_obtenus = stats["credits_obtenus"]
+
+    credits_restants = credits_total - credits_obtenus
+   
+    moyenne_generale = (
+          round(sum(moyennes_ues) / len(moyennes_ues), 2)
+          if moyennes_ues
+          else 0
+        )
+
+         
     recap_final_table = Table([
         [
             Paragraph("<b>Récapitulatif</b>", SMALL),
@@ -590,9 +568,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
                 """,
                 SMALL
             ),
-            # Paragraph("Dr.JERRY TAFOTIE", SMALL),
             Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""",SMALL),
-            # Paragraph("2025 - 2026", SMALL),
             Paragraph(f"ANNÉE SCOLAIRE : {annee}", SMALL),
             Paragraph(decision_globale, SMALL),
         ]
@@ -604,7 +580,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D9D9D9")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        # ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("ALIGN", (0, 0), (-1, 0), "CENTER"),
@@ -613,17 +588,11 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         ("TOPPADDING", (0,0), (-1,-1), 6),
         ("BOTTOMPADDING", (0,0), (-1,-1), 6),
     ]))
-
+    
     elements.append(recap_final_table)
-
-    # =========================================================
-    # SIGNATURE
-    # =========================================================
 
     signature_table = Table([[
         Paragraph("<b>RESPONSABLE</b><br/>", styles["Normal"]),
-        # Paragraph("<b>VISA</b><br/>", styles["Normal"]),
-        # Paragraph("<b>VISA</b><br/><br/>""M. N'GORAN CELESTIN",styles["Normal"]),
         Paragraph("<b>VISA</b><br/><br/>""Dr.JERRY TAFOTIE<br/><br/>""",styles["Normal"]),
     ]], colWidths=[8 * cm, 8 * cm], rowHeights=[3 * cm])
 
@@ -635,13 +604,76 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     ]))
 
     elements.append(Spacer(1, 15))
-    
     elements.append(signature_table)
-    
-    # =========================================================
-    # BUILD
-    # =========================================================
      
     doc.build(elements)
 
     return file_path
+
+# lmd/services.py
+
+def generer_bulletin_lmd_pdf(
+    etudiant,
+    semestre,
+    file_path
+):
+
+    filiere = etudiant.filiere.libelle
+
+
+    if filiere == "Droit Privé":
+
+        from .pdf_droit_prive_service import (
+            generer_bulletin_droit_prive_pdf
+        )
+
+        return generer_bulletin_droit_prive_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
+
+
+    elif filiere == "Gestion et Droit":
+
+        from .pdf_gestion_droit_service import (
+            generer_bulletin_gestion_droit_pdf
+        )
+
+        return generer_bulletin_gestion_droit_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
+
+
+    elif filiere == "Sciences de Gestion":
+
+        from .pdf_sciences_gestion_service import (
+            generer_bulletin_sciences_gestion_pdf
+        )
+
+        return generer_bulletin_sciences_gestion_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
+
+
+    elif filiere == "Management QHSE":
+
+        from .pdf_qhse_service import (
+            generer_bulletin_qhse_pdf
+        )
+
+        return generer_bulletin_qhse_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
+
+
+    else:
+        raise ValueError(
+            f"Aucun générateur PDF pour la filière {filiere}"
+        )

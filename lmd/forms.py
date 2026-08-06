@@ -42,6 +42,7 @@ class EtudiantDroitForm(forms.ModelForm):
             "nom",
             "prenoms",
             "sexe",
+            "niveau",
             "date_naissance",
             "lieu_naissance",
             "telephone",

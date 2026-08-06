@@ -12,11 +12,11 @@
 
         <div>
             <h3 class="fw-bold text-success mb-1">
-                ⚖️ UE / ECUE - Licence 3 Droit Privé
+                ⚖️ UE / ECUE -  Droit Privé (L1 • L2 • L3)
             </h3>
 
             <p class="text-muted mb-0">
-                Gestion des unités d'enseignement et des éléments constitutifs
+                Gestion des unités d'enseignement et des ECUE de la filière Droit Privé.
             </p>
         </div>
 
@@ -40,44 +40,73 @@
 <!-- ============================= -->
 
 <div class="card shadow border-0 mb-4">
-
     <div class="card-body">
 
-        <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+        <form method="get" class="row g-3">
 
-            <span class="fw-bold text-muted me-2">
-                <i class="bi bi-calendar3"></i>
-                Sélectionner le semestre :
-            </span>
+            <div class="col-md-4">
 
+                <label class="form-label">
+                    Niveau
+                </label>
 
-            <!-- SEMESTRE 1 -->
+                <select name="niveau" class="form-select">
 
-            <a href="?semestre=S1"
-               class="btn {% if semestre == 'S1' %}btn-success{% else %}btn-outline-success{% endif %}">
+                    <option value="L1"
+                        {% if niveau == "L1" %}selected{% endif %}>
+                        Licence 1
+                    </option>
 
-                <i class="bi bi-1-circle"></i>
-                Semestre 1
+                    <option value="L2"
+                        {% if niveau == "L2" %}selected{% endif %}>
+                        Licence 2
+                    </option>
 
-            </a>
+                    <option value="L3"
+                        {% if niveau == "L3" %}selected{% endif %}>
+                        Licence 3
+                    </option>
 
+                </select>
 
-            <!-- SEMESTRE 2 -->
+            </div>
 
-            <a href="?semestre=S2"
-               class="btn {% if semestre == 'S2' %}btn-success{% else %}btn-outline-success{% endif %}">
+            <div class="col-md-4">
 
-                <i class="bi bi-2-circle"></i>
-                Semestre 2
+                <label class="form-label">
+                    Semestre
+                </label>
 
-            </a>
+                <select name="semestre" class="form-select">
 
-        </div>
+                    <option value="S1"
+                        {% if semestre == "S1" %}selected{% endif %}>
+                        Semestre 1
+                    </option>
+
+                    <option value="S2"
+                        {% if semestre == "S2" %}selected{% endif %}>
+                        Semestre 2
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+
+                <button class="btn btn-success w-100">
+
+                    Filtrer
+
+                </button>
+
+            </div>
+
+        </form>
 
     </div>
-
 </div>
-
 
 <!-- ============================= -->
 <!-- TITRE DU SEMESTRE -->

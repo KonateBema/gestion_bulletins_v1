@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-# from .models import *
 from .forms import *
 import os
 from django.conf import settings
@@ -11,12 +10,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import EtudiantDroitForm ,EtudiantGestionForm,UEForm,ECUEForm,MasterEtudiantForm ,QHSEEtudiantForm ,QHSEECUEForm
 from .pdf_gestion_service import generer_bulletin_gestion_pdf
-from .pdf_droit_prive_service import generer_bulletin_droit_prive_pdf
+from .services import generer_bulletin_lmd_pdf
 from .pdf_tronc_commun_service import generer_bulletin_tronc_commun_pdf
 from .models import MasterUE,EtudiantMaster , CandidatRattrapage ,FiliereLMD
 from .models import MasterECUE, NoteMaster
 from openpyxl import load_workbook
-
+from .services import (
+    generer_bulletin_licence2_droit_prive_pdf,
+)
 
 from reportlab.lib import colors
 from .models import (
@@ -1766,7 +1767,7 @@ def l3_gestion_dashboard(request):
     )
 
 
-def l3_droit_etudiants(request):
+def l3_droit_etudiantsGGGG(request):
 
     filiere = get_object_or_404(
         FiliereLMD,
@@ -1796,6 +1797,75 @@ def l3_droit_etudiants(request):
         context
     )
 
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, render
+
+
+def droit_prive_etudiants(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+
+    # Tous les étudiants Droit Privé (L1, L2, L3)
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        actif=True
+    )
+
+
+    # Recherche
+    q = request.GET.get("q")
+
+    if q:
+
+        etudiants = etudiants.filter(
+            Q(matricule__icontains=q)
+            |
+            Q(nom__icontains=q)
+            |
+            Q(prenoms__icontains=q)
+        )
+
+
+    # Filtre par niveau
+    niveau = request.GET.get("niveau")
+
+    if niveau:
+
+        etudiants = etudiants.filter(
+            niveau=niveau
+        )
+
+
+    # Tri
+    etudiants = etudiants.order_by(
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+
+    context = {
+
+        "filiere": filiere,
+
+        "etudiants": etudiants,
+
+        "total_etudiants": etudiants.count(),
+
+    }
+
+
+    return render(
+        request,
+         "lmd/l3/droit/etudiants.html",
+        context
+    )
+
+
 def l3_droit_etudiant_add(request):
 
     filiere = get_object_or_404(
@@ -1816,7 +1886,7 @@ def l3_droit_etudiant_add(request):
 
             etudiant.filiere=filiere
 
-            etudiant.niveau="L3"
+            # etudiant.niveau="L3"
 
             etudiant.statut="AF"
 
@@ -1825,7 +1895,7 @@ def l3_droit_etudiant_add(request):
 
 
             return redirect(
-                "l3_droit_etudiants"
+                "droit_prive_etudiants"
             )
 
 
@@ -1840,7 +1910,7 @@ def l3_droit_etudiant_add(request):
         "lmd/l3/droit/etudiant_form.html",
         {
             "form":form,
-            "titre":"Ajouter étudiant L3 Droit Privé"
+            "titre":"Ajouter étudiant en Droit Privé"
         }
     )
 
@@ -1851,21 +1921,18 @@ def l3_droit_etudiant_update(request,pk):
         pk=pk
     )
 
-
     form=EtudiantDroitForm(
         request.POST or None,
         instance=etudiant
     )
-
 
     if form.is_valid():
 
         form.save()
 
         return redirect(
-            "l3_droit_etudiants"
+            "droit_prive_etudiants"
         )
-
 
     return render(
         request,
@@ -1889,7 +1956,7 @@ def l3_droit_etudiant_delete(request,pk):
         etudiant.delete()
 
         return redirect(
-            "l3_droit_etudiants"
+            "droit_prive_etudiants"
         )
 
 
@@ -1922,35 +1989,81 @@ def l3_droit_ue(request):
         libelle="Droit Privé"
     )
 
-    # Récupérer le semestre sélectionné dans l'URL
-    semestre = request.GET.get("semestre", "S1")
 
-    # Sécurité : accepter uniquement S1 ou S2
-    if semestre not in ["S1", "S2"]:
+    # Récupérer les filtres depuis l'URL
+
+    niveau = request.GET.get(
+        "niveau",
+        "L1"
+    )
+
+
+    semestre = request.GET.get(
+        "semestre",
+        "S1"
+    )
+
+
+    # Sécurité niveau
+
+    if niveau not in ["L1", "L2", "L3"]:
+        niveau = "L1"
+
+
+    # Sécurité semestre
+
+    if semestre not in [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+    ]:
         semestre = "S1"
 
-    # Filtrer les UE de Droit Privé
-    # selon le semestre sélectionné
+
+
+    # Récupération des UE correspondantes
+
     ues = (
         UE.objects
         .filter(
             filiere=filiere,
+            niveau=niveau,
             semestre=semestre
         )
-        .prefetch_related("ecues")
-        .order_by("code")
+        .prefetch_related(
+            "ecues"
+        )
+        .order_by(
+            "code"
+        )
     )
+
+
+
+    context = {
+
+        "filiere": filiere,
+
+        "ues": ues,
+
+        "niveau": niveau,
+
+        "semestre": semestre,
+
+    }
+
 
     return render(
         request,
         "lmd/l3/droit/ue.html",
-        {
-            "filiere": filiere,
-            "ues": ues,
-            "semestre": semestre,
-        }
-    )
-def l3_droit_ue_add(request):
+        context
+    )   
+    
+
+def l3_droit_ue_addAAZ(request):
 
     filiere = get_object_or_404(
         FiliereLMD,
@@ -1959,17 +2072,13 @@ def l3_droit_ue_add(request):
 
     if request.method == "POST":
 
-        code = request.POST.get("code")
-        libelle = request.POST.get("libelle")
-        credit = request.POST.get("credit")
-        semestre = request.POST.get("semestre")
-
         UE.objects.create(
-            code=code,
-            libelle=libelle,
-            credit=credit,
-            semestre=semestre,
-            filiere=filiere
+            code=request.POST.get("code"),
+            libelle=request.POST.get("libelle"),
+            credit=request.POST.get("credit"),
+            semestre=request.POST.get("semestre"),
+            niveau=request.POST.get("niveau"),
+            filiere=filiere,
         )
 
         return redirect("l3_droit_ue")
@@ -1978,17 +2087,53 @@ def l3_droit_ue_add(request):
         request,
         "lmd/l3/droit/ue_form.html",
         {
-            "titre": "Ajouter une UE - L3 Droit Privé",
+            "titre": "Ajouter une UE - Droit Privé",
             "filiere": filiere,
         }
     )
 
+def l3_droit_ue_add(request):
 
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+
+    if request.method == "POST":
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+
+
+        UE.objects.create(
+            code=request.POST.get("code"),
+            libelle=request.POST.get("libelle"),
+            credit=request.POST.get("credit"),
+            niveau=niveau,
+            semestre=semestre,
+            filiere=filiere,
+        )
+
+
+        return redirect(
+            "l3_droit_ue"
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/ue_form.html",
+        {
+            "titre": "Ajouter une UE - Droit Privé",
+            "filiere": filiere,
+        }
+    )
 # =========================================================
 # MODIFIER UNE UE - L3 DROIT PRIVÉ
 # =========================================================
 
-def l3_droit_ue_update(request, pk):
+def l3_droit_ue_updateAAA(request, pk):
 
     ue = get_object_or_404(
         UE,
@@ -2016,12 +2161,39 @@ def l3_droit_ue_update(request, pk):
         }
     )
 
+def l3_droit_ue_update(request, pk):
 
+    ue = get_object_or_404(
+        UE,
+        pk=pk,
+        filiere__libelle="Droit Privé"
+    )
+
+    if request.method == "POST":
+
+        ue.code = request.POST.get("code")
+        ue.libelle = request.POST.get("libelle")
+        ue.credit = request.POST.get("credit")
+        ue.semestre = request.POST.get("semestre")
+        ue.niveau = request.POST.get("niveau")
+
+        ue.save()
+
+        return redirect("l3_droit_ue")
+
+    return render(
+        request,
+        "lmd/l3/droit/ue_form.html",
+        {
+            "titre": "Modifier une UE - Droit Privé",
+            "ue": ue,
+        }
+    )
 # =========================================================
 # SUPPRIMER UNE UE - L3 DROIT PRIVÉ
 # =========================================================
 
-def l3_droit_ue_delete(request, pk):
+def l3_droit_ue_deleteAAA(request, pk):
 
     ue = get_object_or_404(
         UE,
@@ -2045,43 +2217,291 @@ def l3_droit_ue_delete(request, pk):
 
     ue = get_object_or_404(
         UE,
-        pk=pk
+        pk=pk,
+        filiere__libelle="Droit Privé"
+    )
+
+    if request.method == "POST":
+
+        ue.delete()
+
+        return redirect("l3_droit_ue")
+
+    return render(
+        request,
+        "lmd/l3/droit/ue_confirm_delete.html",
+        {
+            "ue": ue,
+        }
+    )
+
+def l3_droit_prive_notesQQQ(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
     )
 
 
-    ue.delete()
+    # récupération des filtres
+    niveau = request.GET.get("niveau", "L1")
+    semestre = request.GET.get("semestre", "S1")
 
 
-    return redirect(
-        "l3_droit_ue"
+    # étudiants du niveau choisi
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau=niveau
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+
+    # ECUE du niveau + semestre
+    ecues = ECUE.objects.filter(
+        ue__filiere=filiere,
+        ue__niveau=niveau,
+        semestre=semestre
+    ).order_by(
+        "code"
+    )
+
+
+    # Notes existantes
+    notes = NoteLMD.objects.filter(
+        etudiant__in=etudiants,
+        ecue__in=ecues
     )
 
 
 
-def l3_droit_prive_notes(request):
+    # dictionnaire des notes
+    notes_dict = {}
 
-    notes = (
-        NoteLMD.objects
-        .filter(etudiant__filiere__libelle="Droit Privé")
-        .select_related("etudiant", "ecue")
-        .order_by(
-            "etudiant__nom",
-            "etudiant__prenoms",
-            "ecue__code"
+    for note in notes:
+
+        notes_dict[
+            note.etudiant_id
+        ] = {
+
+            "cc": note.cc,
+
+            "examen": note.examen,
+
+            "ecue": note.ecue_id
+
+        }
+
+
+
+    # préparation pour le template
+    etudiants_notes = []
+
+
+    for etudiant in etudiants:
+
+
+        ancienne_note = notes_dict.get(
+            etudiant.id,
+            {}
         )
-    )
+
+
+        etudiants_notes.append({
+
+            "etudiant": etudiant,
+
+            "cc": ancienne_note.get("cc",""),
+
+            "examen": ancienne_note.get("examen",""),
+
+        })
+
+
 
     return render(
         request,
         "lmd/l3/droit/notes.html",
         {
-            "notes": notes
+            "niveau": niveau,
+            "semestre": semestre,
+
+            "ecues": ecues,
+
+            "etudiants_notes": etudiants_notes,
         }
     )
 
-from django.shortcuts import render
-from .models import NoteLMD
+def l3_droit_prive_noteseeeee(request):
 
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+
+    niveau = request.GET.get("niveau", "L1")
+    semestre = request.GET.get("semestre", "S1")
+
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau=niveau
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+
+    ecues = ECUE.objects.filter(
+        ue__filiere=filiere,
+        ue__niveau=niveau,
+        semestre=semestre
+    ).order_by(
+        "code"
+    )
+
+
+    notes = NoteLMD.objects.filter(
+        etudiant__in=etudiants,
+        ecue__in=ecues
+    )
+
+
+    notes_dict = {}
+
+    for note in notes:
+
+        notes_dict[
+            note.etudiant_id
+        ] = note
+
+
+
+    etudiants_notes = []
+
+
+    for etudiant in etudiants:
+
+
+        note = notes_dict.get(
+            etudiant.id
+        )
+
+
+        etudiants_notes.append({
+
+            "etudiant": etudiant,
+
+            "cc": note.cc if note else "",
+
+            "examen": note.examen if note else "",
+
+        })
+
+
+
+    return render(
+        request,
+        "lmd/l3/droit/notes.html",
+        {
+            "niveau": niveau,
+            "semestre": semestre,
+            "ecues": ecues,
+            "etudiants_notes": etudiants_notes,
+        }
+    )
+
+
+def l3_droit_prive_notes(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+
+    niveau = request.GET.get("niveau", "L1")
+    semestre = request.GET.get("semestre", "S1")
+
+
+    # Etudiants
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere,
+        niveau=niveau
+    ).order_by(
+        "nom",
+        "prenoms"
+    )
+
+
+    # ECUE
+    ecues = ECUE.objects.filter(
+        ue__filiere=filiere,
+        ue__niveau=niveau,
+        ue__semestre=semestre
+    ).order_by(
+        "code"
+    )
+
+
+    # Notes existantes
+    notes = NoteLMD.objects.filter(
+        etudiant__in=etudiants,
+        ecue__in=ecues
+    )
+
+
+    notes_dict = {}
+
+    for note in notes:
+
+        notes_dict[
+            note.etudiant_id
+        ] = note
+
+
+
+    etudiants_notes = []
+
+
+    for etudiant in etudiants:
+
+        note = notes_dict.get(
+            etudiant.id
+        )
+
+
+        etudiants_notes.append({
+
+            "etudiant": etudiant,
+
+            "cc": note.cc if note else "",
+
+            "examen": note.examen if note else "",
+
+        })
+
+
+    print("====== DEBUG ======")
+    print("Niveau :", niveau)
+    print("Semestre :", semestre)
+    print("Etudiants :", etudiants.count())
+    print("ECUE :", ecues.count())
+    print("===================")
+
+
+    return render(
+        request,
+        "lmd/l3/droit/notes.html",
+        {
+            "niveau": niveau,
+            "semestre": semestre,
+            "ecues": ecues,
+            "etudiants_notes": etudiants_notes,
+        }
+    )
 def l3_droit_prive_notes_detail(request):
 
     notes = (
@@ -2103,8 +2523,18 @@ def l3_droit_prive_notes_detail(request):
         }
     )
 
-
-def l3_droit_notes(request):
+def l3_droit_notesDDF(request):
+    
+    notes = (
+        NoteLMD.objects
+        .filter(etudiant__filiere__libelle="Droit Privé")
+        .select_related("etudiant", "ecue")
+        .order_by(
+            "etudiant__nom",
+            "etudiant__prenoms",
+            "ecue__code"
+        )
+    )
 
     etudiants = EtudiantLMD.objects.filter(
         filiere__libelle__icontains="Droit",
@@ -2114,23 +2544,239 @@ def l3_droit_notes(request):
         "prenoms"
     )
 
-    notes = NoteLMD.objects.filter(
-        etudiant__in=etudiants
-    ).select_related(
-        "etudiant",
-        "ecue"
+    return render(
+        request,
+        "lmd/l3/droit/notes.html",
+        {
+            "etudiants": etudiants,
+             "notes": notes,
+           
+        }
     )
+
+def l3_droit_notes(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+    niveau = request.GET.get("niveau", "L1")
+
+    # sécurité
+    if niveau not in ["L1", "L2", "L3"]:
+        niveau = "L1"
+
+
+    semestre = request.GET.get("semestre", "S1")
+
+
+    # étudiants du niveau choisi
+
+    etudiants = (
+        EtudiantLMD.objects
+        .filter(
+            filiere=filiere,
+            niveau=niveau
+        )
+        .order_by(
+            "nom",
+            "prenoms"
+        )
+    )
+
+
+    # notes existantes
+
+    notes = (
+        NoteLMD.objects
+        .filter(
+            etudiant__filiere=filiere,
+            etudiant__niveau=niveau,
+            ecue__semestre=semestre
+        )
+        .select_related(
+            "etudiant",
+            "ecue"
+        )
+        .order_by(
+            "etudiant__nom",
+            "ecue__code"
+        )
+    )
+
+
+    # ECUE disponibles
+
+    ecues = (
+        ECUE.objects
+        .filter(
+            ue__filiere=filiere,
+            semestre=semestre
+        )
+        .order_by("code")
+    )
+
 
     return render(
         request,
         "lmd/l3/droit/notes.html",
         {
             "etudiants": etudiants,
-            "notes": notes
+            "notes": notes,
+            "ecues": ecues,
+            "niveau": niveau,
+            "semestre": semestre,
+        }
+    )
+
+def droit_prive_notes_detail(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+
+    niveau = request.GET.get(
+        "niveau",
+        "L1"
+    )
+
+
+    semestre = request.GET.get(
+        "semestre",
+        "S1"
+    )
+
+
+
+    notes = (
+        NoteLMD.objects
+        .filter(
+            etudiant__filiere=filiere,
+            etudiant__niveau=niveau,
+            ecue__semestre=semestre
+        )
+        .select_related(
+            "etudiant",
+            "ecue"
+        )
+        .order_by(
+            "etudiant__nom",
+            "ecue__code"
+        )
+    )
+
+
+
+    return render(
+        request,
+         "lmd/l3/droit/detail_notes.html",
+        {
+            "notes":notes,
+            "niveau":niveau,
+            "semestre":semestre,
         }
     )
 
 
+def droit_prive_note_add(request):
+
+    if request.method == "POST":
+
+        ecue_id = request.POST.get("ecue_id")
+
+        ecue = get_object_or_404(
+            ECUE,
+            id=ecue_id
+        )
+
+
+        for key, value in request.POST.items():
+
+
+            if key.startswith("cc_"):
+
+
+                etudiant_id = key.replace(
+                    "cc_",
+                    ""
+                )
+
+
+                # récupération CC
+                cc = value.strip()
+
+                if cc == "":
+                    cc = 0
+                else:
+                    cc = float(cc)
+
+
+
+                # récupération examen
+                examen = request.POST.get(
+                    f"examen_{etudiant_id}",
+                    ""
+                )
+
+
+                examen = examen.strip()
+
+                if examen == "":
+                    examen = 0
+                else:
+                    examen = float(examen)
+
+
+
+                etudiant = get_object_or_404(
+                    EtudiantLMD,
+                    id=etudiant_id
+                )
+
+
+
+                moyenne = (
+                    cc * 0.4
+                    +
+                    examen * 0.6
+                )
+
+
+
+                NoteLMD.objects.update_or_create(
+
+                    etudiant=etudiant,
+
+                    ecue=ecue,
+
+                    defaults={
+
+                        "cc": cc,
+
+                        "examen": examen,
+
+                        "moyenne": moyenne
+
+                    }
+
+                )
+
+
+
+        messages.success(
+            request,
+            "Notes enregistrées avec succès"
+        )
+
+
+        return redirect(
+            "droit_prive_notes"
+        )
+        
+        
 def l3_droit_bulletins(request):
 
     filiere = get_object_or_404(
@@ -2140,7 +2786,7 @@ def l3_droit_bulletins(request):
 
     etudiants = EtudiantLMD.objects.filter(
         filiere=filiere,
-        niveau="L3"
+       
     ).order_by(
         "nom",
         "prenoms"
@@ -2904,42 +3550,49 @@ def master_bulletin_pdf(request, id, semestre):
         content_type="application/pdf"
     )
 
-def l3_droit_ecue_add(request, pk):
+
+def l3_droit_ecue_add(request, ue_id):
 
     ue = get_object_or_404(
         UE,
-        pk=pk
+        id=ue_id,
+        filiere__libelle="Droit Privé"
     )
-    
+
+
     if request.method == "POST":
-        form = ECUEForm(request.POST)
 
-        if form.is_valid():
-            ecue = form.save(commit=False)
-            ecue.ue = ue
-            ecue.save()
+        ECUE.objects.create(
 
-            return redirect(
-                "l3_droit_ecue",
-                pk=ue.id
-            )
+            ue=ue,
 
-    else:
+            code=request.POST.get("code"),
 
-        form = ECUEForm()
+            libelle=request.POST.get("libelle"),
+
+            coefficient=request.POST.get("coefficient"),
+
+            credit=request.POST.get("credit"),
+
+        )
+
+
+        return redirect(
+            "droit_prive_ecue",
+            ue.id
+        )
+
 
     return render(
         request,
-        "lmd/l3/droit/ecue_form.html",
+        "lmd/droit_prive/ecue_form.html",
         {
-            "form": form,
-            "ue": ue
+            "ue":ue,
+            "titre":"Ajouter ECUE - Droit Privé"
         }
     )
-    
 
 def l3_droit_saisie_notes(request, ecue_id):
-
     ecue = get_object_or_404(
         ECUE,
         id=ecue_id
@@ -2950,84 +3603,38 @@ def l3_droit_saisie_notes(request, ecue_id):
         niveau="L3"
     )
 
-
-    notes_existantes = NoteLMD.objects.filter(
-        ecue=ecue
-    )
-
-
-    notes_dict = {
-        note.etudiant_id: note
-        for note in notes_existantes
-    }
-
-
-    etudiants_notes = []
-
-
-    for etudiant in etudiants:
-
-        etudiants_notes.append({
-
-            "etudiant": etudiant,
-
-            "note": notes_dict.get(etudiant.id)
-
-        })
-
-
-
     if request.method == "POST":
 
+        for etudiant in etudiants:
 
-        for item in etudiants_notes:
+            cc = request.POST.get(f"cc_{etudiant.id}")
+            examen = request.POST.get(f"examen_{etudiant.id}")
 
-            etudiant = item["etudiant"]
-
-
-            cc = request.POST.get(
-                f"cc_{etudiant.id}"
-            )
-
-            examen = request.POST.get(
-                f"examen_{etudiant.id}"
-            )
-
-
-
-            if cc or examen:
-
+            if cc != "" or examen != "":
 
                 NoteLMD.objects.update_or_create(
-
                     etudiant=etudiant,
-
                     ecue=ecue,
-
                     defaults={
-
-                        "cc": cc or 0,
-
-                        "examen": examen or 0
-
+                        "cc": float(cc) if cc else 0,
+                        "examen": float(examen) if examen else 0
                     }
-
                 )
 
+        return redirect("l3_droit_ecue", pk=ecue.ue.id)
 
-        return redirect(
-            "l3_droit_ecue",
-            pk=ecue.ue.id
-        )
-
-
+    notes = {
+        note.etudiant_id: note
+        for note in NoteLMD.objects.filter(ecue=ecue)
+    }
 
     return render(
         request,
         "lmd/l3/droit/saisie_notes.html",
         {
             "ecue": ecue,
-            "etudiants_notes": etudiants_notes
+            "etudiants": etudiants,
+            "notes": notes,
         }
     )
 # ==============================
@@ -3038,11 +3645,17 @@ def l3_droit_ecue(request, pk):
 
     ue = get_object_or_404(
         UE,
-        id=pk
+        pk=pk,
+        filiere__libelle="Droit Privé"
     )
 
-    ecues = ECUE.objects.filter(
-        ue=ue
+
+    ecues = (
+        ECUE.objects
+        .filter(
+            ue=ue
+        )
+        .order_by("code")
     )
 
 
@@ -3051,12 +3664,9 @@ def l3_droit_ecue(request, pk):
         "lmd/l3/droit/ecue.html",
         {
             "ue": ue,
-            "ecues": ecues
+            "ecues": ecues,
         }
     )
-
-
-
 # ==============================
 # Ajouter ECUE
 # ==============================
@@ -3153,43 +3763,6 @@ def l3_sciences_gestion_etudiants(request):
 
 from django.http import HttpResponse
 
-
-
-def imprimer_bulletin_l3_droit_priveDDD(request, pk ):
-
-    etudiant = get_object_or_404(
-        EtudiantLMD,
-        id=pk
-    )
-
-    # dossier temporaire PDF
-    pdf_dir = os.path.join(
-        settings.MEDIA_ROOT,
-        "bulletins"
-    )
-
-    os.makedirs(
-        pdf_dir,
-        exist_ok=True
-    )
-
-    file_path = os.path.join(
-        pdf_dir,
-        f"bulletin_{etudiant.matricule}.pdf"
-    )
-
-
-    generer_bulletin_droit_prive_pdf(
-        etudiant,
-        file_path
-    )
-
-
-    return FileResponse(
-        open(file_path, "rb"),
-        content_type="application/pdf"
-    )
-
 def imprimer_bulletin_l3_droit_prive(request, id, semestre):
 
     etudiant = get_object_or_404(
@@ -3226,7 +3799,7 @@ def imprimer_bulletin_l3_droit_prive(request, id, semestre):
         content_type="application/pdf"
     )
     
-def liste_bulletins_l3_droit_prive(request):
+def liste_bulletins_l3_droit_priveFFF(request):
 
     filiere = get_object_or_404(
         FiliereLMD,
@@ -3247,6 +3820,38 @@ def liste_bulletins_l3_droit_prive(request):
         {
             "etudiants": etudiants,
             "filiere": filiere
+        }
+    )
+
+
+def liste_bulletins_l3_droit_prive(request):
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere__libelle="Droit Privé"
+    ).order_by(
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+
+    print("Nombre étudiants :", etudiants.count())
+
+
+    for e in etudiants:
+        print(
+            e.nom,
+            e.prenoms,
+            e.niveau,
+            e.filiere.libelle
+        )
+
+
+    return render(
+        request,
+        "lmd/l3/droit/bulletins.html",
+        {
+            "etudiants": etudiants
         }
     )
 
@@ -3576,45 +4181,6 @@ def l3_gestion_ue_delete(request, pk):
         }
     )
 
-def l3_gestion_ecue_add(request, ue_id):
-
-    ue = get_object_or_404(
-        UE,
-        id=ue_id
-    )
-
-
-    if request.method == "POST":
-
-        form = ECUEForm(request.POST)
-
-        if form.is_valid():
-
-            ecue = form.save(commit=False)
-
-            ecue.ue = ue
-
-            ecue.save()
-
-            return redirect(
-                "l3_gestion_ecue_list",
-                ue.id
-            )
-
-    else:
-
-        form = ECUEForm()
-
-
-    return render(
-        request,
-        "lmd/l3/gestion/ecue/form.html",
-        {
-            "form": form,
-            "ue": ue
-        }
-    )
-
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import ECUE
 
@@ -3703,38 +4269,6 @@ def liste_bulletins_gestion(request):
             "etudiants": etudiants,
             "filiere": filiere
         }
-    )
-
-def bulletin_gestion_lmd_pdfKKK(request, etudiant_id):
-
-    etudiant = get_object_or_404(
-        EtudiantLMD,
-        id=etudiant_id
-    )
-
-    filename = f"bulletin_{etudiant.matricule}.pdf"
-
-    filepath = os.path.join(
-        settings.MEDIA_ROOT,
-        "bulletins",
-        filename
-    )
-
-    os.makedirs(
-        os.path.dirname(filepath),
-        exist_ok=True
-    )
-
-
-    generer_bulletin_gestion_pdf(
-        etudiant,
-        filepath
-    )
-
-
-    return FileResponse(
-        open(filepath, "rb"),
-        content_type="application/pdf"
     )
 
 def bulletin_gestion_lmd_pdf(request, id, semestre):
@@ -3984,148 +4518,6 @@ def tronc_commun_ue(request):
         }
     )
     
-def tronc_commun_notesDDD(request):
-
-    # ==============================
-    # SEMESTRE SELECTIONNE
-    # ==============================
-
-    semestre = request.GET.get(
-        "semestre",
-        "S1"
-    )
-
-    # Sécurité
-    if semestre not in ["S1", "S2"]:
-        semestre = "S1"
-
-
-    # ==============================
-    # FILIERE TRONC COMMUN
-    # ==============================
-
-    filiere = get_object_or_404(
-        FiliereLMD,
-        Q(libelle="Gestion et Droit") |
-        Q(libelle="Droit et Gestion")
-    )
-
-
-    # ==============================
-    # ETUDIANTS L1 / L2
-    # ==============================
-
-    etudiants = EtudiantLMD.objects.filter(
-        filiere=filiere,
-        niveau__in=["L1", "L2"]
-    ).order_by(
-        "niveau",
-        "nom",
-        "prenoms"
-    )
-
-
-    # ==============================
-    # ECUE DU SEMESTRE
-    # ==============================
-
-    ecues = ECUE.objects.filter(
-        ue__filiere=filiere,
-        ue__semestre=semestre
-    ).select_related(
-        "ue"
-    ).order_by(
-        "code"
-    )
-
-
-    # ==============================
-    # NOTES DU SEMESTRE
-    # ==============================
-
-    notes = NoteLMD.objects.filter(
-        etudiant__in=etudiants,
-        ecue__in=ecues,
-        semestre=semestre
-    )
-
-
-    # ==============================
-    # INDEXATION
-    # ==============================
-
-    notes_existantes = {}
-
-    for note in notes:
-
-        notes_existantes[
-            (
-                note.etudiant_id,
-                note.ecue_id
-            )
-        ] = note
-
-
-    # ==============================
-    # PREPARATION AFFICHAGE
-    # ==============================
-
-    for etudiant in etudiants:
-
-        etudiant.notes_affichage = []
-
-        for ecue in ecues:
-
-            note = notes_existantes.get(
-                (
-                    etudiant.id,
-                    ecue.id
-                )
-            )
-
-            etudiant.notes_affichage.append(
-                {
-                    "ecue_id": ecue.id,
-
-                    "cc": (
-                        note.cc
-                        if note
-                        else ""
-                    ),
-
-                    "examen": (
-                        note.examen
-                        if note
-                        else ""
-                    ),
-
-                    "moyenne": (
-                        note.moyenne
-                        if note
-                        else ""
-                    ),
-                }
-            )
-
-
-    # ==============================
-    # CONTEXT
-    # ==============================
-
-    return render(
-        request,
-        "lmd/trom_commun/notes.html",
-        {
-            "etudiants": etudiants,
-
-            "ecues": ecues,
-
-            "semestre": semestre,
-
-            "filiere": filiere,
-        }
-    )
-
 def tronc_commun_notes(request):
 
     # ==============================
@@ -4333,32 +4725,6 @@ def tronc_commun_notes(request):
 # =====================================================
 # TRONC COMMUN L1/L2 - DROIT + GESTION
 # =====================================================
-def liste_etudiants_tronc_communAAA(request):
-
-    etudiants = EtudiantLMD.objects.filter(
-        Q(filiere__libelle__icontains="Droit")
-        |
-        Q(filiere__libelle__icontains="Gestion"),
-        niveau__in=[
-            "L1",
-            "L2",
-            "Licence 1",
-            "Licence 2"
-        ]
-    ).order_by(
-        "niveau",
-        "nom"
-    )
-
-
-    return render(
-        request,
-        "lmd/trom_commun/etudiants.html",
-        {
-            "etudiants": etudiants,
-            "titre":"Tronc Commun Droit & Gestion L1-L2"
-        }
-    )
 
 def liste_etudiants_tronc_commun(request):
 
@@ -4847,30 +5213,6 @@ def l3_qhse_etudiant_delete(request,pk):
 # =====================================================
 # UE / ECUE QHSE
 # =====================================================
-
-def l3_qhse_ueEN(request):
-
-    filiere = FiliereLMD.objects.filter(
-        code="QHSE"
-    ).first()
-
-
-    ues = UE.objects.filter(
-        # filiere=filiere
-        filiere__code__in=["QHSE", "QHSE-L3"]
-    ).prefetch_related(
-        "ecues"
-    ).order_by("code")
-
-
-    return render(
-        request,
-        "lmd/l3_qhse/ue.html",
-        {
-            "ues": ues,
-            "filiere": filiere
-        }
-    )
 
 def l3_qhse_ue(request):
     semestre = request.GET.get("semestre", "S1")
@@ -5873,3 +6215,534 @@ def tronc_commun_delete(request, id):
         "liste_etudiants_tronc_commun"
     )
 
+
+
+from datetime import datetime
+from datetime import datetime, date
+
+
+def convertir_date(date_value):
+
+    if not date_value:
+        return None
+
+
+    # Si Excel retourne déjà une date
+    if isinstance(date_value, datetime):
+
+        return date_value.date()
+
+
+    if isinstance(date_value, date):
+
+        return date_value
+
+
+
+    if isinstance(date_value, str):
+
+        formats = [
+
+            "%d/%m/%Y",   # 15/02/2000
+            "%d-%m-%Y",   # 15-02-2000
+            "%Y-%m-%d",   # 2000-02-15
+            "%Y/%m/%d",   # 2000/02/15
+            "%d.%m.%Y",   # 15.02.2000
+            "%m/%d/%Y",   # 02/15/2000
+
+        ]
+
+
+        for fmt in formats:
+
+            try:
+
+                return datetime.strptime(
+                    date_value.strip(),
+                    fmt
+                ).date()
+
+
+            except ValueError:
+
+                continue
+
+
+
+    return None
+
+def l3_droit_etudiant_import(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+
+    colonnes_attendues = [
+        "Matricule",
+        "Nom",
+        "Prénoms",
+        "Lieu naissance",
+        "Date naissance",
+        "Email",
+        "Annee academique",
+        "Niveau",
+        "Sexe",
+        "Téléphone",
+    ]
+
+
+    if request.method == "POST":
+
+
+        fichier = request.FILES.get("fichier")
+
+
+        if not fichier:
+
+            messages.error(
+                request,
+                "❌ Aucun fichier sélectionné."
+            )
+
+            return redirect(
+                "droit_prive_etudiants"
+            )
+
+        # Vérification extension
+
+        if not fichier.name.endswith(".xlsx"):
+
+            messages.error(
+                request,
+                "❌ Format incorrect. Veuillez importer un fichier Excel (.xlsx)."
+            )
+
+            return redirect(
+                "droit_prive_etudiants"
+            )
+
+        try:
+            workbook = load_workbook(
+                fichier
+            )
+
+            sheet = workbook.active
+
+        except Exception:
+
+            messages.error(
+                request,
+                "❌ Impossible de lire le fichier Excel."
+            )
+
+            return redirect(
+                "droit_prive_etudiants"
+            )
+
+
+
+        # Vérification des entêtes
+
+        headers = [
+            str(cell.value).strip()
+            for cell in sheet[1]
+            if cell.value
+        ]
+
+
+
+        if headers != colonnes_attendues:
+
+            messages.error(
+                request,
+                "❌ Format du fichier incorrect. "
+                "Veuillez télécharger et utiliser le modèle Excel fourni."
+            )
+
+            return redirect(
+                "droit_prive_etudiants"
+            )
+
+
+
+        total = 0
+        doublons = 0
+        erreurs = 0
+
+
+
+        for index, row in enumerate(
+            sheet.iter_rows(
+                min_row=2,
+                values_only=True
+            ),
+            start=2
+        ):
+
+
+            # supprimer les cellules vides à la fin
+
+            row = list(row)
+
+            while row and row[-1] is None:
+                row.pop()
+
+
+
+            # ignorer ligne vide
+
+            if not row:
+                continue
+
+
+
+            # vérifier nombre de colonnes
+
+            if len(row) != 10:
+
+                messages.warning(
+                    request,
+                    f"⚠️ Ligne {index} ignorée : "
+                    f"{len(row)} colonnes trouvées au lieu de 10."
+                )
+
+                erreurs += 1
+
+                continue
+
+
+
+            (
+                matricule,
+                nom,
+                prenoms,
+                lieu_naissance,
+                date_naissance,
+                email,
+                annee_academique,
+                niveau,
+                sexe,
+                telephone
+
+            ) = row
+
+
+
+
+            # champs obligatoires
+
+            if not matricule or not nom or not prenoms:
+
+
+                messages.warning(
+                    request,
+                    f"⚠️ Ligne {index} ignorée : "
+                    "Matricule, nom ou prénom manquant."
+                )
+
+                erreurs += 1
+
+                continue
+
+
+
+
+            # doublon matricule
+
+            if EtudiantLMD.objects.filter(
+                matricule=matricule
+            ).exists():
+
+
+                doublons += 1
+
+                continue
+
+            # conversion date Excel
+
+            # if isinstance(
+            #     date_naissance,
+            #     datetime
+            # ):
+            date_naissance = convertir_date(
+               date_naissance
+               )
+
+            EtudiantLMD.objects.create(
+
+                matricule=matricule,
+
+                nom=nom,
+
+                prenoms=prenoms,
+
+                lieu_naissance=lieu_naissance,
+
+                date_naissance=date_naissance,
+
+                email=email,
+
+                annee_academique=annee_academique,
+
+                niveau=niveau,
+
+                sexe=sexe,
+
+                telephone=telephone,
+
+                filiere=filiere
+
+            )
+
+
+
+            total += 1
+
+
+
+
+        messages.success(
+            request,
+            f"✅ {total} étudiant(s) importé(s) avec succès."
+        )
+
+
+
+        if doublons:
+
+            messages.warning(
+                request,
+                f"⚠️ {doublons} étudiant(s) déjà existant(s) ignoré(s)."
+            )
+
+
+
+        if erreurs:
+
+            messages.warning(
+                request,
+                f"⚠️ {erreurs} ligne(s) non importée(s)."
+            )
+
+
+
+        return redirect(
+            "droit_prive_etudiants"
+        )
+
+
+
+    return render(
+        request,
+        "lmd/l3/droit/import_etudiants.html"
+    )
+    
+from openpyxl import Workbook
+
+
+
+def l3_droit_etudiant_modele_excel(request):
+
+    wb = Workbook()
+
+    ws = wb.active
+
+    ws.title = "Etudiants Droit Privé"
+
+
+    headers = [
+
+        "Matricule",
+        "Nom",
+        "Prénoms",
+        "Lieu naissance",
+        "Date naissance",
+        "Email",
+        "Annee academique",
+        "Niveau",
+        "Sexe",
+        "Téléphone",
+
+    ]
+
+
+    ws.append(headers)
+
+
+
+    # exemple
+    ws.append([
+
+        "DP001",
+        "KONE",
+        "Lacina",
+        "Abidjan",
+        "15/02/2000",
+        "lacina@gmail.com",
+        "2025-2026",
+        "L3",
+        "M",
+        "07000000",
+        "S1"
+
+    ])
+
+
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+    response["Content-Disposition"] = (
+        'attachment; filename="modele_import_etudiants_droit_prive.xlsx"'
+    )
+
+
+    wb.save(response)
+
+
+    return response
+
+
+def imprimer_bulletin_droit_prive(request, id, semestre):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id,
+        filiere__libelle="Droit Privé"
+    )
+
+
+    pdf_dir = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins"
+    )
+
+    os.makedirs(
+        pdf_dir,
+        exist_ok=True
+    )
+
+
+    file_path = os.path.join(
+        pdf_dir,
+         f"bulletin_{etudiant.matricule}_{etudiant.niveau}_{semestre}.pdf"
+    )
+
+
+    generer_bulletin_droit_prive_pdf(
+        etudiant,
+        semestre,
+        file_path
+    )
+
+
+    return FileResponse(
+        open(file_path,"rb"),
+        content_type="application/pdf"
+    )
+    
+def imprimer_bulletin_lmd(request, id, semestre):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id
+    )
+
+
+    pdf_dir = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins"
+    )
+
+    os.makedirs(
+        pdf_dir,
+        exist_ok=True
+    )
+
+
+    file_path = os.path.join(
+        pdf_dir,
+        f"bulletin_{etudiant.matricule}_{semestre}.pdf"
+    )
+
+
+    # ==============================
+    # CHOIX DU BULLETIN
+    # ==============================
+
+    if (
+        etudiant.filiere.libelle == "Droit Privé"
+        and etudiant.niveau == "L2"
+    ):
+
+        generer_bulletin_licence2_droit_prive_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
+
+
+    elif etudiant.filiere.libelle == "Droit Privé":
+
+        generer_bulletin_droit_prive_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
+
+
+    else:
+
+        # futur générateur pour les autres filières
+        generer_bulletin_droit_prive_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
+
+
+    return FileResponse(
+        open(file_path, "rb"),
+        content_type="application/pdf"
+    )
+    
+def imprimer_bulletin_lmd(request, id, semestre):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id
+    )
+
+
+    pdf_dir = os.path.join(
+        settings.MEDIA_ROOT,
+        "bulletins"
+    )
+
+    os.makedirs(
+        pdf_dir,
+        exist_ok=True
+    )
+
+
+    file_path = os.path.join(
+        pdf_dir,
+        f"bulletin_{etudiant.matricule}_{semestre}.pdf"
+    )
+
+
+    generer_bulletin_lmd_pdf(
+        etudiant=etudiant,
+        semestre=semestre,
+        file_path=file_path
+    )
+
+
+    return FileResponse(
+        open(file_path, "rb"),
+        content_type="application/pdf"
+    )
