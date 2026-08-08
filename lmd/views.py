@@ -1355,6 +1355,7 @@ def ajouter_etudiants_saisie(request, saisie_id):
         "saisie_detail",
          pk=saisie.id
     )
+    
 def filiere_l3_detail(request, id):
 
     filiere = FiliereLMD.objects.get(id=id)
@@ -3739,27 +3740,39 @@ def l3_droit_ecue_delete(request, pk):
         "l3_droit_ecue",
         pk=ue_id
     )
-
-
-
+  
 def l3_sciences_gestion_etudiants(request):
 
     etudiants = EtudiantLMD.objects.filter(
-        filiere__libelle__icontains="Sciences de Gestion",
-        niveau="L3"
+        filiere__libelle__icontains="Sciences de Gestion"
     ).order_by(
+        "niveau",
         "nom",
         "prenoms"
     )
+
+    print("======================================")
+    print("NOMBRE ETUDIANTS :", etudiants.count())
+
+    for e in etudiants:
+        print(
+            e.id,
+            e.matricule,
+            e.nom,
+            e.prenoms,
+            e.niveau,
+            e.filiere.libelle
+        )
+
+    print("======================================")
 
     return render(
         request,
         "lmd/l3/gestion/etudiants.html",
         {
-            "etudiants": etudiants
+            "etudiants": etudiants,
         }
     )
-
 
 from django.http import HttpResponse
 
@@ -3854,27 +3867,6 @@ def liste_bulletins_l3_droit_prive(request):
             "etudiants": etudiants
         }
     )
-
-
-def l3_gestion_etudiant_list(request):
-
-    etudiants = EtudiantLMD.objects.filter(
-        filiere__libelle__icontains="Sciences de Gestion",
-        niveau="L3"
-    ).order_by(
-        "nom",
-        "prenoms"
-    )
-
-
-    return render(
-        request,
-        "lmd/l3/gestion/list.html",
-        {
-            "etudiants": etudiants
-        }
-    )
-
 
 def l3_gestion_etudiant_add(request):
 
@@ -3981,6 +3973,49 @@ def l3_gestion_etudiant_delete(request, pk):
 
 def l3_gestion_ue_list(request):
 
+    # Niveau sélectionné
+    niveau = request.GET.get("niveau", "L3")
+
+    # Semestre sélectionné
+    semestre = request.GET.get("semestre", "S1")
+
+    # Filière Sciences de Gestion
+    filiere = FiliereLMD.objects.filter(
+        libelle__icontains="Sciences de Gestion"
+    ).first()
+
+    if not filiere:
+        messages.error(
+            request,
+            "La filière Sciences de Gestion est introuvable."
+        )
+        return redirect("home")
+
+    # UE selon filière + niveau + semestre
+    ues = UE.objects.filter(
+        filiere=filiere,
+        niveau=niveau,
+        semestre=semestre
+    ).prefetch_related(
+        "ecues"
+    ).order_by(
+        "ordre",
+        "code"
+    )
+
+    return render(
+        request,
+        "lmd/l3/gestion/ue/list.html",
+        {
+            "ues": ues,
+            "niveau": niveau,
+            "semestre": semestre,
+            "filiere": filiere,
+        }
+    )
+    
+def l3_gestion_ue_listdddd(request):
+
     ues = UE.objects.filter(
         filiere__libelle__icontains="Sciences de Gestion"
     ).order_by("code")
@@ -3994,7 +4029,7 @@ def l3_gestion_ue_list(request):
     )
 
 
-def l3_gestion_ue_add(request):
+def l3_gestion_ue_addAAA(request):
 
     filiere = get_object_or_404(
         FiliereLMD,
@@ -4024,6 +4059,52 @@ def l3_gestion_ue_add(request):
             "titre": "Ajouter une UE - L3 Sciences de Gestion"
         }
     )
+
+def l3_gestion_ue_add(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Sciences de Gestion"
+    )
+
+    # Valeurs par défaut
+    niveau = request.GET.get("niveau", "L3")
+    semestre = request.GET.get("semestre", "S5")
+
+    if request.method == "POST":
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+
+        code = request.POST.get("code")
+        libelle = request.POST.get("libelle")
+        credit = request.POST.get("credit")
+        ordre = request.POST.get("ordre")
+
+        UE.objects.create(
+            code=code,
+            libelle=libelle,
+            credit=credit,
+            niveau=niveau,
+            semestre=semestre,
+            ordre=ordre,
+            filiere=filiere
+        )
+
+        return redirect(
+            f"/lmd/l3/gestion/ue/?niveau={niveau}&semestre={semestre}"
+        )
+
+    return render(
+        request,
+        "lmd/l3/gestion/ue/form.html",
+        {
+            "titre": "Ajouter une UE - Sciences de Gestion",
+            "niveau": niveau,
+            "semestre": semestre,
+        }
+    )
+
 
 def l3_gestion_ecue_list(request, ue_id):
 
@@ -6746,3 +6827,835 @@ def imprimer_bulletin_lmd(request, id, semestre):
         open(file_path, "rb"),
         content_type="application/pdf"
     )
+    
+def gestion_etudiants_sciences_gestion(request, niveau):
+    """
+    Liste les étudiants de Sciences de Gestion
+    pour le niveau demandé : L1, L2 ou L3.
+    """
+
+    niveaux_valides = ["L1", "L2", "L3"]
+
+    if niveau not in niveaux_valides:
+        return render(
+            request,
+            "lmd/erreur.html",
+            {
+                "message": "Niveau invalide."
+            }
+        )
+
+    etudiants = (
+        EtudiantLMD.objects
+        .filter(
+            filiere__libelle__icontains="Sciences de Gestion",
+            niveau=niveau
+        )
+        .order_by("nom", "prenoms")
+    )
+
+    return render(
+        request,
+        "lmd/gestion/etudiants/etudiants.html",
+        {
+            "etudiants": etudiants,
+            "niveau": niveau,
+        }
+    )
+
+
+    
+
+def gestion_etudiant_list(request):
+    """
+    Liste des étudiants de Sciences de Gestion
+    pour les niveaux L1, L2 et L3.
+    """
+
+    niveau = request.GET.get("niveau", "").strip()
+    recherche = request.GET.get("q", "").strip()
+
+    etudiants = (
+        EtudiantLMD.objects
+        .filter(
+            filiere__libelle__icontains="Sciences de Gestion",
+            niveau__in=["L1", "L2", "L3"],
+        )
+        .order_by("niveau", "nom", "prenoms")
+    )
+
+    # Filtre par niveau
+    if niveau in ["L1", "L2", "L3"]:
+        etudiants = etudiants.filter(niveau=niveau)
+
+    # Recherche
+    if recherche:
+        etudiants = etudiants.filter(
+            matricule__icontains=recherche
+        ) | etudiants.filter(
+            nom__icontains=recherche
+        ) | etudiants.filter(
+            prenoms__icontains=recherche
+        )
+
+    return render(
+        request,
+        "lmd/gestion/etudiants/list.html",
+        {
+            "etudiants": etudiants,
+            "niveau_selectionne": niveau,
+            "recherche": recherche,
+        },
+    )
+
+
+def gestion_etudiant_add(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle__icontains="Sciences de Gestion",
+    )
+
+    if request.method == "POST":
+
+        matricule = request.POST.get("matricule", "").strip()
+        nom = request.POST.get("nom", "").strip()
+        prenoms = request.POST.get("prenoms", "").strip()
+        sexe = request.POST.get("sexe", "").strip()
+        date_naissance = request.POST.get("date_naissance") or None
+        lieu_naissance = request.POST.get("lieu_naissance", "").strip()
+        statut = request.POST.get("statut", "").strip()
+        niveau = request.POST.get("niveau", "").strip()
+        annee_academique = request.POST.get(
+            "annee_academique",
+            "2025-2026",
+        ).strip()
+
+        # =========================
+        # VALIDATIONS
+        # =========================
+
+        if not matricule or not nom or not prenoms:
+            messages.error(
+                request,
+                "Le matricule, le nom et les prénoms sont obligatoires.",
+            )
+
+            return render(
+                request,
+                "lmd/gestion/etudiants/form.html",
+                {
+                    "etudiant": None,
+                    "filiere": filiere,
+                },
+            )
+
+        if niveau not in ["L1", "L2", "L3"]:
+            messages.error(
+                request,
+                "Veuillez sélectionner un niveau valide.",
+            )
+
+            return render(
+                request,
+                "lmd/gestion/etudiants/form.html",
+                {
+                    "etudiant": None,
+                    "filiere": filiere,
+                },
+            )
+
+        if EtudiantLMD.objects.filter(
+            matricule=matricule
+        ).exists():
+
+            messages.error(
+                request,
+                f"Le matricule {matricule} existe déjà.",
+            )
+
+            return render(
+                request,
+                "lmd/gestion/etudiants/form.html",
+                {
+                    "etudiant": None,
+                    "filiere": filiere,
+                },
+            )
+
+        # =========================
+        # CREATION
+        # =========================
+
+        EtudiantLMD.objects.create(
+            matricule=matricule,
+            nom=nom,
+            prenoms=prenoms,
+            sexe=sexe,
+            date_naissance=date_naissance,
+            lieu_naissance=lieu_naissance,
+            statut=statut,
+            niveau=niveau,
+            filiere=filiere,
+            annee_academique=annee_academique,
+        )
+
+        messages.success(
+            request,
+            f"L'étudiant {nom} {prenoms} a été ajouté avec succès.",
+        )
+
+        return redirect("gestion_etudiant_list")
+
+    return render(
+        request,
+        "lmd/gestion/etudiants/form.html",
+        {
+            "etudiant": None,
+            "filiere": filiere,
+        },
+    )
+
+
+def gestion_etudiant_edit(request, id):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id,
+        filiere__libelle__icontains="Sciences de Gestion",
+        niveau__in=["L1", "L2", "L3"],
+    )
+
+    if request.method == "POST":
+
+        matricule = request.POST.get("matricule", "").strip()
+        nom = request.POST.get("nom", "").strip()
+        prenoms = request.POST.get("prenoms", "").strip()
+        sexe = request.POST.get("sexe", "").strip()
+        date_naissance = request.POST.get("date_naissance") or None
+        lieu_naissance = request.POST.get("lieu_naissance", "").strip()
+        statut = request.POST.get("statut", "").strip()
+        niveau = request.POST.get("niveau", "").strip()
+        annee_academique = request.POST.get(
+            "annee_academique",
+            etudiant.annee_academique,
+        ).strip()
+
+        if not matricule or not nom or not prenoms:
+            messages.error(
+                request,
+                "Le matricule, le nom et les prénoms sont obligatoires.",
+            )
+
+            return render(
+                request,
+                "lmd/gestion/etudiants/form.html",
+                {
+                    "etudiant": etudiant,
+                    "filiere": etudiant.filiere,
+                },
+            )
+
+        if niveau not in ["L1", "L2", "L3"]:
+            messages.error(
+                request,
+                "Veuillez sélectionner un niveau valide.",
+            )
+
+            return render(
+                request,
+                "lmd/gestion/etudiants/form.html",
+                {
+                    "etudiant": etudiant,
+                    "filiere": etudiant.filiere,
+                },
+            )
+
+        matricule_existe = (
+            EtudiantLMD.objects
+            .filter(matricule=matricule)
+            .exclude(id=etudiant.id)
+            .exists()
+        )
+
+        if matricule_existe:
+
+            messages.error(
+                request,
+                f"Le matricule {matricule} est déjà utilisé.",
+            )
+
+            return render(
+                request,
+                "lmd/gestion/etudiants/form.html",
+                {
+                    "etudiant": etudiant,
+                    "filiere": etudiant.filiere,
+                },
+            )
+
+        # =========================
+        # MODIFICATION
+        # =========================
+
+        etudiant.matricule = matricule
+        etudiant.nom = nom
+        etudiant.prenoms = prenoms
+        etudiant.sexe = sexe
+        etudiant.date_naissance = date_naissance
+        etudiant.lieu_naissance = lieu_naissance
+        etudiant.statut = statut
+        etudiant.niveau = niveau
+        etudiant.annee_academique = annee_academique
+
+        # La filière reste Sciences de Gestion
+        etudiant.save()
+
+        messages.success(
+            request,
+            f"L'étudiant {nom} {prenoms} a été modifié avec succès.",
+        )
+
+        return redirect("gestion_etudiant_list")
+
+    return render(
+        request,
+        "lmd/gestion/etudiants/form.html",
+        {
+            "etudiant": etudiant,
+            "filiere": etudiant.filiere,
+        },
+    )
+
+
+def gestion_etudiant_delete(request, id):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id,
+        filiere__libelle__icontains="Sciences de Gestion",
+        niveau__in=["L1", "L2", "L3"],
+    )
+
+    if request.method == "POST":
+
+        nom_complet = f"{etudiant.nom} {etudiant.prenoms}"
+
+        etudiant.delete()
+
+        messages.success(
+            request,
+            f"L'étudiant {nom_complet} a été supprimé avec succès.",
+        )
+
+        return redirect("gestion_etudiant_list")
+
+    return render(
+        request,
+        "lmd/gestion/etudiants/delete.html",
+        {
+            "etudiant": etudiant,
+        },
+    )
+
+
+
+def l3_gestion_etudiant_add(request):
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle__icontains="Sciences de Gestion",
+    )
+
+    if request.method == "POST":
+        matricule = request.POST.get("matricule", "").strip()
+        nom = request.POST.get("nom", "").strip()
+        prenoms = request.POST.get("prenoms", "").strip()
+        sexe = request.POST.get("sexe", "").strip()
+        date_naissance = request.POST.get("date_naissance") or None
+        lieu_naissance = request.POST.get("lieu_naissance", "").strip()
+        statut = request.POST.get("statut", "").strip()
+        annee_academique = request.POST.get(
+            "annee_academique",
+            "2025-2026",
+        ).strip()
+
+        if not matricule or not nom or not prenoms:
+            messages.error(
+                request,
+                "Le matricule, le nom et les prénoms sont obligatoires.",
+            )
+            return render(
+                request,
+                "lmd/l3/gestion/form.html",
+                {
+                    "etudiant": None,
+                    "filiere": filiere,
+                },
+            )
+
+        if EtudiantLMD.objects.filter(matricule=matricule).exists():
+            messages.error(
+                request,
+                f"Le matricule {matricule} existe déjà.",
+            )
+            return render(
+                request,
+                "lmd/l3/gestion/form.html",
+                {
+                    "etudiant": None,
+                    "filiere": filiere,
+                },
+            )
+
+        EtudiantLMD.objects.create(
+            matricule=matricule,
+            nom=nom,
+            prenoms=prenoms,
+            sexe=sexe,
+            date_naissance=date_naissance,
+            lieu_naissance=lieu_naissance,
+            statut=statut,
+            niveau="L3",
+            filiere=filiere,
+            annee_academique=annee_academique,
+        )
+
+        messages.success(
+            request,
+            f"L'étudiant {nom} {prenoms} a été ajouté avec succès.",
+        )
+
+        return redirect("l3_gestion_etudiant_list")
+
+    return render(
+        request,
+        "lmd/l3/gestion/form.html",
+        {
+            "etudiant": None,
+            "filiere": filiere,
+        },
+    )
+
+
+def l3_gestion_etudiant_edit(request, id):
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id,
+        niveau="L3",
+        filiere__libelle__icontains="Sciences de Gestion",
+    )
+
+    if request.method == "POST":
+        matricule = request.POST.get("matricule", "").strip()
+        nom = request.POST.get("nom", "").strip()
+        prenoms = request.POST.get("prenoms", "").strip()
+        sexe = request.POST.get("sexe", "").strip()
+        date_naissance = request.POST.get("date_naissance") or None
+        lieu_naissance = request.POST.get("lieu_naissance", "").strip()
+        statut = request.POST.get("statut", "").strip()
+        annee_academique = request.POST.get(
+            "annee_academique",
+            etudiant.annee_academique,
+        ).strip()
+
+        if not matricule or not nom or not prenoms:
+            messages.error(
+                request,
+                "Le matricule, le nom et les prénoms sont obligatoires.",
+            )
+            return render(
+                request,
+                "lmd/l3/gestion/form.html",
+                {
+                    "etudiant": etudiant,
+                    "filiere": etudiant.filiere,
+                },
+            )
+
+        matricule_existe = (
+            EtudiantLMD.objects
+            .filter(matricule=matricule)
+            .exclude(id=etudiant.id)
+            .exists()
+        )
+
+        if matricule_existe:
+            messages.error(
+                request,
+                f"Le matricule {matricule} est déjà utilisé.",
+            )
+            return render(
+                request,
+                "lmd/l3/gestion/form.html",
+                {
+                    "etudiant": etudiant,
+                    "filiere": etudiant.filiere,
+                },
+            )
+
+        etudiant.matricule = matricule
+        etudiant.nom = nom
+        etudiant.prenoms = prenoms
+        etudiant.sexe = sexe
+        etudiant.date_naissance = date_naissance
+        etudiant.lieu_naissance = lieu_naissance
+        etudiant.statut = statut
+        etudiant.niveau = "L3"
+        etudiant.annee_academique = annee_academique
+
+        # On conserve volontairement la filière Sciences de Gestion.
+        etudiant.save()
+
+        messages.success(
+            request,
+            f"L'étudiant {nom} {prenoms} a été modifié avec succès.",
+        )
+
+        return redirect("l3_gestion_etudiant_list")
+
+    return render(
+        request,
+        "lmd/l3/gestion/form.html",
+        {
+            "etudiant": etudiant,
+            "filiere": etudiant.filiere,
+        },
+    )
+
+
+def l3_gestion_etudiant_delete(request, id):
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id,
+        niveau="L3",
+        filiere__libelle__icontains="Sciences de Gestion",
+    )
+
+    if request.method == "POST":
+        nom_complet = f"{etudiant.nom} {etudiant.prenoms}"
+
+        etudiant.delete()
+
+        messages.success(
+            request,
+            f"L'étudiant {nom_complet} a été supprimé avec succès.",
+        )
+
+        return redirect("l3_gestion_etudiant_list")
+
+    return render(
+        request,
+        "lmd/l3/gestion/delete.html",
+        {
+            "etudiant": etudiant,
+        },
+    )
+    
+
+# ============================================================
+# SCIENCES DE GESTION - ÉTUDIANTS L1 / L2 / L3
+# ============================================================
+
+def sciences_gestion_etudiant_addrrr(request):
+
+  if request.method == "POST":
+
+    matricule = request.POST.get("matricule")
+    nom = request.POST.get("nom")
+    prenoms = request.POST.get("prenoms")
+    niveau = request.POST.get("niveau")
+
+    sexe = request.POST.get("sexe")
+    date_naissance = request.POST.get("date_naissance")
+    lieu_naissance = request.POST.get("lieu_naissance")
+    statut = request.POST.get("statut")
+    annee_academique = request.POST.get(
+        "annee_academique",
+        "2025-2026"
+    )
+
+    # Vérification du niveau
+    if niveau not in ["L1", "L2", "L3"]:
+        messages.error(
+            request,
+            "Veuillez sélectionner un niveau valide."
+        )
+
+        return render(
+            request,
+            "lmd/l3/gestion/form.html",
+        )
+
+    # Récupération de la filière
+    filiere = FiliereLMD.objects.get(
+        libelle__icontains="Sciences de Gestion"
+    )
+
+    # Création de l'étudiant
+    EtudiantLMD.objects.create(
+        matricule=matricule,
+        nom=nom,
+        prenoms=prenoms,
+        niveau=niveau,
+        filiere=filiere,
+        sexe=sexe or None,
+        date_naissance=date_naissance or None,
+        lieu_naissance=lieu_naissance,
+        statut=statut,
+        annee_academique=annee_academique,
+    )
+
+    messages.success(
+        request,
+        f"Étudiant ajouté avec succès en {niveau} Sciences de Gestion."
+    )
+
+    return redirect("sciences_gestion_etudiants")
+
+  return render(
+     request,
+    "lmd/l3/gestion/form.html"
+)
+
+def sciences_gestion_etudiant_add(request):
+
+    # Récupération de la filière
+    filiere = FiliereLMD.objects.filter(
+        libelle__icontains="Sciences de Gestion"
+    ).first()
+
+    if not filiere:
+        messages.error(
+            request,
+            "La filière Sciences de Gestion est introuvable."
+        )
+        return redirect("sciences_gestion_etudiants")
+
+    if request.method == "POST":
+
+        matricule = request.POST.get("matricule", "").strip()
+        nom = request.POST.get("nom", "").strip()
+        prenoms = request.POST.get("prenoms", "").strip()
+        niveau = request.POST.get("niveau", "").strip()
+
+        sexe = request.POST.get("sexe", "").strip()
+        date_naissance = request.POST.get("date_naissance") or None
+        lieu_naissance = request.POST.get("lieu_naissance", "").strip()
+        statut = request.POST.get("statut", "").strip()
+
+        annee_academique = request.POST.get(
+            "annee_academique",
+            "2025-2026"
+        ).strip()
+
+        # Vérification du niveau
+        if niveau not in ["L1", "L2", "L3"]:
+
+            messages.error(
+                request,
+                "Veuillez sélectionner un niveau valide."
+            )
+
+            return render(
+                request,
+                "lmd/l3/gestion/form.html",
+                {
+                    "niveau": niveau,
+                }
+            )
+
+        # Création de l'étudiant
+        EtudiantLMD.objects.create(
+            matricule=matricule,
+            nom=nom,
+            prenoms=prenoms,
+            niveau=niveau,
+            filiere=filiere,
+            sexe=sexe or None,
+            date_naissance=date_naissance,
+            lieu_naissance=lieu_naissance,
+            statut=statut,
+            annee_academique=annee_academique,
+        )
+
+        messages.success(
+            request,
+            f"Étudiant ajouté avec succès en {niveau} Sciences de Gestion."
+        )
+
+        return redirect("sciences_gestion_etudiants")
+
+    return render(
+        request,
+        "lmd/l3/gestion/form.html",
+        {
+            "niveau": "",
+        }
+    )
+
+def sciences_gestion_etudiant_edit(request, id):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id,
+        filiere__libelle__icontains="Sciences de Gestion"
+    )
+
+    if request.method == "POST":
+
+        matricule = request.POST.get("matricule")
+        nom = request.POST.get("nom")
+        prenoms = request.POST.get("prenoms")
+        niveau = request.POST.get("niveau")
+
+        sexe = request.POST.get("sexe")
+        date_naissance = request.POST.get("date_naissance")
+        lieu_naissance = request.POST.get("lieu_naissance")
+        statut = request.POST.get("statut")
+        annee_academique = request.POST.get(
+            "annee_academique",
+            "2025-2026"
+        )
+
+        # Vérification du niveau
+        if niveau not in ["L1", "L2", "L3"]:
+
+            messages.error(
+                request,
+                "Veuillez sélectionner un niveau valide."
+            )
+
+            return render(
+                request,
+                "lmd/l3/gestion/form.html",
+                {
+                    "etudiant": etudiant,
+                }
+            )
+
+        # Mise à jour
+        etudiant.matricule = matricule
+        etudiant.nom = nom
+        etudiant.prenoms = prenoms
+        etudiant.niveau = niveau
+        etudiant.sexe = sexe or None
+        etudiant.date_naissance = date_naissance or None
+        etudiant.lieu_naissance = lieu_naissance
+        etudiant.statut = statut
+        etudiant.annee_academique = annee_academique
+
+        etudiant.save()
+
+        messages.success(
+            request,
+            f"Étudiant {nom} {prenoms} modifié avec succès."
+        )
+
+        return redirect(
+            "l3_sciences_gestion_etudiants"
+        )
+
+    return render(
+        request,
+        "lmd/l3/gestion/form.html",
+        {
+            "etudiant": etudiant,
+        }
+    )
+
+
+def sciences_gestion_etudiant_deleteH(request, niveau, id):
+
+    if niveau not in ["L1", "L2", "L3"]:
+        raise Http404("Niveau invalide")
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id,
+        niveau=niveau,
+        filiere__libelle__iexact="Sciences de Gestion",
+    )
+
+    if request.method == "POST":
+
+        etudiant.delete()
+
+        return redirect(
+            "l1_gestion_etudiants"
+            if niveau == "L1"
+            else "l2_gestion_etudiants"
+            if niveau == "L2"
+            else "l3_gestion_etudiants"
+        )
+
+    return render(
+        request,
+        "lmd/l3/gestion/confirm_delete.html",
+        {
+            "etudiant": etudiant,
+            "niveau": niveau,
+        }
+    )
+
+def sciences_gestion_bulletins(request):
+  etudiants = EtudiantLMD.objects.filter(
+     filiere__libelle__icontains="Sciences de Gestion"
+  ).order_by(
+    "niveau",
+    "nom",
+    "prenoms"
+   )
+
+   # Recherche
+  q = request.GET.get("q", "").strip()
+  if q:
+    etudiants = etudiants.filter(
+        Q(matricule__icontains=q)
+        | Q(nom__icontains=q)
+        | Q(prenoms__icontains=q)
+    )
+
+  # Filtre niveau
+  niveau = request.GET.get("niveau", "").strip()
+
+  if niveau:
+    etudiants = etudiants.filter(
+        niveau=niveau
+    )
+
+  return render(
+    request,
+    "lmd/l3/gestion/bulletins.html",
+    {
+        "etudiants": etudiants,
+    }
+)
+
+
+def sciences_gestion_etudiant_delete(request, id):
+
+    etudiant = get_object_or_404(
+        EtudiantLMD,
+        id=id,
+        filiere__libelle__icontains="Sciences de Gestion"
+    )
+
+    nom_complet = f"{etudiant.nom} {etudiant.prenoms}"
+
+    etudiant.delete()
+
+    messages.success(
+        request,
+        f"L'étudiant {nom_complet} a été supprimé avec succès."
+    )
+
+    return redirect(
+        "l3_sciences_gestion_etudiants"
+    )
+    
+
+    
+
+
+
+

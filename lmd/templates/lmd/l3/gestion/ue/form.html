@@ -4,6 +4,7 @@
 
 <div class="container-fluid mt-4">
 
+
     <!-- ============================= -->
     <!-- HEADER -->
     <!-- ============================= -->
@@ -22,7 +23,7 @@
 
                     {% else %}
 
-                        ➕ Nouvelle UE - Licence 3 Sciences de Gestion
+                        ➕ Nouvelle UE - Sciences de Gestion
 
                     {% endif %}
 
@@ -30,7 +31,7 @@
 
                 <p class="text-muted mb-0">
 
-                    Gestion des unités d'enseignement (UE)
+                    Gestion des unités d'enseignement par niveau et semestre
 
                 </p>
 
@@ -39,8 +40,10 @@
 
             <div>
 
-                <a href="{% url 'l3_gestion_ue_list' %}?semestre={{ semestre }}"
-                   class="btn btn-secondary">
+                <a
+                    href="{% url 'l3_gestion_ue_list' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+                    class="btn btn-secondary"
+                >
 
                     <i class="bi bi-arrow-left"></i>
 
@@ -55,17 +58,19 @@
     </div>
 
 
+
     <!-- ============================= -->
     <!-- FORMULAIRE -->
     <!-- ============================= -->
 
     <div class="row justify-content-center">
 
-        <div class="col-lg-8">
+        <div class="col-lg-9">
 
             <div class="card shadow border-0">
 
-                <!-- TITRE -->
+
+                <!-- HEADER -->
 
                 <div class="card-header bg-success text-white">
 
@@ -80,10 +85,9 @@
                 </div>
 
 
-                <!-- CORPS -->
+                <!-- BODY -->
 
                 <div class="card-body">
-
 
                     <form method="POST">
 
@@ -113,106 +117,92 @@
                         {% endif %}
 
 
-                        <!-- ============================= -->
-                        <!-- CODE + LIBELLE -->
-                        <!-- ============================= -->
-
-                        <div class="row">
-
-
-                            <!-- CODE UE -->
-
-                            <div class="col-md-4 mb-3">
-
-                                <label for="{{ form.code.id_for_label }}"
-                                       class="form-label fw-bold">
-
-                                    Code UE
-
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="code"
-                                    id="{{ form.code.id_for_label }}"
-                                    class="form-control"
-                                    value="{{ form.code.value|default:'' }}"
-                                    placeholder="Ex : UE-GES-01"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <!-- LIBELLE -->
-
-                            <div class="col-md-8 mb-3">
-
-                                <label for="{{ form.libelle.id_for_label }}"
-                                       class="form-label fw-bold">
-
-                                    Libellé de l'UE
-
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="libelle"
-                                    id="{{ form.libelle.id_for_label }}"
-                                    class="form-control"
-                                    value="{{ form.libelle.value|default:'' }}"
-                                    placeholder="Ex : Comptabilité générale"
-                                    required
-                                >
-
-                            </div>
-
-
-                        </div>
-
 
                         <!-- ============================= -->
-                        <!-- CREDIT + SEMESTRE -->
+                        <!-- NIVEAU + SEMESTRE -->
                         <!-- ============================= -->
 
                         <div class="row">
 
 
-                            <!-- CREDIT -->
+                            <!-- NIVEAU -->
 
                             <div class="col-md-6 mb-4">
 
-                                <label for="{{ form.credit.id_for_label }}"
-                                       class="form-label fw-bold">
+                                <label
+                                    for="id_niveau"
+                                    class="form-label fw-bold"
+                                >
 
-                                    Nombre de crédits
+                                    <i class="bi bi-mortarboard"></i>
+
+                                    Niveau
 
                                 </label>
 
-                                <input
-                                    type="number"
-                                    name="credit"
-                                    id="{{ form.credit.id_for_label }}"
-                                    class="form-control"
-                                    value="{{ form.credit.value|default:'' }}"
-                                    placeholder="Ex : 6"
-                                    min="1"
+
+                                <select
+                                    name="niveau"
+                                    id="id_niveau"
+                                    class="form-select"
                                     required
                                 >
 
+                                    <option value="">
+                                        -- Sélectionner le niveau --
+                                    </option>
+
+
+                                    <option
+                                        value="L1"
+                                        {% if niveau == "L1" %}selected{% endif %}
+                                    >
+
+                                        Licence 1
+
+                                    </option>
+
+
+                                    <option
+                                        value="L2"
+                                        {% if niveau == "L2" %}selected{% endif %}
+                                    >
+
+                                        Licence 2
+
+                                    </option>
+
+
+                                    <option
+                                        value="L3"
+                                        {% if niveau == "L3" %}selected{% endif %}
+                                    >
+
+                                        Licence 3
+
+                                    </option>
+
+                                </select>
+
                             </div>
+
 
 
                             <!-- SEMESTRE -->
 
                             <div class="col-md-6 mb-4">
 
-                                <label for="id_semestre"
-                                       class="form-label fw-bold">
+                                <label
+                                    for="id_semestre"
+                                    class="form-label fw-bold"
+                                >
+
+                                    <i class="bi bi-calendar3"></i>
 
                                     Semestre
 
                                 </label>
+
 
                                 <select
                                     name="semestre"
@@ -226,10 +216,9 @@
                                     </option>
 
 
-                                    <option value="S1"
-                                        {% if form.semestre.value == "S1" or semestre == "S1" %}
-                                            selected
-                                        {% endif %}
+                                    <option
+                                        value="S1"
+                                        {% if semestre == "S1" %}selected{% endif %}
                                     >
 
                                         Semestre 1
@@ -237,13 +226,52 @@
                                     </option>
 
 
-                                    <option value="S2"
-                                        {% if form.semestre.value == "S2" or semestre == "S2" %}
-                                            selected
-                                        {% endif %}
+                                    <option
+                                        value="S2"
+                                        {% if semestre == "S2" %}selected{% endif %}
                                     >
 
                                         Semestre 2
+
+                                    </option>
+
+
+                                    <option
+                                        value="S3"
+                                        {% if semestre == "S3" %}selected{% endif %}
+                                    >
+
+                                        Semestre 3
+
+                                    </option>
+
+
+                                    <option
+                                        value="S4"
+                                        {% if semestre == "S4" %}selected{% endif %}
+                                    >
+
+                                        Semestre 4
+
+                                    </option>
+
+
+                                    <option
+                                        value="S5"
+                                        {% if semestre == "S5" %}selected{% endif %}
+                                    >
+
+                                        Semestre 5
+
+                                    </option>
+
+
+                                    <option
+                                        value="S6"
+                                        {% if semestre == "S6" %}selected{% endif %}
+                                    >
+
+                                        Semestre 6
 
                                     </option>
 
@@ -251,11 +279,194 @@
 
                             </div>
 
+                        </div>
+
+
+
+                        <!-- ============================= -->
+                        <!-- CODE + ORDRE -->
+                        <!-- ============================= -->
+
+                        <div class="row">
+
+
+                            <!-- CODE -->
+
+                            <div class="col-md-8 mb-4">
+
+                                <label
+                                    for="id_code"
+                                    class="form-label fw-bold"
+                                >
+
+                                    <i class="bi bi-code-square"></i>
+
+                                    Code UE
+
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    name="code"
+                                    id="id_code"
+                                    class="form-control"
+                                    value="{{ form.code.value|default:'' }}"
+                                    placeholder="Ex : GES-S5-UE01"
+                                    required
+                                >
+
+                            </div>
+
+
+
+                            <!-- ORDRE -->
+
+                            <div class="col-md-4 mb-4">
+
+                                <label
+                                    for="id_ordre"
+                                    class="form-label fw-bold"
+                                >
+
+                                    <i class="bi bi-sort-numeric-down"></i>
+
+                                    Ordre d'affichage
+
+                                </label>
+
+
+                                <input
+                                    type="number"
+                                    name="ordre"
+                                    id="id_ordre"
+                                    class="form-control"
+                                    value="{{ form.ordre.value|default:'1' }}"
+                                    min="1"
+                                    required
+                                >
+
+                                <small class="text-muted">
+
+                                    Exemple : 1, 2, 3...
+
+                                </small>
+
+                            </div>
 
                         </div>
 
 
+
+                        <!-- ============================= -->
+                        <!-- LIBELLE -->
+                        <!-- ============================= -->
+
+                        <div class="mb-4">
+
+                            <label
+                                for="id_libelle"
+                                class="form-label fw-bold"
+                            >
+
+                                <i class="bi bi-journal-text"></i>
+
+                                Libellé de l'UE
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="libelle"
+                                id="id_libelle"
+                                class="form-control"
+                                value="{{ form.libelle.value|default:'' }}"
+                                placeholder="Ex : Comptabilité générale"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- ============================= -->
+                        <!-- CREDIT -->
+                        <!-- ============================= -->
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-4">
+
+                                <label
+                                    for="id_credit"
+                                    class="form-label fw-bold"
+                                >
+
+                                    <i class="bi bi-star"></i>
+
+                                    Nombre de crédits
+
+                                </label>
+
+
+                                <input
+                                    type="number"
+                                    name="credit"
+                                    id="id_credit"
+                                    class="form-control"
+                                    value="{{ form.credit.value|default:'' }}"
+                                    placeholder="Ex : 6"
+                                    min="1"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-6 mb-4">
+
+                                <label class="form-label fw-bold">
+
+                                    <i class="bi bi-building"></i>
+
+                                    Filière
+
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="Sciences de Gestion"
+                                    readonly
+                                >
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- ============================= -->
+                        <!-- INFORMATION -->
+                        <!-- ============================= -->
+
+                        <div class="alert alert-info border-0">
+
+                            <i class="bi bi-info-circle"></i>
+
+                            <strong>Organisation :</strong>
+
+                            Les UE seront affichées selon le niveau,
+                            le semestre puis l'ordre d'affichage.
+
+                        </div>
+
+
+
                         <hr>
+
 
 
                         <!-- ============================= -->
@@ -265,10 +476,10 @@
                         <div class="d-flex justify-content-end gap-2">
 
 
-                            <!-- ANNULER -->
-
-                            <a href="{% url 'l3_gestion_ue_list' %}?semestre={{ semestre }}"
-                               class="btn btn-secondary">
+                            <a
+                                href="{% url 'l3_gestion_ue_list' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+                                class="btn btn-secondary"
+                            >
 
                                 <i class="bi bi-x-circle"></i>
 
@@ -277,8 +488,6 @@
                             </a>
 
 
-                            <!-- ENREGISTRER -->
-
                             <button
                                 type="submit"
                                 class="btn btn-success"
@@ -286,24 +495,14 @@
 
                                 <i class="bi bi-save"></i>
 
-                                {% if form.instance.pk %}
-
-                                    Mettre à jour
-
-                                {% else %}
-
-                                    Enregistrer
-
-                                {% endif %}
+                                Enregistrer l'UE
 
                             </button>
-
 
                         </div>
 
 
                     </form>
-
 
                 </div>
 

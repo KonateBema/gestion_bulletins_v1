@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="card shadow">
+
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">
+            {% if etudiant %}
+                ✏️ Modifier l'étudiant
+            {% else %}
+                ➕ Ajouter un étudiant
+            {% endif %}
+        </h4>
+    </div>
+
+    <div class="card-body">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <div class="row">
+
+                <!-- MATRICULE -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        Matricule *
+                    </label>
+
+                    <input
+                        type="text"
+                        name="matricule"
+                        class="form-control"
+                        value="{{ etudiant.matricule|default:'' }}"
+                        required
+                    >
+                </div>
+
+
+                <!-- NOM -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        Nom *
+                    </label>
+
+                    <input
+                        type="text"
+                        name="nom"
+                        class="form-control"
+                        value="{{ etudiant.nom|default:'' }}"
+                        required
+                    >
+                </div>
+
+
+                <!-- PRENOMS -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        Prénoms *
+                    </label>
+
+                    <input
+                        type="text"
+                        name="prenoms"
+                        class="form-control"
+                        value="{{ etudiant.prenoms|default:'' }}"
+                        required
+                    >
+                </div>
+
+
+                <!-- NIVEAU -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Niveau *
+                    </label>
+
+                    <select
+                        name="niveau"
+                        class="form-select"
+                        required
+                    >
+
+                        <option value="">
+                            -- Sélectionner le niveau --
+                        </option>
+
+                        <option value="L1"
+                            {% if etudiant and etudiant.niveau == "L1" %}
+                                selected
+                            {% endif %}
+                        >
+                            Licence 1
+                        </option>
+
+                        <option value="L2"
+                            {% if etudiant and etudiant.niveau == "L2" %}
+                                selected
+                            {% endif %}
+                        >
+                            Licence 2
+                        </option>
+
+                        <option value="L3"
+                            {% if etudiant and etudiant.niveau == "L3" %}
+                                selected
+                            {% endif %}
+                        >
+                            Licence 3
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- FILIERE -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Filière
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        value="Sciences de Gestion"
+                        readonly
+                    >
+
+                    <!-- On envoie quand même la filière au serveur -->
+                    <input
+                        type="hidden"
+                        name="filiere"
+                        value="Sciences de Gestion"
+                    >
+
+                </div>
+
+
+                <!-- SEXE -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Sexe
+                    </label>
+
+                    <select
+                        name="sexe"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            -- Sélectionner --
+                        </option>
+
+                        <option value="M"
+                            {% if etudiant and etudiant.sexe == "M" %}
+                                selected
+                            {% endif %}
+                        >
+                            Masculin
+                        </option>
+
+                        <option value="F"
+                            {% if etudiant and etudiant.sexe == "F" %}
+                                selected
+                            {% endif %}
+                        >
+                            Féminin
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- DATE DE NAISSANCE -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Date de naissance
+                    </label>
+
+                    <input
+                        type="date"
+                        name="date_naissance"
+                        class="form-control"
+                        value="{{ etudiant.date_naissance|date:'Y-m-d' }}"
+                    >
+
+                </div>
+
+
+                <!-- LIEU DE NAISSANCE -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Lieu de naissance
+                    </label>
+
+                    <input
+                        type="text"
+                        name="lieu_naissance"
+                        class="form-control"
+                        value="{{ etudiant.lieu_naissance|default:'' }}"
+                    >
+
+                </div>
+
+
+                <!-- STATUT -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Statut
+                    </label>
+
+                    <select
+                        name="statut"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            -- Sélectionner --
+                        </option>
+
+                        <option value="Régulier"
+                            {% if etudiant and etudiant.statut == "Régulier" %}
+                                selected
+                            {% endif %}
+                        >
+                            Régulier
+                        </option>
+
+                        <option value="Auditeur"
+                            {% if etudiant and etudiant.statut == "Auditeur" %}
+                                selected
+                            {% endif %}
+                        >
+                            Auditeur
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ANNEE ACADEMIQUE -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Année académique
+                    </label>
+
+                    <input
+                        type="text"
+                        name="annee_academique"
+                        class="form-control"
+                        value="{{ etudiant.annee_academique|default:'2025-2026' }}"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- BOUTONS -->
+            <div class="mt-3">
+
+                <button
+                    type="submit"
+                    class="btn btn-success"
+                >
+                    💾 Enregistrer
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+</div>
+
+{% endblock %}

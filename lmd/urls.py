@@ -137,7 +137,7 @@ urlpatterns = [
     path("l3/droit/bulletins/",views.l3_droit_bulletins,name="l3_droit_bulletins"),
 
     path("l3/gestion/etudiants/",views.l3_gestion_etudiants,name="l3_gestion_etudiants"),
-    path("l3/gestion/ue/",views.l3_gestion_ue,name="l3_gestion_ue"),
+    # path("l3/gestion/ue/",views.l3_gestion_ue,name="l3_gestion_ue"),
     # path("l3/gestion/notes/",views.l3_gestion_notes,name="l3_gestion_notes"),
 
 
@@ -211,7 +211,7 @@ urlpatterns = [
    
    path("l3/sciences-gestion/etudiants/",views.l3_sciences_gestion_etudiants,name="l3_sciences_gestion_etudiants"),
 
-   path("l3/sciences-gestion/etudiants/",views.l3_gestion_etudiant_list,name="l3_gestion_etudiant_list"),
+  #  path("l3/sciences-gestion/etudiants/",views.l3_gestion_etudiant_list,name="l3_gestion_etudiant_list"),
 
    path("l3/sciences-gestion/etudiant/add/",views.l3_gestion_etudiant_add,name="l3_gestion_etudiant_add"),
 
@@ -383,5 +383,69 @@ path(
     "bulletin/<int:id>/<str:semestre>/",
     views.imprimer_bulletin_lmd,
     name="imprimer_bulletin_lmd"
-)
+),
+
+
+
+path(
+    "gestion/etudiants/",
+    views.gestion_etudiant_list,
+    name="gestion_etudiant_list",
+),
+
+path(
+    "gestion/etudiants/ajouter/",
+    views.gestion_etudiant_add,
+    name="gestion_etudiant_add",
+),
+
+path(
+    "gestion/etudiants/<int:id>/modifier/",
+    views.gestion_etudiant_edit,
+    name="gestion_etudiant_edit",
+),
+
+path(
+    "gestion/etudiants/<int:id>/supprimer/",
+    views.gestion_etudiant_delete,
+    name="gestion_etudiant_delete",
+),
+
+# ============================================================
+# SCIENCES DE GESTION - GESTION DES ÉTUDIANTS
+# ============================================================
+
+path(
+    "l1/gestion/etudiants/",
+    views.gestion_etudiants_sciences_gestion,
+    {"niveau": "L1"},
+    name="l1_gestion_etudiants",
+),
+
+path(
+    "l2/gestion/etudiants/",
+    views.gestion_etudiants_sciences_gestion,
+    {"niveau": "L2"},
+    name="l2_gestion_etudiants",
+),
+
+path(
+    "l3/gestion/etudiants/",
+    views.gestion_etudiants_sciences_gestion,
+    {"niveau": "L3"},
+    name="l3_gestion_etudiants",
+),
+
+
+# Ajouter étudiant
+path( "sciences-gestion/etudiants/ajouter/", views.sciences_gestion_etudiant_add, name="sciences_gestion_etudiant_add", ),
+
+
+# Modifier étudiant
+path( "sciences-gestion/etudiants/<int:id>/modifier/", views.sciences_gestion_etudiant_edit, name="sciences_gestion_etudiant_edit", ),
+
+# Supprimer étudiant
+path( "sciences-gestion/etudiants/<int:id>/supprimer/", views.sciences_gestion_etudiant_delete, name="sciences_gestion_etudiant_delete", ),
+
+
 ]
