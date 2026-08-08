@@ -71,6 +71,7 @@ def add_footer(canvas, doc):
 
 def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     
+    
     somme_ue = 0
     total_credit = 0
     credits_obtenus = 0
@@ -132,7 +133,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         Paragraph("""
         <para align="center">
        <b>
-       <font color="#002147" size="11">
+       <font color="#002147" size="8">
         MINISTÈRE DE L'ENSEIGNEMENT <br/>SUPÉRIEUR
         ET DE LA <br/>RECHERCHE SCIENTIFIQUE
         </font>
@@ -208,7 +209,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
              <b></b><br/><br/>
              <b>SPECIALITE :</b><br/> {specialite}<br/>
         """, SMALL)
-    ]], colWidths=[8 * cm], rowHeights=[3.7 * cm])
+    ]], colWidths=[6 * cm], rowHeights=[3.5* cm])
 
     cadre_universite.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
@@ -217,6 +218,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
         ("TOPPADDING", (0, 2), (-1, 2), 12),  # espace avant SPÉCIALITÉ
+       
     ]))
 
     elements.append(Spacer(1, 10))
@@ -243,7 +245,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         [Paragraph("<b>Statut</b>", SMALL),Paragraph(etudiant.statut, SMALL)],
         [Paragraph("<b>Niveau</b>", SMALL), 
          Paragraph(etudiant.get_niveau_display(), SMALL)],
-    ], colWidths=[5 * cm, 3.5 * cm])
+    ], colWidths=[5* cm, 5.5 * cm])
 
     cadre_etudiant.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
@@ -258,14 +260,24 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
 
     header_global = Table(
         [[cadre_universite, cadre_etudiant]],
-        colWidths=[12 * cm, 8 * cm],
-        rowHeights=[3.5 * cm]
+        colWidths=[9 * cm, 8 * cm],
+        rowHeights=[2.5 * cm]
     )
     header_global.setStyle(TableStyle([
     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
     ("LEFTPADDING", (0, 0), (-1, -1), 0),
     ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+    
+     # Décale le cadre_universite vers la gauche
+    ("LEFTPADDING", (0, 0), (0, 0), -90),
+    ("RIGHTPADDING", (0, 0), (0, 0), 1),
+
+    # Cadre étudiant
+    ("LEFTPADDING", (1, 0), (1, 0), 0),
+    ("RIGHTPADDING", (1, 0), (1, 0), 0),
+    
+    
     ]))
     
     
