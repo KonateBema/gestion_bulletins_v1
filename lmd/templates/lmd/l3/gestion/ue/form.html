@@ -4,507 +4,511 @@
 
 <div class="container-fluid mt-4">
 
+```
+<!-- ========================================================= -->
+<!-- HEADER -->
+<!-- ========================================================= -->
 
-    <!-- ============================= -->
-    <!-- HEADER -->
-    <!-- ============================= -->
+<div class="card shadow border-0 mb-4">
 
-    <div class="card shadow border-0 mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center">
 
-        <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
 
-            <div>
+            <h3 class="fw-bold text-success mb-1">
 
-                <h3 class="fw-bold text-success mb-1">
+                {% if ue %}
 
-                    {% if form.instance.pk %}
+                    ✏️ Modifier une UE
 
-                        ✏️ Modifier une UE
+                {% else %}
 
-                    {% else %}
+                    ➕ Nouvelle UE - Sciences de Gestion
 
-                        ➕ Nouvelle UE - Sciences de Gestion
+                {% endif %}
 
-                    {% endif %}
+            </h3>
 
-                </h3>
+            <p class="text-muted mb-0">
+                Gestion des unités d'enseignement par niveau et semestre
+            </p>
 
-                <p class="text-muted mb-0">
-
-                    Gestion des unités d'enseignement par niveau et semestre
-
-                </p>
-
-            </div>
+        </div>
 
 
-            <div>
+        <div>
 
-                <a
-                    href="{% url 'l3_gestion_ue_list' %}?niveau={{ niveau }}&semestre={{ semestre }}"
-                    class="btn btn-secondary"
-                >
+            <a
+                href="{% url 'l3_gestion_ue_list' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+                class="btn btn-secondary"
+            >
 
-                    <i class="bi bi-arrow-left"></i>
+                <i class="bi bi-arrow-left me-1"></i>
 
-                    Retour
+                Retour
 
-                </a>
-
-            </div>
+            </a>
 
         </div>
 
     </div>
 
+</div>
 
 
-    <!-- ============================= -->
-    <!-- FORMULAIRE -->
-    <!-- ============================= -->
+<!-- ========================================================= -->
+<!-- MESSAGES -->
+<!-- ========================================================= -->
 
-    <div class="row justify-content-center">
+{% if messages %}
 
-        <div class="col-lg-9">
+    {% for message in messages %}
 
-            <div class="card shadow border-0">
+        <div
+            class="alert
+            {% if message.tags == 'success' %}
+                alert-success
+            {% elif message.tags == 'error' %}
+                alert-danger
+            {% elif message.tags == 'warning' %}
+                alert-warning
+            {% else %}
+                alert-info
+            {% endif %}
+            alert-dismissible fade show shadow-sm"
+            role="alert"
+        >
 
+            {{ message }}
 
-                <!-- HEADER -->
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Fermer"
+            ></button>
 
-                <div class="card-header bg-success text-white">
+        </div>
 
-                    <h5 class="mb-0">
+    {% endfor %}
 
-                        <i class="bi bi-journal-plus"></i>
+{% endif %}
 
-                        Informations de l'UE
 
-                    </h5>
+<!-- ========================================================= -->
+<!-- FORMULAIRE -->
+<!-- ========================================================= -->
 
-                </div>
+<div class="row justify-content-center">
 
+    <div class="col-lg-9">
 
-                <!-- BODY -->
+        <div class="card shadow border-0">
 
-                <div class="card-body">
+            <!-- ================================================= -->
+            <!-- HEADER FORMULAIRE -->
+            <!-- ================================================= -->
 
-                    <form method="POST">
+            <div class="card-header bg-success text-white py-3">
 
-                        {% csrf_token %}
+                <h5 class="mb-0 fw-bold">
 
+                    <i class="bi bi-journal-plus me-2"></i>
 
-                        <!-- ============================= -->
-                        <!-- ERREURS -->
-                        <!-- ============================= -->
+                    Informations de l'UE
 
-                        {% if form.errors %}
+                </h5>
 
-                        <div class="alert alert-danger">
+            </div>
 
-                            <h6 class="fw-bold">
 
-                                <i class="bi bi-exclamation-triangle"></i>
+            <!-- ================================================= -->
+            <!-- BODY -->
+            <!-- ================================================= -->
 
-                                Veuillez corriger les erreurs suivantes :
+            <div class="card-body">
 
-                            </h6>
+                <form method="POST">
 
-                            {{ form.errors }}
+                    {% csrf_token %}
 
-                        </div>
 
-                        {% endif %}
+                    <!-- ================================================= -->
+                    <!-- NIVEAU + SEMESTRE -->
+                    <!-- ================================================= -->
 
+                    <div class="row">
 
 
-                        <!-- ============================= -->
-                        <!-- NIVEAU + SEMESTRE -->
-                        <!-- ============================= -->
+                        <!-- NIVEAU -->
 
-                        <div class="row">
-
-
-                            <!-- NIVEAU -->
-
-                            <div class="col-md-6 mb-4">
-
-                                <label
-                                    for="id_niveau"
-                                    class="form-label fw-bold"
-                                >
-
-                                    <i class="bi bi-mortarboard"></i>
-
-                                    Niveau
-
-                                </label>
-
-
-                                <select
-                                    name="niveau"
-                                    id="id_niveau"
-                                    class="form-select"
-                                    required
-                                >
-
-                                    <option value="">
-                                        -- Sélectionner le niveau --
-                                    </option>
-
-
-                                    <option
-                                        value="L1"
-                                        {% if niveau == "L1" %}selected{% endif %}
-                                    >
-
-                                        Licence 1
-
-                                    </option>
-
-
-                                    <option
-                                        value="L2"
-                                        {% if niveau == "L2" %}selected{% endif %}
-                                    >
-
-                                        Licence 2
-
-                                    </option>
-
-
-                                    <option
-                                        value="L3"
-                                        {% if niveau == "L3" %}selected{% endif %}
-                                    >
-
-                                        Licence 3
-
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-
-
-                            <!-- SEMESTRE -->
-
-                            <div class="col-md-6 mb-4">
-
-                                <label
-                                    for="id_semestre"
-                                    class="form-label fw-bold"
-                                >
-
-                                    <i class="bi bi-calendar3"></i>
-
-                                    Semestre
-
-                                </label>
-
-
-                                <select
-                                    name="semestre"
-                                    id="id_semestre"
-                                    class="form-select"
-                                    required
-                                >
-
-                                    <option value="">
-                                        -- Sélectionner le semestre --
-                                    </option>
-
-
-                                    <option
-                                        value="S1"
-                                        {% if semestre == "S1" %}selected{% endif %}
-                                    >
-
-                                        Semestre 1
-
-                                    </option>
-
-
-                                    <option
-                                        value="S2"
-                                        {% if semestre == "S2" %}selected{% endif %}
-                                    >
-
-                                        Semestre 2
-
-                                    </option>
-
-
-                                    <option
-                                        value="S3"
-                                        {% if semestre == "S3" %}selected{% endif %}
-                                    >
-
-                                        Semestre 3
-
-                                    </option>
-
-
-                                    <option
-                                        value="S4"
-                                        {% if semestre == "S4" %}selected{% endif %}
-                                    >
-
-                                        Semestre 4
-
-                                    </option>
-
-
-                                    <option
-                                        value="S5"
-                                        {% if semestre == "S5" %}selected{% endif %}
-                                    >
-
-                                        Semestre 5
-
-                                    </option>
-
-
-                                    <option
-                                        value="S6"
-                                        {% if semestre == "S6" %}selected{% endif %}
-                                    >
-
-                                        Semestre 6
-
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-                        </div>
-
-
-
-                        <!-- ============================= -->
-                        <!-- CODE + ORDRE -->
-                        <!-- ============================= -->
-
-                        <div class="row">
-
-
-                            <!-- CODE -->
-
-                            <div class="col-md-8 mb-4">
-
-                                <label
-                                    for="id_code"
-                                    class="form-label fw-bold"
-                                >
-
-                                    <i class="bi bi-code-square"></i>
-
-                                    Code UE
-
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="code"
-                                    id="id_code"
-                                    class="form-control"
-                                    value="{{ form.code.value|default:'' }}"
-                                    placeholder="Ex : GES-S5-UE01"
-                                    required
-                                >
-
-                            </div>
-
-
-
-                            <!-- ORDRE -->
-
-                            <div class="col-md-4 mb-4">
-
-                                <label
-                                    for="id_ordre"
-                                    class="form-label fw-bold"
-                                >
-
-                                    <i class="bi bi-sort-numeric-down"></i>
-
-                                    Ordre d'affichage
-
-                                </label>
-
-
-                                <input
-                                    type="number"
-                                    name="ordre"
-                                    id="id_ordre"
-                                    class="form-control"
-                                    value="{{ form.ordre.value|default:'1' }}"
-                                    min="1"
-                                    required
-                                >
-
-                                <small class="text-muted">
-
-                                    Exemple : 1, 2, 3...
-
-                                </small>
-
-                            </div>
-
-                        </div>
-
-
-
-                        <!-- ============================= -->
-                        <!-- LIBELLE -->
-                        <!-- ============================= -->
-
-                        <div class="mb-4">
+                        <div class="col-md-6 mb-4">
 
                             <label
-                                for="id_libelle"
+                                for="id_niveau"
                                 class="form-label fw-bold"
                             >
 
-                                <i class="bi bi-journal-text"></i>
+                                <i class="bi bi-mortarboard me-1"></i>
 
-                                Libellé de l'UE
+                                Niveau
+
+                            </label>
+
+
+                            <select
+                                name="niveau"
+                                id="id_niveau"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    -- Sélectionner le niveau --
+                                </option>
+
+
+                                <option
+                                    value="L1"
+                                    {% if niveau == "L1" %}selected{% endif %}
+                                >
+                                    Licence 1 (L1)
+                                </option>
+
+
+                                <option
+                                    value="L2"
+                                    {% if niveau == "L2" %}selected{% endif %}
+                                >
+                                    Licence 2 (L2)
+                                </option>
+
+
+                                <option
+                                    value="L3"
+                                    {% if niveau == "L3" %}selected{% endif %}
+                                >
+                                    Licence 3 (L3)
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- SEMESTRE -->
+
+                        <div class="col-md-6 mb-4">
+
+                            <label
+                                for="id_semestre"
+                                class="form-label fw-bold"
+                            >
+
+                                <i class="bi bi-calendar3 me-1"></i>
+
+                                Semestre
+
+                            </label>
+
+
+                            <select
+                                name="semestre"
+                                id="id_semestre"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    -- Sélectionner le semestre --
+                                </option>
+
+
+                                <option
+                                    value="S1"
+                                    {% if semestre == "S1" %}selected{% endif %}
+                                >
+                                    Semestre 1
+                                </option>
+
+
+                                <option
+                                    value="S2"
+                                    {% if semestre == "S2" %}selected{% endif %}
+                                >
+                                    Semestre 2
+                                </option>
+
+
+                                <option
+                                    value="S3"
+                                    {% if semestre == "S3" %}selected{% endif %}
+                                >
+                                    Semestre 3
+                                </option>
+
+
+                                <option
+                                    value="S4"
+                                    {% if semestre == "S4" %}selected{% endif %}
+                                >
+                                    Semestre 4
+                                </option>
+
+
+                                <option
+                                    value="S5"
+                                    {% if semestre == "S5" %}selected{% endif %}
+                                >
+                                    Semestre 5
+                                </option>
+
+
+                                <option
+                                    value="S6"
+                                    {% if semestre == "S6" %}selected{% endif %}
+                                >
+                                    Semestre 6
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- CODE + ORDRE -->
+                    <!-- ================================================= -->
+
+                    <div class="row">
+
+
+                        <!-- CODE -->
+
+                        <div class="col-md-8 mb-4">
+
+                            <label
+                                for="id_code"
+                                class="form-label fw-bold"
+                            >
+
+                                <i class="bi bi-code-square me-1"></i>
+
+                                Code UE
 
                             </label>
 
 
                             <input
                                 type="text"
-                                name="libelle"
-                                id="id_libelle"
+                                name="code"
+                                id="id_code"
                                 class="form-control"
-                                value="{{ form.libelle.value|default:'' }}"
-                                placeholder="Ex : Comptabilité générale"
+                                value="{{ ue.code|default:'' }}"
+                                placeholder="Ex : GES-S5-UE01"
                                 required
                             >
 
                         </div>
 
 
+                        <!-- ORDRE -->
 
-                        <!-- ============================= -->
-                        <!-- CREDIT -->
-                        <!-- ============================= -->
+                        <div class="col-md-4 mb-4">
 
-                        <div class="row">
+                            <label
+                                for="id_ordre"
+                                class="form-label fw-bold"
+                            >
 
-                            <div class="col-md-6 mb-4">
+                                <i class="bi bi-sort-numeric-down me-1"></i>
 
-                                <label
-                                    for="id_credit"
-                                    class="form-label fw-bold"
-                                >
+                                Ordre d'affichage
 
-                                    <i class="bi bi-star"></i>
-
-                                    Nombre de crédits
-
-                                </label>
+                            </label>
 
 
-                                <input
-                                    type="number"
-                                    name="credit"
-                                    id="id_credit"
-                                    class="form-control"
-                                    value="{{ form.credit.value|default:'' }}"
-                                    placeholder="Ex : 6"
-                                    min="1"
-                                    required
-                                >
+                            <input
+                                type="number"
+                                name="ordre"
+                                id="id_ordre"
+                                class="form-control"
+                                value="{{ ue.ordre|default:'1' }}"
+                                min="1"
+                                required
+                            >
 
-                            </div>
+                            <small class="text-muted">
+                                Exemple : 1, 2, 3...
+                            </small>
 
+                        </div>
 
-                            <div class="col-md-6 mb-4">
-
-                                <label class="form-label fw-bold">
-
-                                    <i class="bi bi-building"></i>
-
-                                    Filière
-
-                                </label>
+                    </div>
 
 
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    value="Sciences de Gestion"
-                                    readonly
-                                >
+                    <!-- ================================================= -->
+                    <!-- LIBELLÉ -->
+                    <!-- ================================================= -->
 
-                            </div>
+                    <div class="mb-4">
+
+                        <label
+                            for="id_libelle"
+                            class="form-label fw-bold"
+                        >
+
+                            <i class="bi bi-journal-text me-1"></i>
+
+                            Libellé de l'UE
+
+                        </label>
+
+
+                        <input
+                            type="text"
+                            name="libelle"
+                            id="id_libelle"
+                            class="form-control"
+                            value="{{ ue.libelle|default:'' }}"
+                            placeholder="Ex : Comptabilité générale"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- CRÉDIT + FILIÈRE -->
+                    <!-- ================================================= -->
+
+                    <div class="row">
+
+
+                        <!-- CRÉDIT -->
+
+                        <div class="col-md-6 mb-4">
+
+                            <label
+                                for="id_credit"
+                                class="form-label fw-bold"
+                            >
+
+                                <i class="bi bi-star me-1"></i>
+
+                                Nombre de crédits
+
+                            </label>
+
+
+                            <input
+                                type="number"
+                                name="credit"
+                                id="id_credit"
+                                class="form-control"
+                                value="{{ ue.credit|default:'' }}"
+                                placeholder="Ex : 6"
+                                min="1"
+                                required
+                            >
 
                         </div>
 
 
+                        <!-- FILIÈRE -->
 
-                        <!-- ============================= -->
-                        <!-- INFORMATION -->
-                        <!-- ============================= -->
+                        <div class="col-md-6 mb-4">
 
-                        <div class="alert alert-info border-0">
+                            <label
+                                class="form-label fw-bold"
+                            >
 
-                            <i class="bi bi-info-circle"></i>
+                                <i class="bi bi-building me-1"></i>
 
-                            <strong>Organisation :</strong>
+                                Filière
 
-                            Les UE seront affichées selon le niveau,
-                            le semestre puis l'ordre d'affichage.
+                            </label>
+
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="Sciences de Gestion"
+                                readonly
+                            >
 
                         </div>
 
+                    </div>
 
 
-                        <hr>
+                    <!-- ================================================= -->
+                    <!-- INFORMATION -->
+                    <!-- ================================================= -->
+
+                    <div class="alert alert-info border-0 shadow-sm">
+
+                        <i class="bi bi-info-circle me-1"></i>
+
+                        <strong>Organisation :</strong>
+
+                        Les UE sont affichées selon le niveau,
+                        le semestre puis l'ordre d'affichage.
+
+                    </div>
 
 
-
-                        <!-- ============================= -->
-                        <!-- BOUTONS -->
-                        <!-- ============================= -->
-
-                        <div class="d-flex justify-content-end gap-2">
+                    <hr class="my-4">
 
 
-                            <a
-                                href="{% url 'l3_gestion_ue_list' %}?niveau={{ niveau }}&semestre={{ semestre }}"
-                                class="btn btn-secondary"
-                            >
+                    <!-- ================================================= -->
+                    <!-- BOUTONS -->
+                    <!-- ================================================= -->
 
-                                <i class="bi bi-x-circle"></i>
+                    <div class="d-flex justify-content-between align-items-center">
 
-                                Annuler
+                        <!-- RETOUR -->
 
-                            </a>
+                        <a
+                            href="{% url 'l3_gestion_ue_list' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+                            class="btn btn-outline-secondary"
+                        >
+
+                            <i class="bi bi-arrow-left me-1"></i>
+
+                            Annuler
+
+                        </a>
 
 
-                            <button
-                                type="submit"
-                                class="btn btn-success"
-                            >
+                        <!-- ENREGISTRER -->
 
-                                <i class="bi bi-save"></i>
+                        <button
+                            type="submit"
+                            class="btn btn-success px-4"
+                        >
+
+                            {% if ue %}
+
+                                <i class="bi bi-check-circle me-1"></i>
+
+                                Enregistrer les modifications
+
+                            {% else %}
+
+                                <i class="bi bi-save me-1"></i>
 
                                 Enregistrer l'UE
 
-                            </button>
+                            {% endif %}
 
-                        </div>
+                        </button>
 
+                    </div>
 
-                    </form>
-
-                </div>
+                </form>
 
             </div>
 
@@ -513,5 +517,41 @@
     </div>
 
 </div>
+```
+
+</div>
+
+<!-- ========================================================= -->
+
+<!-- STYLE -->
+
+<!-- ========================================================= -->
+
+<style>
+
+    .form-select,
+    .form-control {
+        min-height: 45px;
+    }
+
+    .card {
+        border-radius: 14px;
+    }
+
+    .card-header {
+        border-radius: 14px 14px 0 0 !important;
+    }
+
+    .form-label {
+        color: #343a40;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.15);
+    }
+
+</style>
 
 {% endblock %}

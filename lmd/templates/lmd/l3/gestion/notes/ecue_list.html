@@ -1,74 +1,343 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
+<!-- ========================================================= -->
+<!-- EN-TÊTE -->
+<!-- ========================================================= -->
 
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-    <!-- Titre -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-primary mb-1">
+            📝 Saisie des notes LMD
+        </h3>
 
+        <p class="text-muted mb-0">
+            Sélectionnez le niveau, l'UE puis l'ECUE.
+        </p>
+    </div>
+
+    {% if ecues %}
         <div>
-            <h3 class="fw-bold text-primary">
-                📝 Saisie des notes - L3 Sciences de Gestion
-            </h3>
-
-            <p class="text-muted">
-                Sélectionnez une ECUE pour saisir les notes des étudiants.
-            </p>
-        </div>
-
-
-        <div>
-            <span class="badge bg-success fs-6">
-                {{ ecues|length }} ECUE disponibles
+            <span class="badge bg-success fs-6 px-3 py-2">
+                {{ ecues|length }} ECUE
             </span>
+        </div>
+    {% endif %}
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- FILTRES -->
+<!-- ========================================================= -->
+
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-header bg-primary text-white py-3">
+
+        <h5 class="mb-0 fw-bold">
+            🔎 Filtrer les enseignements
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <form method="GET" id="filtreForm">
+
+            <div class="row g-3">
+
+                <!-- ================================================= -->
+                <!-- NIVEAU -->
+                <!-- ================================================= -->
+
+                <div class="col-md-4">
+
+                    <label for="niveau" class="form-label fw-bold">
+                        🎓 Niveau
+                    </label>
+
+                    <select
+                        name="niveau"
+                        id="niveau"
+                        class="form-select"
+                        onchange="this.form.submit()"
+                    >
+
+                        <option value="">
+                            -- Sélectionner un niveau --
+                        </option>
+
+                        <option
+                            value="L1"
+                            {% if niveau_selectionne == "L1" %}selected{% endif %}
+                        >
+                            Licence 1 (L1)
+                        </option>
+
+                        <option
+                            value="L2"
+                            {% if niveau_selectionne == "L2" %}selected{% endif %}
+                        >
+                            Licence 2 (L2)
+                        </option>
+
+                        <option
+                            value="L3"
+                            {% if niveau_selectionne == "L3" %}selected{% endif %}
+                        >
+                            Licence 3 (L3)
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- UE -->
+                <!-- ================================================= -->
+
+                <div class="col-md-4">
+
+                    <label for="ue" class="form-label fw-bold">
+                        📚 Unité d'enseignement (UE)
+                    </label>
+
+                    <select
+                        name="ue"
+                        id="ue"
+                        class="form-select"
+                        {% if not niveau_selectionne %}disabled{% endif %}
+                        onchange="this.form.submit()"
+                    >
+
+                        <option value="">
+                            -- Sélectionner une UE --
+                        </option>
+
+                        {% for item in ues %}
+
+                            <option
+                                value="{{ item.id }}"
+                                {% if ue_selectionnee == item.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ item.code }} — {{ item.libelle }}
+                            </option>
+
+                        {% empty %}
+
+                            {% if niveau_selectionne %}
+                                <option value="" disabled>
+                                    Aucune UE disponible pour ce niveau
+                                </option>
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </select>
+
+                    {% if not niveau_selectionne %}
+
+                        <small class="text-muted">
+                            Sélectionnez d'abord un niveau.
+                        </small>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- ECUE -->
+                <!-- ================================================= -->
+
+                <div class="col-md-4">
+
+                    <label for="ecue" class="form-label fw-bold">
+                        📖 ECUE
+                    </label>
+
+                    <select
+                        name="ecue"
+                        id="ecue"
+                        class="form-select"
+                        {% if not ue_selectionnee %}disabled{% endif %}
+                        onchange="this.form.submit()"
+                    >
+
+                        <option value="">
+                            -- Sélectionner une ECUE --
+                        </option>
+
+                        {% for ecue in ecues %}
+
+                            <option
+                                value="{{ ecue.id }}"
+                                {% if ecue_selectionnee == ecue.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ ecue.code }} — {{ ecue.libelle }}
+                            </option>
+
+                        {% empty %}
+
+                            {% if ue_selectionnee %}
+                                <option value="" disabled>
+                                    Aucune ECUE disponible pour cette UE
+                                </option>
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </select>
+
+                    {% if not ue_selectionnee %}
+
+                        <small class="text-muted">
+                            Sélectionnez d'abord une UE.
+                        </small>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- BOUTON SAISIR -->
+            <!-- ================================================= -->
+
+            {% if ecue_selectionnee %}
+
+                <div class="d-flex justify-content-end mt-4">
+
+                    <a
+                        href="{% url 'l3_gestion_saisie_notes' ecue_selectionnee %}"
+                        class="btn btn-success px-4"
+                    >
+                        <i class="bi bi-pencil-square me-1"></i>
+                        Saisir les notes
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- FILTRE ACTUEL -->
+<!-- ========================================================= -->
+
+{% if niveau_selectionne %}
+
+    <div class="alert alert-info shadow-sm border-0">
+
+        <div class="d-flex align-items-center">
+
+            <div class="fs-3 me-3">
+                🔎
+            </div>
+
+            <div>
+
+                <strong>Filtre actuel</strong>
+
+                <div class="mt-2">
+
+                    <span class="badge bg-primary me-1">
+                        Niveau : {{ niveau_selectionne }}
+                    </span>
+
+                    {% if ue_selectionnee_obj %}
+
+                        <span class="badge bg-dark me-1">
+                            UE : {{ ue_selectionnee_obj.code }}
+                        </span>
+
+                    {% endif %}
+
+                    {% if ecue_selectionnee_obj %}
+
+                        <span class="badge bg-success">
+                            ECUE : {{ ecue_selectionnee_obj.code }}
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
         </div>
 
     </div>
 
+{% endif %}
 
 
+<!-- ========================================================= -->
+<!-- LISTE DES ECUE -->
+<!-- ========================================================= -->
+
+{% if ecues %}
 
     <div class="card shadow border-0">
 
+        <div class="card-header bg-dark text-white py-3">
 
-        <div class="card-header bg-primary text-white">
-
-            <h5 class="mb-0">
-                📚 Liste des ECUE
+            <h5 class="mb-0 fw-bold">
+                📚 ECUE disponibles
             </h5>
 
         </div>
 
-
-
-        <div class="card-body">
-
-
-            {% if ecues %}
-
+        <div class="card-body p-0">
 
             <div class="table-responsive">
 
-
-                <table class="table table-hover align-middle">
-
+                <table class="table table-hover align-middle mb-0">
 
                     <thead class="table-dark">
 
                         <tr>
 
-                            <th>#</th>
+                            <th class="text-center">
+                                #
+                            </th>
 
-                            <th>Unité d'enseignement (UE)</th>
+                            <th>
+                                UE
+                            </th>
 
-                            <th>ECUE</th>
+                            <th>
+                                Code ECUE
+                            </th>
 
-                            <th>Crédit</th>
+                            <th>
+                                ECUE
+                            </th>
 
-                            <th>Coefficient</th>
+                            <th class="text-center">
+                                Crédit
+                            </th>
+
+                            <th class="text-center">
+                                Coefficient
+                            </th>
 
                             <th class="text-center">
                                 Action
@@ -78,128 +347,193 @@
 
                     </thead>
 
-
-
                     <tbody>
 
+                        {% for ecue in ecues %}
 
-                    {% for ecue in ecues %}
+                            <tr>
 
+                                <td class="text-center fw-bold">
+                                    {{ forloop.counter }}
+                                </td>
 
-                        <tr>
+                                <!-- UE -->
 
+                                <td>
 
-                            <td>
-                                {{ forloop.counter }}
-                            </td>
+                                    <strong class="text-primary">
+                                        {{ ecue.ue.code }}
+                                    </strong>
 
+                                    <br>
 
+                                    <small class="text-muted">
+                                        {{ ecue.ue.libelle }}
+                                    </small>
 
-                            <td>
-
-                                <span class="fw-bold text-primary">
-
-                                    {{ ecue.ue.libelle }}
-
-                                </span>
-
-                            </td>
-
-
-
-                            <td>
-
-                                {{ ecue.libelle }}
-
-                            </td>
+                                </td>
 
 
+                                <!-- CODE ECUE -->
 
-                            <td>
+                                <td>
 
-                                <span class="badge bg-info">
+                                    <span class="badge bg-dark">
+                                        {{ ecue.code }}
+                                    </span>
 
-                                    {{ ecue.credit }}
-
-                                    crédits
-
-                                </span>
-
-                            </td>
+                                </td>
 
 
+                                <!-- LIBELLE ECUE -->
 
-                            <td>
-
-                                <span class="badge bg-secondary">
-
-                                    {{ ecue.coefficient }}
-
-                                </span>
-
-                            </td>
+                                <td>
+                                    {{ ecue.libelle }}
+                                </td>
 
 
+                                <!-- CREDIT -->
+
+                                <td class="text-center">
+
+                                    <span class="badge bg-info text-dark">
+                                        {{ ecue.credit }}
+                                    </span>
+
+                                </td>
 
 
-                            <td class="text-center">
+                                <!-- COEFFICIENT -->
+
+                                <td class="text-center">
+
+                                    <span class="badge bg-secondary">
+                                        {{ ecue.coefficient }}
+                                    </span>
+
+                                </td>
 
 
-                                <a href="{% url 'l3_gestion_saisie_notes' ecue.id %}"
+                                <!-- ACTION -->
 
-                                   class="btn btn-success btn-sm">
+                                <td class="text-center">
 
+                                    <a
+                                        href="{% url 'l3_gestion_saisie_notes' ecue.id %}"
+                                        class="btn btn-success btn-sm"
+                                    >
+                                        <i class="bi bi-pencil-square me-1"></i>
+                                        Saisir
+                                    </a>
 
-                                    <i class="bi bi-pencil-square"></i>
+                                </td>
 
-                                    Saisir les notes
+                            </tr>
 
-
-                                </a>
-
-
-                            </td>
-
-
-                        </tr>
-
-
-                    {% endfor %}
-
+                        {% endfor %}
 
                     </tbody>
 
-
                 </table>
-
 
             </div>
 
-
-
-            {% else %}
-
-
-                <div class="alert alert-warning text-center">
-
-                    ⚠️ Aucun ECUE trouvé pour L3 Sciences de Gestion.
-
-                </div>
-
-
-            {% endif %}
-
-
-
         </div>
-
 
     </div>
 
 
+{% elif niveau_selectionne and ue_selectionnee %}
+
+    <div class="alert alert-warning text-center shadow-sm border-0">
+
+        <div class="fs-3 mb-2">
+            ⚠️
+        </div>
+
+        <strong>
+            Aucune ECUE trouvée.
+        </strong>
+
+        <div class="small mt-1">
+            Cette UE ne contient actuellement aucune ECUE.
+        </div>
+
+    </div>
+
+
+{% elif niveau_selectionne %}
+
+    <div class="alert alert-warning text-center shadow-sm border-0">
+
+        <div class="fs-3 mb-2">
+            ⚠️
+        </div>
+
+        <strong>
+            Aucune UE trouvée.
+        </strong>
+
+        <div class="small mt-1">
+            Aucune UE n'est disponible pour le niveau
+            <strong>{{ niveau_selectionne }}</strong>.
+        </div>
+
+    </div>
+
+{% endif %}
 
 </div>
 
+<!-- ========================================================= -->
+
+<!-- STYLE -->
+
+<!-- ========================================================= -->
+
+<style>
+
+    .form-select {
+        min-height: 45px;
+        border-radius: 8px;
+    }
+
+    .form-select:disabled {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+        opacity: 0.75;
+    }
+
+    .form-select:not(:disabled):focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .table th {
+        white-space: nowrap;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+        transform: translateY(-1px);
+    }
+
+    .badge {
+        font-weight: 600;
+    }
+
+    .alert {
+        border-radius: 10px;
+    }
+
+</style>
 
 {% endblock %}
-

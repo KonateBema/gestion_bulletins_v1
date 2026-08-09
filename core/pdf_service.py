@@ -88,6 +88,45 @@ def format_rang(r):
     return f"{r}e" if r != "-" else "-"
 
 
+def draw_footer(canvas, doc):
+    """Dessine le pied de page directement sur le canvas.
+
+    Appelée automatiquement par ReportLab sur CHAQUE page (via
+    onFirstPage/onLaterPages passés à doc.build), donc le footer
+    reste toujours collé en bas de page, quelle que soit la
+    longueur du contenu — contrairement à un Flowable ajouté à la
+    suite des `elements`, qui peut se retrouver au milieu de la
+    page ou être poussé sur une page suivante.
+    """
+    canvas.saveState()
+
+    width, height = A4
+
+    # Ligne de séparation
+    canvas.setStrokeColor(colors.grey)
+    canvas.setLineWidth(0.5)
+    canvas.line(
+        doc.leftMargin, 1.45 * cm,
+        width - doc.rightMargin, 1.45 * cm,
+    )
+
+    canvas.setFont("Helvetica-Bold", 7)
+    canvas.setFillColor(colors.grey)
+    canvas.drawCentredString(width / 2, 1.15 * cm, "UNIVERSITÉ INTERNATIONALE DE COCODY")
+
+    canvas.setFont("Helvetica", 7)
+    canvas.drawCentredString(
+        width / 2, 0.85 * cm,
+        "Cocody 2 Plateaux - Abidjan Côte d'Ivoire / Tel : (+225) 07 78 63 74 00 | Email : uicinfos@gmail.com",
+    )
+    canvas.drawCentredString(
+        width / 2, 0.55 * cm,
+        f"édité le {datetime.now().strftime('%d/%m/%Y à %H:%M')}",
+    )
+
+    canvas.restoreState()
+
+
 science_points = 0
 science_coef = 0
 moyenne_professionnelle=0
@@ -112,7 +151,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
        leftMargin=0.8 * cm,
        rightMargin=0.8 * cm,
        topMargin=0.7 * cm,
-       bottomMargin=0.7 * cm
+       bottomMargin=1.9 * cm   # laisse la place au footer fixe dessiné par draw_footer
     )
 
     elements = []
@@ -856,79 +895,20 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     
 
    ]))
-    
-    FOOTER = ParagraphStyle(
-    "FOOTER",
-    parent=SMALL,
-    fontSize=7,
-    leading=9,
-    alignment=1,
-    textColor=colors.grey,
-    fontName="Helvetica"
-)
 
     elements.append(visa_table)
     elements.append(Spacer(1, 10))
+
     # =====================================================
-# FOOTER PROFESSIONNEL
-# =====================================================
+    # Le pied de page n'est plus un flowable : il est dessiné
+    # directement sur chaque page via draw_footer (voir doc.build
+    # ci-dessous), donc toujours fixé en bas de page.
+    # =====================================================
 
-    elements.append(Spacer(1, 10))
-
-
-    footer_table = Table(
-      [[
-         Paragraph(
-            """
-            <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/>
-            Cocody 2 Plateaux - Abidjan Côte d'Ivoire / Tel : (+225) 07 78 63 74 00 | Email : uicinfos@gmail.com<br/>
-            édité le %s
-            """ 
-            % datetime.now().strftime("%d/%m/%Y à %H:%M"),
-            FOOTER
-         )
-     ]],
-    colWidths=[18 * cm]
-   )
-    
-    footer_table.setStyle(TableStyle([
-
-    # Ligne supérieure
-      (
-         "LINEABOVE",
-         (0,0),
-         (-1,-1),
-         0.5,
-         colors.grey
-      ),
-
-     ("ALIGN",
-      (0,0),
-      (-1,-1),
-      "CENTER"
-     ),
-
-     ("VALIGN",
-      (0,0),
-      (-1,-1),
-      "MIDDLE"
-     ),
-
-     ("TOPPADDING",
-      (0,0),
-      (-1,-1),
-      5
-     ),
-
-     ("BOTTOMPADDING",
-      (0,0),
-      (-1,-1),
-      2
-     ),
-
-  ]))
-
-    elements.append(footer_table)
-    doc.build(elements)
+    doc.build(
+        elements,
+        onFirstPage=draw_footer,
+        onLaterPages=draw_footer,
+    )
 
     return file_path

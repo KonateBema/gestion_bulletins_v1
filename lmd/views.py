@@ -2843,7 +2843,7 @@ def l3_gestion_ue(request):
         }
     )
 
-def l3_gestion_notes(request, ecue_id):
+def l3_gestion_notesff(request, ecue_id):
 
     ecue = get_object_or_404(
         ECUE,
@@ -2896,6 +2896,233 @@ def l3_gestion_notes(request, ecue_id):
         }
     )
 
+
+def l3_gestion_notes(request, ecue_id=None):
+
+    # =========================================================
+    # 1. VÉRIFIER QU'UN ECUE A ÉTÉ SÉLECTIONNÉ
+    # =========================================================
+
+    if ecue_id is None:
+        return redirect("l3_gestion_saisie_notes")
+
+    # =========================================================
+    # 2. RÉCUPÉRER L'ECUE
+    # =========================================================
+
+    ecue = get_object_or_404(
+        ECUE.objects.select_related(
+            "ue",
+            "ue__filiere",
+        ),
+        id=ecue_id,
+    )
+
+    ue = ecue.ue
+    filiere = ue.filiere
+    niveau = ue.niveau
+
+    # =========================================================
+    # 3. VÉRIFICATION FILIÈRE
+    # =========================================================
+
+    if filiere.libelle != "Sciences de Gestion":
+        messages.error(
+            request,
+            "Cette ECUE n'appartient pas à la filière Sciences de Gestion."
+        )
+
+        return redirect("l3_gestion_saisie_notes")
+
+    # =========================================================
+    # 4. RÉCUPÉRER LES ÉTUDIANTS
+    # =========================================================
+
+    etudiants = (
+        EtudiantLMD.objects
+        .filter(
+            filiere=filiere,
+            niveau=niveau,
+        )
+        .order_by(
+            "nom",
+            "prenoms",
+        )
+    )
+
+    # =========================================================
+    # 5. ENREGISTREMENT DES NOTES
+    # =========================================================
+
+    if request.method == "POST":
+
+        nombre_notes = 0
+
+        for etudiant in etudiants:
+
+            cc_value = request.POST.get(
+                f"cc_{etudiant.id}",
+                ""
+            ).strip()
+
+            examen_value = request.POST.get(
+                f"examen_{etudiant.id}",
+                ""
+            ).strip()
+
+            # -------------------------------------------------
+            # Aucun champ rempli
+            # -------------------------------------------------
+
+            if not cc_value and not examen_value:
+                continue
+
+            # -------------------------------------------------
+            # Conversion des notes
+            # -------------------------------------------------
+
+            try:
+
+                cc = float(cc_value) if cc_value else 0
+                examen = float(examen_value) if examen_value else 0
+
+            except (ValueError, TypeError):
+
+                messages.error(
+                    request,
+                    f"Note invalide pour {etudiant.nom} "
+                    f"{etudiant.prenoms}."
+                )
+
+                continue
+
+            # -------------------------------------------------
+            # Vérification des notes
+            # -------------------------------------------------
+
+            if cc < 0 or cc > 20:
+
+                messages.error(
+                    request,
+                    f"Le CC de {etudiant.nom} {etudiant.prenoms} "
+                    f"doit être compris entre 0 et 20."
+                )
+
+                continue
+
+            if examen < 0 or examen > 20:
+
+                messages.error(
+                    request,
+                    f"L'examen de {etudiant.nom} {etudiant.prenoms} "
+                    f"doit être compris entre 0 et 20."
+                )
+
+                continue
+
+            # -------------------------------------------------
+            # CALCUL MOYENNE
+            # -------------------------------------------------
+
+            moyenne = round(
+                (cc * 0.40) + (examen * 0.60),
+                2,
+            )
+
+            # -------------------------------------------------
+            # CRÉATION / MODIFICATION DE LA NOTE
+            # -------------------------------------------------
+
+            NoteLMD.objects.update_or_create(
+
+                etudiant=etudiant,
+
+                ecue=ecue,
+
+                semestre="S1",
+
+                session="1",
+
+                defaults={
+                    "cc": cc,
+                    "examen": examen,
+                    "moyenne": moyenne,
+                },
+            )
+
+            nombre_notes += 1
+
+        # =====================================================
+        # MESSAGE DE CONFIRMATION
+        # =====================================================
+
+        messages.success(
+            request,
+            f"{nombre_notes} note(s) enregistrée(s) avec succès."
+        )
+
+        # =====================================================
+        # RETOUR SUR LA MÊME ECUE
+        # =====================================================
+
+        return redirect(
+            "l3_gestion_notes",
+            ecue_id=ecue.id,
+        )
+
+    # =========================================================
+    # 6. RÉCUPÉRER LES NOTES EXISTANTES
+    # =========================================================
+
+    notes = (
+        NoteLMD.objects
+        .filter(
+            ecue=ecue,
+            semestre="S1",
+            session="1",
+        )
+    )
+
+    # =========================================================
+    # 7. TRANSFORMER LES NOTES EN DICTIONNAIRE
+    # =========================================================
+
+    notes_dict = {
+        note.etudiant_id: note
+        for note in notes
+    }
+
+    # =========================================================
+    # 8. CONTEXTE
+    # =========================================================
+
+    context = {
+
+        "ecue": ecue,
+
+        "ue": ue,
+
+        "filiere": filiere,
+
+        "niveau": niveau,
+
+        "etudiants": etudiants,
+
+        "notes_dict": notes_dict,
+
+    }
+
+    # =========================================================
+    # 9. AFFICHAGE
+    # =========================================================
+
+    return render(
+        request,
+        "lmd/l3/gestion/notes/saisie.html",
+        context,
+    )  
+    
+ 
 def l3_gestion_bulletins(request):
 
     return render(
@@ -2904,7 +3131,7 @@ def l3_gestion_bulletins(request):
     )
 
 
-def l3_gestion_notes_selection(request):
+def l3_gestion_notes_selectioneeee(request):
 
     ecues = ECUE.objects.filter(
         ue__filiere__libelle__icontains="Sciences de Gestion"
@@ -2917,6 +3144,126 @@ def l3_gestion_notes_selection(request):
             "ecues": ecues
         }
     )
+  
+  
+def l3_gestion_notes_selection(request):
+
+    # =========================================================
+    # 1. RÉCUPÉRER LES FILTRES
+    # =========================================================
+
+    niveau_selectionne = request.GET.get("niveau", "").strip()
+    ue_selectionnee = request.GET.get("ue", "").strip()
+    ecue_selectionnee = request.GET.get("ecue", "").strip()
+
+    # =========================================================
+    # 2. FILTRER UNIQUEMENT SCIENCES DE GESTION
+    # =========================================================
+
+    base_ues = UE.objects.filter(
+        filiere__libelle__icontains="Sciences de Gestion"
+    )
+
+    # =========================================================
+    # 3. UE
+    # =========================================================
+
+    ues = UE.objects.none()
+
+    if niveau_selectionne:
+
+        ues = (
+            base_ues
+            .filter(
+                niveau=niveau_selectionne
+            )
+            .order_by("ordre", "code")
+        )
+
+    # =========================================================
+    # 4. ECUE
+    # =========================================================
+
+    ecues = ECUE.objects.none()
+
+    if ue_selectionnee:
+
+        ecues = (
+            ECUE.objects
+            .filter(
+                ue_id=ue_selectionnee,
+                ue__filiere__libelle__icontains="Sciences de Gestion",
+            )
+            .select_related("ue")
+            .order_by("ordre", "code")
+        )
+
+    # =========================================================
+    # 5. OBJET UE SÉLECTIONNÉ
+    # =========================================================
+
+    ue_selectionnee_obj = None
+
+    if ue_selectionnee:
+
+        ue_selectionnee_obj = (
+            UE.objects
+            .filter(
+                id=ue_selectionnee,
+                filiere__libelle__icontains="Sciences de Gestion",
+            )
+            .first()
+        )
+
+    # =========================================================
+    # 6. OBJET ECUE SÉLECTIONNÉ
+    # =========================================================
+
+    ecue_selectionnee_obj = None
+
+    if ecue_selectionnee:
+
+        ecue_selectionnee_obj = (
+            ECUE.objects
+            .filter(
+                id=ecue_selectionnee,
+                ue__filiere__libelle__icontains="Sciences de Gestion",
+            )
+            .select_related("ue")
+            .first()
+        )
+
+    # =========================================================
+    # 7. CONTEXTE
+    # =========================================================
+
+    context = {
+
+        "niveau_selectionne": niveau_selectionne,
+
+        "ues": ues,
+
+        "ue_selectionnee": ue_selectionnee,
+
+        "ue_selectionnee_obj": ue_selectionnee_obj,
+
+        "ecues": ecues,
+
+        "ecue_selectionnee": ecue_selectionnee,
+
+        "ecue_selectionnee_obj": ecue_selectionnee_obj,
+
+    }
+
+    # =========================================================
+    # 8. AFFICHAGE
+    # =========================================================
+
+    return render(
+        request,
+        "lmd/l3/gestion/notes/ecue_list.html",
+        context
+    ) 
 # ================= MASTER =================
 
 def master_dashboard(request):
@@ -4029,7 +4376,7 @@ def l3_gestion_ue_listdddd(request):
     )
 
 
-def l3_gestion_ue_addAAA(request):
+def l3_gestion_ue_addzz(request):
 
     filiere = get_object_or_404(
         FiliereLMD,
@@ -4154,60 +4501,235 @@ def l3_gestion_ecue_add(request, ue_id):
             "ue": ue
         }
     )
-
+    
 
 def l3_gestion_saisie_notes(request, ecue_id):
 
+    # =========================================================
+    # 1. RÉCUPÉRER L'ECUE
+    # =========================================================
+
     ecue = get_object_or_404(
-        ECUE,
-        id=ecue_id
+        ECUE.objects.select_related(
+            "ue",
+            "ue__filiere",
+        ),
+        id=ecue_id,
     )
 
-    etudiants = EtudiantLMD.objects.filter(
-        filiere__libelle="Sciences de Gestion",
-        niveau="L3"
+    ue = ecue.ue
+    filiere = ue.filiere
+    niveau = ue.niveau
+
+    # =========================================================
+    # 2. RÉCUPÉRER LES ÉTUDIANTS
+    # =========================================================
+
+    etudiants = (
+        EtudiantLMD.objects
+        .filter(
+            filiere=filiere,
+            niveau=niveau,
+        )
+        .order_by(
+            "nom",
+            "prenoms",
+        )
     )
 
+    # =========================================================
+    # 3. ENREGISTREMENT DES NOTES
+    # =========================================================
 
     if request.method == "POST":
 
+        nombre_notes = 0
+
         for etudiant in etudiants:
 
-            cc = request.POST.get(
-                f"cc_{etudiant.id}"
+            cc_value = request.POST.get(
+                f"cc_{etudiant.id}",
+                ""
+            ).strip()
+
+            examen_value = request.POST.get(
+                f"examen_{etudiant.id}",
+                ""
+            ).strip()
+
+            # -------------------------------------------------
+            # Si aucun champ n'est rempli
+            # -------------------------------------------------
+
+            if not cc_value and not examen_value:
+                continue
+
+            # -------------------------------------------------
+            # Conversion
+            # -------------------------------------------------
+
+            try:
+
+                cc = float(cc_value) if cc_value else 0
+                examen = float(examen_value) if examen_value else 0
+
+            except (ValueError, TypeError):
+
+                messages.error(
+                    request,
+                    f"Note invalide pour "
+                    f"{etudiant.nom} {etudiant.prenoms}."
+                )
+
+                continue
+
+            # -------------------------------------------------
+            # Vérification CC
+            # -------------------------------------------------
+
+            if cc < 0 or cc > 20:
+
+                messages.error(
+                    request,
+                    f"Le CC de {etudiant.nom} {etudiant.prenoms} "
+                    f"doit être compris entre 0 et 20."
+                )
+
+                continue
+
+            # -------------------------------------------------
+            # Vérification examen
+            # -------------------------------------------------
+
+            if examen < 0 or examen > 20:
+
+                messages.error(
+                    request,
+                    f"L'examen de {etudiant.nom} {etudiant.prenoms} "
+                    f"doit être compris entre 0 et 20."
+                )
+
+                continue
+
+            # -------------------------------------------------
+            # CALCUL DE LA MOYENNE
+            # CC = 40%
+            # Examen = 60%
+            # -------------------------------------------------
+
+            moyenne = round(
+                (cc * 0.40) + (examen * 0.60),
+                2
             )
 
-            examen = request.POST.get(
-                f"examen_{etudiant.id}"
-            )
-
+            # -------------------------------------------------
+            # ENREGISTRER / MODIFIER
+            # -------------------------------------------------
 
             NoteLMD.objects.update_or_create(
+
                 etudiant=etudiant,
+
                 ecue=ecue,
+
+                semestre=ecue.semestre,
+
+                session="1",
+
                 defaults={
-                    "cc": float(cc or 0),
-                    "examen": float(examen or 0)
+                    "cc": cc,
+                    "examen": examen,
+                    "moyenne": moyenne,
                 }
+
             )
 
+            nombre_notes += 1
 
-        return redirect(
-            "l3_gestion_notes"
+        # -----------------------------------------------------
+        # MESSAGE
+        # -----------------------------------------------------
+
+        messages.success(
+            request,
+            f"{nombre_notes} note(s) enregistrée(s) avec succès."
         )
 
+        # -----------------------------------------------------
+        # RETOUR SUR LA MÊME ECUE
+        # -----------------------------------------------------
+
+        return redirect(
+            "l3_gestion_saisie_notes",
+            ecue_id=ecue.id,
+        )
+
+    # =========================================================
+    # 4. RÉCUPÉRER LES NOTES EXISTANTES
+    # =========================================================
+
+    notes = (
+        NoteLMD.objects
+        .filter(
+            ecue=ecue,
+            semestre=ecue.semestre,
+            session="1",
+        )
+    )
+
+    # =========================================================
+    # 5. DICTIONNAIRE INTERNE
+    # =========================================================
+
+    notes_dict = {
+        note.etudiant_id: note
+        for note in notes
+    }
+
+    # =========================================================
+    # 6. PRÉPARER ÉTUDIANT + NOTE
+    # =========================================================
+
+    etudiants_notes = []
+
+    for etudiant in etudiants:
+
+        note = notes_dict.get(etudiant.id)
+
+        etudiants_notes.append({
+            "etudiant": etudiant,
+            "note": note,
+        })
+
+    # =========================================================
+    # 7. CONTEXTE
+    # =========================================================
+
+    context = {
+
+        "ecue": ecue,
+
+        "ue": ue,
+
+        "filiere": filiere,
+
+        "niveau": niveau,
+
+        "etudiants_notes": etudiants_notes,
+
+    }
+
+    # =========================================================
+    # 8. AFFICHAGE
+    # =========================================================
 
     return render(
         request,
         "lmd/l3/gestion/notes/saisie.html",
-        {
-            "ecue": ecue,
-            "etudiants": etudiants
-        }
+        context,
     )
 
-
-def l3_gestion_ue_edit(request, pk):
+def l3_gestion_ue_edituuu(request, pk):
 
     ue = get_object_or_404(
         UE,
@@ -4237,6 +4759,56 @@ def l3_gestion_ue_edit(request, pk):
         }
     )
 
+def l3_gestion_ue_edit(request, pk):
+
+    # =========================================================
+    # 1. RÉCUPÉRER L'UE
+    # =========================================================
+
+    ue = get_object_or_404(
+        UE.objects.select_related("filiere"),
+        pk=pk,
+        filiere__libelle="Sciences de Gestion",
+    )
+
+    # =========================================================
+    # 2. MODIFICATION
+    # =========================================================
+
+    if request.method == "POST":
+
+        ue.niveau = request.POST.get("niveau")
+        ue.semestre = request.POST.get("semestre")
+        ue.code = request.POST.get("code")
+        ue.libelle = request.POST.get("libelle")
+        ue.credit = request.POST.get("credit")
+        ue.ordre = request.POST.get("ordre")
+
+        ue.save()
+
+        messages.success(
+            request,
+            f"L'UE « {ue.code} — {ue.libelle} » a été modifiée avec succès."
+        )
+
+        return redirect(
+            "l3_gestion_ue_list"
+        )
+
+    # =========================================================
+    # 3. AFFICHAGE
+    # =========================================================
+
+    return render(
+        request,
+        "lmd/l3/gestion/ue/form.html",
+        {
+            "ue": ue,
+            "niveau": ue.niveau,
+            "semestre": ue.semestre,
+            "titre": "Modifier UE - L3 Sciences de Gestion",
+        },
+    )
 
 def l3_gestion_ue_delete(request, pk):
 
