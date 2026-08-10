@@ -3337,7 +3337,10 @@ def l3_gestion_notes(request, ecue_id=None):
     # 3. RÉCUPÉRER LE SEMESTRE DE L'UE
     # =========================================================
 
-    semestre = ue.semestre
+    # semestre = ue.semestre
+    # semestre = etudiant.semestre
+    for etudiant in etudiants:
+         semestre_etudiant = etudiant.semestre
 
     # =========================================================
     # 4. RÉCUPÉRER LE NIVEAU
@@ -3470,7 +3473,9 @@ def l3_gestion_notes(request, ecue_id=None):
 
                 # IMPORTANT :
                 # Le semestre vient automatiquement de l'UE
-                semestre=semestre,
+                # semestre=semestre,
+                semestre=semestre_etudiant,
+                
 
                 # Session normale
                 session="1",
@@ -3555,6 +3560,7 @@ def l3_gestion_notes(request, ecue_id=None):
         "lmd/l3/gestion/notes/saisie.html",
         context,
     )
+
  
 def l3_gestion_bulletins(request):
 
@@ -4936,7 +4942,7 @@ def l3_gestion_ecue_add(request, ue_id):
     )
     
 
-def l3_gestion_saisie_notes(request, ecue_id):
+def l3_gestion_saisie_notesAAA(request, ecue_id):
 
     # =========================================================
     # 1. RÉCUPÉRER L'ECUE
@@ -5065,7 +5071,8 @@ def l3_gestion_saisie_notes(request, ecue_id):
 
                 ecue=ecue,
 
-                semestre=ecue.semestre,
+                # semestre=ecue.semestre,
+                semestre=semestre,
 
                 session="1",
 
@@ -5161,6 +5168,287 @@ def l3_gestion_saisie_notes(request, ecue_id):
         "lmd/l3/gestion/notes/saisie.html",
         context,
     )
+
+
+def l3_gestion_saisie_notes(request, ecue_id):
+
+    # =========================================================
+    # 1. RÉCUPÉRER L'ECUE
+    # =========================================================
+
+    ecue = get_object_or_404(
+        ECUE.objects.select_related(
+            "ue",
+            "ue__filiere",
+        ),
+        id=ecue_id,
+    )
+
+    ue = ecue.ue
+    filiere = ue.filiere
+    niveau = ue.niveau
+
+    # =========================================================
+    # 2. RÉCUPÉRER LE SEMESTRE
+    # =========================================================
+    #
+    # POST : le semestre vient du formulaire
+    # GET  : le semestre vient de l'URL
+    #
+    # Si aucun semestre n'est fourni, on utilise celui de l'UE
+    # comme valeur par défaut.
+    # =========================================================
+
+    if request.method == "POST":
+        semestre = request.POST.get("semestre")
+    else:
+        semestre = request.GET.get("semestre")
+
+    # ---------------------------------------------------------
+    # Valeur par défaut
+    # ---------------------------------------------------------
+
+    if not semestre:
+        semestre = ue.semestre
+
+    # ---------------------------------------------------------
+    # Vérification
+    # ---------------------------------------------------------
+
+    if semestre not in ["S1", "S2"]:
+
+        messages.error(
+            request,
+            "Veuillez sélectionner un semestre valide."
+        )
+
+        return redirect(
+            "l3_gestion_saisie_notes",
+            ecue_id=ecue.id,
+        )
+
+    # =========================================================
+    # 3. RÉCUPÉRER LES ÉTUDIANTS
+    # =========================================================
+
+    etudiants = (
+        EtudiantLMD.objects
+        .filter(
+            filiere=filiere,
+            niveau=niveau,
+        )
+        .order_by(
+            "nom",
+            "prenoms",
+        )
+    )
+
+    # =========================================================
+    # 4. ENREGISTREMENT DES NOTES
+    # =========================================================
+
+    if request.method == "POST":
+
+        nombre_notes = 0
+
+        for etudiant in etudiants:
+
+            # -------------------------------------------------
+            # CC
+            # -------------------------------------------------
+
+            cc_value = request.POST.get(
+                f"cc_{etudiant.id}",
+                ""
+            ).strip()
+
+            # -------------------------------------------------
+            # EXAMEN
+            # -------------------------------------------------
+
+            examen_value = request.POST.get(
+                f"examen_{etudiant.id}",
+                ""
+            ).strip()
+
+            # -------------------------------------------------
+            # AUCUNE NOTE
+            # -------------------------------------------------
+
+            if not cc_value and not examen_value:
+                continue
+
+            # -------------------------------------------------
+            # CONVERSION
+            # -------------------------------------------------
+
+            try:
+
+                cc = float(cc_value) if cc_value else 0
+                examen = float(examen_value) if examen_value else 0
+
+            except (ValueError, TypeError):
+
+                messages.error(
+                    request,
+                    f"Note invalide pour "
+                    f"{etudiant.nom} {etudiant.prenoms}."
+                )
+
+                continue
+
+            # -------------------------------------------------
+            # VALIDATION CC
+            # -------------------------------------------------
+
+            if not 0 <= cc <= 20:
+
+                messages.error(
+                    request,
+                    f"Le CC de {etudiant.nom} {etudiant.prenoms} "
+                    f"doit être compris entre 0 et 20."
+                )
+
+                continue
+
+            # -------------------------------------------------
+            # VALIDATION EXAMEN
+            # -------------------------------------------------
+
+            if not 0 <= examen <= 20:
+
+                messages.error(
+                    request,
+                    f"L'examen de {etudiant.nom} {etudiant.prenoms} "
+                    f"doit être compris entre 0 et 20."
+                )
+
+                continue
+
+            # -------------------------------------------------
+            # CALCUL MOYENNE
+            # CC      = 40 %
+            # EXAMEN  = 60 %
+            # -------------------------------------------------
+
+            moyenne = round(
+                (cc * 0.40) + (examen * 0.60),
+                2
+            )
+
+            # =================================================
+            # ENREGISTRER LA NOTE
+            # =================================================
+
+            NoteLMD.objects.update_or_create(
+
+                etudiant=etudiant,
+
+                ecue=ecue,
+
+                semestre=semestre,
+
+                session="1",
+
+                defaults={
+                    "cc": cc,
+                    "examen": examen,
+                    "moyenne": moyenne,
+                }
+            )
+
+            nombre_notes += 1
+
+        # =====================================================
+        # MESSAGE
+        # =====================================================
+
+        messages.success(
+            request,
+            f"{nombre_notes} note(s) du {semestre} "
+            f"enregistrée(s) avec succès."
+        )
+
+        # =====================================================
+        # RETOUR SUR LA MÊME PAGE
+        # =====================================================
+        #
+        # IMPORTANT :
+        # On conserve ecue_id ET semestre.
+        # =====================================================
+
+        return redirect(
+            f"{request.path}?semestre={semestre}"
+        )
+
+    # =========================================================
+    # 5. RÉCUPÉRER LES NOTES DU SEMESTRE SÉLECTIONNÉ
+    # =========================================================
+
+    notes = (
+        NoteLMD.objects
+        .filter(
+            ecue=ecue,
+            semestre=semestre,
+            session="1",
+        )
+    )
+
+    # =========================================================
+    # 6. DICTIONNAIRE DES NOTES
+    # =========================================================
+
+    notes_dict = {
+        note.etudiant_id: note
+        for note in notes
+    }
+
+    # =========================================================
+    # 7. ÉTUDIANTS + NOTES
+    # =========================================================
+
+    etudiants_notes = []
+
+    for etudiant in etudiants:
+
+        etudiants_notes.append({
+            "etudiant": etudiant,
+            "note": notes_dict.get(etudiant.id),
+        })
+
+    # =========================================================
+    # 8. CONTEXTE
+    # =========================================================
+
+    context = {
+
+        "ecue": ecue,
+
+        "ue": ue,
+
+        "filiere": filiere,
+
+        "niveau": niveau,
+
+        # IMPORTANT :
+        # C'est cette variable qu'il faut afficher
+        # dans le template.
+        "semestre": semestre,
+
+        "etudiants_notes": etudiants_notes,
+
+    }
+
+    # =========================================================
+    # 9. AFFICHAGE
+    # =========================================================
+
+    return render(
+        request,
+        "lmd/l3/gestion/notes/saisie.html",
+        context,
+    )
+
 
 def l3_gestion_ue_edituuu(request, pk):
 

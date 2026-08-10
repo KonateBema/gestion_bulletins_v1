@@ -369,12 +369,11 @@
                                 <!-- ACTION -->
                                 <td class="text-center">
                                     <a
-                                        href="{% url 'l3_gestion_saisie_notes' ecue.id %}"
-                                        class="btn btn-success btn-sm"
-                                    >
-                                        <i class="bi bi-pencil-square me-1"></i>
-                                        Saisir
-                                    </a>
+                                    href="{% url 'l3_gestion_saisie_notes' ecue.id %}?semestre={{ semestre_selectionne }}"
+                                    class="btn btn-success btn-sm"
+                                >
+                                    Saisir
+                                </a>
 
                                 </td>
                             </tr>

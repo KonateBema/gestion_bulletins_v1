@@ -12,7 +12,7 @@ from reportlab.platypus import HRFlowable
 from .models import SaisieNoteLMD
 from django.db.models import Prefetch
 # lmd/views.py
-
+from reportlab.lib.enums import TA_CENTER
 
 def safe_date(date):
     return date.strftime("%d/%m/%Y") if date else "Non renseignée"
@@ -23,7 +23,7 @@ styles = getSampleStyleSheet()
 TITLE = ParagraphStyle(
     "TITLE",
     parent=styles["Normal"],
-    fontSize=14,
+    fontSize=8,
     leading=16,
     alignment=1,
     spaceAfter=10,
@@ -34,8 +34,8 @@ TITLE = ParagraphStyle(
 SMALL = ParagraphStyle(
     "SMALL",
     parent=styles["Normal"],
-    fontSize=8,
-    leading=10,
+    fontSize=6.4,
+    leading=9,
     fontName="Courier-Bold",
 )
 
@@ -80,7 +80,8 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     # variantes au lieu d'en imposer une seule, pour ne pas rater
     # des notes existantes (cf. bug déjà rencontré sur le bulletin
     # Droit Privé).
-    SESSIONS_NORMALES = ["1", "Normale", "NORMALE", "normale"]
+    # SESSIONS_NORMALES = ["1", "Normale", "NORMALE", "normale"]
+    SESSIONS_NORMALES = ["1", "2", "3", "4"]
 
     # =========================================================
     # RÉCUPÉRATION DES UE / ECUE
@@ -152,9 +153,21 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         "LOGO"
     )
 
+
+
     # =========================================================
     # EN-TÊTE
     # =========================================================
+    HEADER_STYLE = ParagraphStyle(
+       "HEADER_STYLE",
+        parent=SMALL,
+        fontName="Helvetica-Bold",
+        fontSize=5,
+        leading=11,
+        alignment=TA_CENTER,
+        spaceAfter=0,
+        spaceBefore=0,
+     )
 
     header_table = Table(
         [[
@@ -162,7 +175,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
                 """
                 <para align="center">
                 <b>
-                <font color="#002147" size="8">
+                <font >
                 MINISTÈRE DE L'ENSEIGNEMENT <br/>
                 SUPÉRIEUR ET DE LA <br/>
                 RECHERCHE SCIENTIFIQUE
@@ -170,7 +183,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
                 </b>
                 </para>
                 """,
-                SMALL
+                HEADER_STYLE
             ),
 
             logo,
@@ -182,7 +195,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
                 Union - Discipline - Travail
                 </para>
                 """,
-                SMALL
+                HEADER_STYLE
             )
         ]],
         colWidths=[
@@ -196,6 +209,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+
             ("LEFTPADDING", (0, 0), (-1, -1), 0),
             ("RIGHTPADDING", (0, 0), (-1, -1), 0),
             ("TOPPADDING", (0, 0), (-1, -1), 0),
@@ -213,9 +227,9 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     session_label = "Normale"
 
     if semestre == "S1":
-        libelle_semestre = "1er SEMESTRE"
+        libelle_semestre = " SEMESTRE 1"
     else:
-        libelle_semestre = "2ème SEMESTRE"
+        libelle_semestre = "SEMESTRE 2"
 
     annee = etudiant.annee_academique
 
@@ -265,17 +279,18 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         [[
             Paragraph(
                 f"""
-                <b>DOMAINE :</b><br/>
-                Sciences de Gestion
+                <b>DOMAINE : Sciences de Gestion   </b><br/>
+
                 <br/><br/>
-                <b>SPECIALITE :</b><br/>
-                {specialite}
+                <b>SPECIALITE : {specialite}</b><br/>
+
+
                 """,
                 SMALL
             )
         ]],
-        colWidths=[6 * cm],
-        rowHeights=[3.5 * cm]
+        colWidths=[7 * cm],
+        rowHeights=[3 * cm]
     )
 
     cadre_universite.setStyle(
@@ -292,6 +307,9 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
             ("ROUNDEDCORNERS", [6, 6, 6, 6]),
             ("TOPPADDING", (0, 0), (-1, -1), 8),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+             # TEXTE
+            ("FONTSIZE", (0, 0), (-1, -1), 16),
+            ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
         ])
     )
 
@@ -443,6 +461,49 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
 
     grande_unite_actuelle = None
 
+    # --- Accumulateurs pour la ligne récapitulative (crédits + moyenne
+    # pondérée) de la grande unité en cours de traitement ---
+    credits_gu = 0
+    ponderation_gu = 0  # somme(moyenne_ue * credit_ue) pour la grande unité en cours
+
+    def inserer_ligne_grande_unite(grande_unite, credits, ponderation):
+        """Ajoute la ligne récapitulative d'une grande unité (ex: UFO1,
+        UCG2, ...) juste après les UE qui la composent, dans le style du
+        bulletin papier : code, libellé, total crédits, moyenne pondérée
+        et décision. `data`/`table_style` sont capturés par closure."""
+        if credits == 0:
+            return
+        moyenne_gu = round(ponderation / credits, 2)
+        gu_validee = moyenne_gu >= 10
+        if gu_validee:
+            decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", SMALL)
+            couleur_gu = colors.green
+        else:
+            decision_gu = Paragraph("<font color='red'><b>Non validée</b></font>", SMALL)
+            couleur_gu = colors.red
+
+        code_gu = getattr(grande_unite, "code", grande_unite.nom)
+
+        data.append([
+            Paragraph(f"<b>{code_gu}</b>", SMALL),
+            Paragraph(f"<b>UE : {grande_unite.nom}</b>", SMALL),
+            "",
+            Paragraph(f"<b>{credits:.2f}</b>", SMALL),
+            Paragraph(f"<b>{credits:.2f}</b>", SMALL),
+            "",
+            Paragraph(f"<b>{moyenne_gu:.2f}</b>", SMALL),
+            decision_gu,
+        ])
+        ligne = len(data) - 1
+        # IMPORTANT : le BACKGROUND doit être déclaré AVANT le SPAN.
+        # Avec ReportLab, si SPAN est ajouté en premier dans la liste de
+        # styles, le fond ne s'affiche pas sur la ligne fusionnée.
+        table_style.append(("BACKGROUND", (0, ligne), (7, ligne), colors.HexColor("#D9D9D9")))
+        table_style.append(("SPAN", (1, ligne), (2, ligne)))
+        table_style.append(("FONTNAME", (0, ligne), (7, ligne), "Helvetica-Bold"))
+        table_style.append(("ALIGN", (0, ligne), (-1, ligne), "CENTER"))
+        table_style.append(("TEXTCOLOR", (7, ligne), (7, ligne), couleur_gu))
+
     # =========================================================
     # PARCOURS DES UE
     # =========================================================
@@ -464,54 +525,17 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         # -----------------------------------------------------
         # GRANDE UNITÉ
         # -----------------------------------------------------
+        # Dès qu'on change de grande unité, on clôture la précédente
+        # par sa ligne récapitulative (code, crédits, moyenne, décision).
 
         if ue.grande_unite != grande_unite_actuelle:
 
+            if grande_unite_actuelle is not None:
+                inserer_ligne_grande_unite(grande_unite_actuelle, credits_gu, ponderation_gu)
+                credits_gu = 0
+                ponderation_gu = 0
+
             grande_unite_actuelle = ue.grande_unite
-
-            nom_grande_unite = (
-                grande_unite_actuelle.nom
-                if grande_unite_actuelle
-                else ""
-            )
-
-            data.append([
-                Paragraph(
-                    f"<b>{nom_grande_unite}</b>",
-                    SMALL
-                ),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                ""
-            ])
-
-            ligne = len(data) - 1
-
-            table_style.append(
-                ("SPAN", (0, ligne), (7, ligne))
-            )
-
-            table_style.append(
-                (
-                    "BACKGROUND",
-                    (0, ligne),
-                    (7, ligne),
-                    colors.HexColor("#D9D9D9")
-                )
-            )
-
-            table_style.append(
-                (
-                    "FONTNAME",
-                    (0, ligne),
-                    (7, ligne),
-                    "Helvetica-Bold"
-                )
-            )
 
         # -----------------------------------------------------
         # CALCUL MOYENNE UE
@@ -570,6 +594,10 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
 
         moyennes_ues.append(moyenne_ue)
 
+        # accumulation pour la ligne récapitulative de la grande unité
+        credits_gu += ue.credit
+        ponderation_gu += moyenne_ue * ue.credit
+
         # -----------------------------------------------------
         # DÉCISION UE
         # -----------------------------------------------------
@@ -589,7 +617,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         else:
 
             decision = Paragraph(
-                "<font color='red'><b>NON VALIDÉE</b></font>",
+                "<font color='red'><b>NON VALID</b></font>",
                 SMALL
             )
 
@@ -700,20 +728,58 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         )
 
     # =========================================================
+    # LIGNE RÉCAPITULATIVE DE LA DERNIÈRE GRANDE UNITÉ
+    # =========================================================
+    # Elle ne passe jamais par le "if" de changement de grande unité
+    # ci-dessus, donc on la clôture manuellement ici.
+
+    if grande_unite_actuelle is not None:
+        inserer_ligne_grande_unite(grande_unite_actuelle, credits_gu, ponderation_gu)
+
+    # Moyenne générale calculée dès maintenant pour pouvoir l'afficher à
+    # la fois sur la ligne "TOTAL CREDITS ACQUIS" et dans le
+    # récapitulatif final plus bas.
+    moyenne_generale = (
+        round(
+            sum(moyennes_ues) / len(moyennes_ues),
+            2
+        )
+        if moyennes_ues
+        else 0
+    )
+
+    # --- Ligne finale "TOTAL CREDITS ACQUIS" (TCA) ---
+    data.append([
+        Paragraph("<b>TCA</b>", SMALL),
+        Paragraph("<b>TOTAL CREDITS ACQUIS</b>", SMALL),
+        "",
+        Paragraph(f"<b>{stats['credits_total']:.2f}</b>", SMALL),
+        Paragraph(f"<b>{stats['credits_total']:.2f}</b>", SMALL),
+        "",
+        Paragraph(f"<b>{moyenne_generale:.2f}</b>", SMALL),
+        "",
+    ])
+    ligne_tca = len(data) - 1
+    table_style.append(("SPAN", (1, ligne_tca), (2, ligne_tca)))
+    table_style.append(("FONTNAME", (0, ligne_tca), (7, ligne_tca), "Helvetica-Bold"))
+    table_style.append(("ALIGN", (0, ligne_tca), (-1, ligne_tca), "CENTER"))
+    table_style.append(("BACKGROUND", (0, ligne_tca), (-1, ligne_tca), colors.lightgrey))
+
+    # =========================================================
     # TABLEAU FINAL
     # =========================================================
 
     table = Table(
         data,
         colWidths=[
-            1.4 * cm,   # Code
+            1.3 * cm,   # Code
             5 * cm,     # UE
             7.2 * cm,   # ECUE
-            1.1 * cm,   # Crédit ECUE
-            1.1 * cm,   # Crédit UE
-            1.5 * cm,   # Moy ECUE
-            1.5 * cm,   # Moy UE
-            1.8 * cm    # Décision
+            1.3 * cm,   # Crédit ECUE
+            1.3 * cm,   # Crédit UE
+            1.3 * cm,   # Moy ECUE
+            1.3 * cm,   # Moy UE
+            1.7 * cm    # Décision
         ],
         rowHeights=[
             30
@@ -826,15 +892,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     # =========================================================
     # MOYENNE GÉNÉRALE
     # =========================================================
-
-    moyenne_generale = (
-        round(
-            sum(moyennes_ues) / len(moyennes_ues),
-            2
-        )
-        if moyennes_ues
-        else 0
-    )
+    # (déjà calculée plus haut, réutilisée ici pour le récapitulatif)
 
     # =========================================================
     # RÉCAPITULATIF
@@ -845,8 +903,8 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
             [
                 Paragraph("<b>Récapitulatif</b>", SMALL),
                 Paragraph("<b>Responsable</b>", SMALL),
-                Paragraph("<b>Année</b>", SMALL),
-                Paragraph("<b>Décision</b>", SMALL),
+                Paragraph("<b>Année de validation</b>", SMALL),
+                # Paragraph("<b>Décision</b>", SMALL),
             ],
 
             [
@@ -883,27 +941,27 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
                 ),
 
                 Paragraph(
-                    f"ANNÉE SCOLAIRE : {annee}",
+                    f"{annee}",
                     SMALL
                 ),
 
-                Paragraph(
-                    decision_globale,
-                    SMALL
-                ),
+                # Paragraph(
+                #     decision_globale,
+                #     SMALL
+                # ),
             ]
         ],
 
         colWidths=[
             8.5 * cm,
-            4 * cm,
-            4 * cm,
-            4 * cm
+            6 * cm,
+            6 * cm,
+
         ],
 
         rowHeights=[
-            0.8 * cm,
-            2.7 * cm
+            0.7 * cm,
+            2.4 * cm
         ]
     )
 

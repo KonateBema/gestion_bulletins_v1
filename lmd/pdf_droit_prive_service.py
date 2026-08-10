@@ -33,7 +33,7 @@ TITLE = ParagraphStyle(
 SMALL = ParagraphStyle(
     "SMALL",
     parent=styles["Normal"],
-    fontSize=8,
+    fontSize=6.4,
     leading=10,
     fontName="Courier-Bold",
 )
@@ -178,7 +178,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         <b>
         <font color="#B30000">RELEVE DE NOTES</font>
         &nbsp;&nbsp;&nbsp;&nbsp;
-         {libelle_semestre} - SESSION {session_label}
+        semestre {libelle_semestre} - SESSION {session_label}
         &nbsp;&nbsp;&nbsp;&nbsp;
         ANNÉE SCOLAIRE : {annee}
         </b>
@@ -194,15 +194,17 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         spaceAfter=10,
         hAlign='CENTER',
     ))
+    SMALL_INFO = ParagraphStyle( "SmallInfo", parent=styles["Normal"], fontName="Helvetica", fontSize=7, leading=9, )
 
-    specialite = etudiant.filiere.libelle if etudiant.filiere else " DROIT "
+    specialite = etudiant.filiere.libelle if etudiant.filiere else " DROIT PRIVE"
+
     cadre_universite = Table([[
         Paragraph(f"""
-            <b>DOMAINE : <br/> DROIT</b><br/>
+            <b>DOMAINE :  DROIT PRIVE</b><br/>
              <b></b><br/><br/>
-             <b>SPECIALITE :</b><br/> {specialite}<br/>
+             <b>SPECIALITE :</b> {specialite}<br/>
         """, SMALL)
-    ]], colWidths=[8 * cm], rowHeights=[3.7 * cm])
+    ]], colWidths=[8 * cm], rowHeights=[3.2* cm])
 
     cadre_universite.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
@@ -211,38 +213,45 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),
         ("TOPPADDING", (0, 2), (-1, 2), 12),
+         # TEXTE
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 16),
+         # Décaler le premier cadre vers la gauche
+
     ]))
 
     elements.append(Spacer(1, 10))
 
     cadre_etudiant = Table([
-        [Paragraph("<b>Nom et Prénoms</b>", SMALL),
-         Paragraph(f"{etudiant.nom} {etudiant.prenoms}", SMALL)],
-        [Paragraph("<b>Date et lieu de naissance</b>", SMALL),
-         Paragraph(f"{safe_date(etudiant.date_naissance)} à {etudiant.lieu_naissance}", SMALL)],
-        [Paragraph("<b>Sexe</b>", SMALL),
-         Paragraph(etudiant.get_sexe_display(), SMALL)],
-        [Paragraph("<b>Matricule</b>", SMALL),
-         Paragraph(str(etudiant.matricule), SMALL)],
-        [Paragraph("<b>Statut</b>", SMALL),
-         Paragraph(etudiant.statut, SMALL)],
+        [Paragraph("<b>Nom et Prénoms</b>", SMALL_INFO),
+         Paragraph(f"{etudiant.nom} {etudiant.prenoms}", SMALL_INFO)],
+        [Paragraph("<b>Date et lieu de naissance</b>", SMALL_INFO),
+         Paragraph(f"{safe_date(etudiant.date_naissance)} à {etudiant.lieu_naissance}", SMALL_INFO)],
+        [Paragraph("<b>Sexe</b>", SMALL_INFO),
+         Paragraph(etudiant.get_sexe_display(), SMALL_INFO)],
+        [Paragraph("<b>Matricule</b>", SMALL_INFO),
+         Paragraph(str(etudiant.matricule), SMALL_INFO)],
+        [Paragraph("<b>Statut</b>", SMALL_INFO),
+         Paragraph(etudiant.statut, SMALL_INFO)],
         [Paragraph("<b>Niveau</b>", SMALL),
-         Paragraph(etudiant.get_niveau_display(), SMALL)],
-    ], colWidths=[5 * cm, 3.5 * cm])
+         Paragraph(etudiant.get_niveau_display(), SMALL_INFO)],
+    ], colWidths=[4.2 * cm, 4.3 * cm])
 
     cadre_etudiant.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 1, colors.black),
+        ("BOX", (0, 0), (-1, -1), -2, colors.black),
         ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
+
         ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("PADDING", (0, 0), (-1, -1), 6),
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),
+
     ]))
 
     header_global = Table(
         [[cadre_universite, cadre_etudiant]],
-        colWidths=[12 * cm, 8 * cm],
+        colWidths=[11 * cm, 7 * cm],
         rowHeights=[3.5 * cm],
     )
     header_global.setStyle(TableStyle([
@@ -273,8 +282,48 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
     grande_unite_actuelle = None
 
+    # --- Accumulateurs pour la ligne de sous-total (crédits + moyenne
+    # pondérée) de la grande unité en cours de traitement ---
+    credits_gu = 0
+    ponderation_gu = 0  # somme(moyenne_ue * credit_ue) pour la grande unité en cours
+
+    def inserer_ligne_grande_unite(grande_unite, credits, ponderation):
+        """Ajoute la ligne récapitulative d'une grande unité (ex: UFO1,
+        UCG2, ...) juste après les UE qui la composent, dans le style du
+        bulletin papier : code, libellé, total crédits, moyenne pondérée
+        et décision. `data`/`table_style` sont capturés par closure."""
+        if credits == 0:
+            return
+        moyenne_gu = round(ponderation / credits, 2)
+        gu_validee = moyenne_gu >= 10
+        if gu_validee:
+            decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", SMALL)
+            couleur_gu = colors.green
+        else:
+            decision_gu = Paragraph("<font color='red'><b>Non validée</b></font>", SMALL)
+            couleur_gu = colors.red
+
+        code_gu = getattr(grande_unite, "code", grande_unite.nom)
+
+        data.append([
+            Paragraph(f"<b>{code_gu}</b>", SMALL),
+            Paragraph(f"<b>UE : {grande_unite.nom}</b>", SMALL),
+            "",
+            Paragraph(f"<b>{credits:.2f}</b>", SMALL),
+            Paragraph(f"<b>{credits:.2f}</b>", SMALL),
+            "",
+            Paragraph(f"<b>{moyenne_gu:.2f}</b>", SMALL),
+            decision_gu,
+        ])
+        ligne = len(data) - 1
+        table_style.append(("SPAN", (1, ligne), (2, ligne)))
+        table_style.append(("BACKGROUND", (0, ligne), (7, ligne), colors.HexColor("#D9D9D9")))
+        table_style.append(("FONTNAME", (0, ligne), (7, ligne), "Helvetica-Bold"))
+        table_style.append(("ALIGN", (0, ligne), (-1, ligne), "CENTER"))
+        table_style.append(("TEXTCOLOR", (7, ligne), (7, ligne), couleur_gu))
+
     for ue in ues:
-        
+
         ecues = ue.ecues.all()
 
         if not ecues.exists():
@@ -283,17 +332,16 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         stats["ue_total"] += 1
         stats["credits_total"] += ue.credit
 
-        # --- Ligne d'en-tête de "grande unité" (UFO1, UCG2, USP3, ...) ---
+        # Dès qu'on change de grande unité, on clôture la précédente par
+        # sa ligne récapitulative (code, crédits, moyenne, décision).
         if ue.grande_unite != grande_unite_actuelle:
+            if grande_unite_actuelle is not None:
+                inserer_ligne_grande_unite(grande_unite_actuelle, credits_gu, ponderation_gu)
+                credits_gu = 0
+                ponderation_gu = 0
+
             grande_unite_actuelle = ue.grande_unite
-            data.append([
-                Paragraph(f"<b>{grande_unite_actuelle.nom}</b>", SMALL),
-                "", "", "", "", "", "", "",
-            ])
-            ligne = len(data) - 1
-            table_style.append(("SPAN", (0, ligne), (7, ligne)))
-            table_style.append(("BACKGROUND", (0, ligne), (7, ligne), colors.HexColor("#D9D9D9")))
-            table_style.append(("FONTNAME", (0, ligne), (7, ligne), "Helvetica-Bold"))
+
         ecue_data = []  # (ecue, moyenne) pour construire les lignes ensuite
         somme = 0
         coef = 0
@@ -321,6 +369,10 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
         moyenne_ue = round(somme / coef, 2) if coef > 0 else 0
         moyennes_ues.append(moyenne_ue)  # une seule valeur par UE, correcte
+
+        # accumulation pour le sous-total de la grande unité en cours
+        credits_gu += ue.credit
+        ponderation_gu += moyenne_ue * ue.credit
 
         ue_validee = moyenne_ue >= 10
         if ue_validee:
@@ -359,15 +411,47 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         table_style.append(("TEXTCOLOR", (7, debut), (7, fin), couleur_decision))
         table_style.append(("FONTNAME", (7, debut), (7, fin), "Helvetica-Bold"))
 
+    # Ligne récapitulative de la toute dernière grande unité : elle ne
+    # passe jamais par le "if" de changement de grande unité ci-dessus,
+    # donc on la clôture manuellement ici.
+    if grande_unite_actuelle is not None:
+        inserer_ligne_grande_unite(grande_unite_actuelle, credits_gu, ponderation_gu)
+
+    # Moyenne générale calculée dès maintenant pour pouvoir l'afficher à
+    # la fois sur la ligne "TOTAL CREDITS ACQUIS" et dans le récapitulatif
+    # final plus bas.
+    moyenne_generale = (
+        round(sum(moyennes_ues) / len(moyennes_ues), 2)
+        if moyennes_ues
+        else 0
+    )
+
+    # --- Ligne finale "TOTAL CREDITS ACQUIS" (TCA) ---
+    data.append([
+        Paragraph("<b>TCA</b>", SMALL),
+        Paragraph("<b>TOTAL CREDITS ACQUIS</b>", SMALL),
+        "",
+        Paragraph(f"<b>{stats['credits_total']:.2f}</b>", SMALL),
+        Paragraph(f"<b>{stats['credits_total']:.2f}</b>", SMALL),
+        "",
+        Paragraph(f"<b>{moyenne_generale:.2f}</b>", SMALL),
+        "",
+    ])
+    ligne_tca = len(data) - 1
+    table_style.append(("SPAN", (1, ligne_tca), (2, ligne_tca)))
+    table_style.append(("FONTNAME", (0, ligne_tca), (7, ligne_tca), "Helvetica-Bold"))
+    table_style.append(("ALIGN", (0, ligne_tca), (-1, ligne_tca), "CENTER"))
+    table_style.append(("BACKGROUND", (0, ligne_tca), (-1, ligne_tca), colors.lightgrey))
+
     table = Table(data, colWidths=[
         1.4 * cm,   # Code
         6 * cm,     # UE
         6 * cm,     # ECUE
-        1.1 * cm,   # Crédit ECUE
-        1.1 * cm,   # Crédit UE
-        1.5 * cm,   # Moy ECUE
-        1.5 * cm,   # Moy UE
-        2.1 * cm,   # Décision
+        1.3 * cm,   # Crédit ECUE
+        1.3 * cm,   # Crédit UE
+        1.3 * cm,   # Moy ECUE
+        1.3 * cm,   # Moy UE
+        1.8 * cm,   # Décision
     ], rowHeights=[30] + [15] * (len(data) - 1))
 
     table.setStyle(TableStyle([
@@ -416,18 +500,14 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     credits_obtenus = stats["credits_obtenus"]
     credits_restants = credits_total - credits_obtenus
 
-    moyenne_generale = (
-        round(sum(moyennes_ues) / len(moyennes_ues), 2)
-        if moyennes_ues
-        else 0
-    )
+    # moyenne_generale déjà calculée plus haut, réutilisée ici pour le récapitulatif
 
     recap_final_table = Table([
         [
             Paragraph("<b>Récapitulatif</b>", SMALL),
             Paragraph("<b>Responsable</b>", SMALL),
             Paragraph("<b>Année de validation</b>", SMALL),
-            Paragraph("<b>Décision</b>", SMALL),
+            # Paragraph("<b>Décision</b>", SMALL),
         ],
         [
             Paragraph(
@@ -445,9 +525,9 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
             Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""", SMALL),
             Paragraph(f"{annee}", SMALL),
             # Paragraph(decision_globale, SMALL),
-            Paragraph("", SMALL),
+            # Paragraph("", SMALL),
         ]
-    ], colWidths=[8.5 * cm, 4 * cm, 4 * cm, 4 * cm],
+    ], colWidths=[8.5 * cm, 6 * cm, 6 * cm, 4 * cm],
        rowHeights=[0.8 * cm, 2.7 * cm])
 
     recap_final_table.setStyle(TableStyle([
