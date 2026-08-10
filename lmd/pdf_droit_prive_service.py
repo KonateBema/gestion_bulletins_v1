@@ -167,9 +167,9 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     ).first()
 
     if semestre == "S1":
-        libelle_semestre = "1er SEMESTRE"
+        libelle_semestre = "1"
     else:
-        libelle_semestre = "2ème SEMESTRE"
+        libelle_semestre = "2"
 
     annee = etudiant.annee_academique
 
@@ -195,10 +195,10 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         hAlign='CENTER',
     ))
 
-    specialite = etudiant.filiere.libelle if etudiant.filiere else " DROIT PRIVE"
+    specialite = etudiant.filiere.libelle if etudiant.filiere else " DROIT "
     cadre_universite = Table([[
         Paragraph(f"""
-            <b>DOMAINE : <br/> DROIT PRIVE </b><br/>
+            <b>DOMAINE : <br/> DROIT</b><br/>
              <b></b><br/><br/>
              <b>SPECIALITE :</b><br/> {specialite}<br/>
         """, SMALL)
@@ -218,8 +218,8 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     cadre_etudiant = Table([
         [Paragraph("<b>Nom et Prénoms</b>", SMALL),
          Paragraph(f"{etudiant.nom} {etudiant.prenoms}", SMALL)],
-        [Paragraph("<b>Date de naissance</b>", SMALL),
-         Paragraph(f"{safe_date(etudiant.date_naissance)}", SMALL)],
+        [Paragraph("<b>Date et lieu de naissance</b>", SMALL),
+         Paragraph(f"{safe_date(etudiant.date_naissance)} à {etudiant.lieu_naissance}", SMALL)],
         [Paragraph("<b>Sexe</b>", SMALL),
          Paragraph(etudiant.get_sexe_display(), SMALL)],
         [Paragraph("<b>Matricule</b>", SMALL),
@@ -274,6 +274,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     grande_unite_actuelle = None
 
     for ue in ues:
+        
         ecues = ue.ecues.all()
 
         if not ecues.exists():
@@ -293,11 +294,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
             table_style.append(("SPAN", (0, ligne), (7, ligne)))
             table_style.append(("BACKGROUND", (0, ligne), (7, ligne), colors.HexColor("#D9D9D9")))
             table_style.append(("FONTNAME", (0, ligne), (7, ligne), "Helvetica-Bold"))
-
-        # --- 1) On calcule d'abord la moyenne de TOUTES les ECUE de cette UE ---
-        # (c'est ici qu'était le bug principal : avant, la moyenne UE affichée
-        # était calculée après la 1ère ECUE seulement, au lieu d'être calculée
-        # après TOUTES les ECUE de l'UE)
         ecue_data = []  # (ecue, moyenne) pour construire les lignes ensuite
         somme = 0
         coef = 0
@@ -430,7 +426,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         [
             Paragraph("<b>Récapitulatif</b>", SMALL),
             Paragraph("<b>Responsable</b>", SMALL),
-            Paragraph("<b>Année</b>", SMALL),
+            Paragraph("<b>Année de validation</b>", SMALL),
             Paragraph("<b>Décision</b>", SMALL),
         ],
         [
@@ -447,8 +443,9 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
                 SMALL,
             ),
             Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""", SMALL),
-            Paragraph(f"ANNÉE SCOLAIRE : {annee}", SMALL),
-            Paragraph(decision_globale, SMALL),
+            Paragraph(f"{annee}", SMALL),
+            # Paragraph(decision_globale, SMALL),
+            Paragraph("", SMALL),
         ]
     ], colWidths=[8.5 * cm, 4 * cm, 4 * cm, 4 * cm],
        rowHeights=[0.8 * cm, 2.7 * cm])
@@ -470,8 +467,8 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     elements.append(recap_final_table)
 
     signature_table = Table([[
-        Paragraph("<b>RESPONSABLE</b><br/>", styles["Normal"]),
-        Paragraph("<b>VISA</b><br/><br/>""Dr.JERRY TAFOTIE<br/><br/>""", styles["Normal"]),
+        Paragraph("<b>DECISION</b><br/>", styles["Normal"]),
+        Paragraph("<b>VISA DU CHEF D'ETABLISSEMENT</b><br/><br/>""<br/><br/>""", styles["Normal"]),
     ]], colWidths=[8 * cm, 8 * cm], rowHeights=[3 * cm])
 
     signature_table.setStyle(TableStyle([

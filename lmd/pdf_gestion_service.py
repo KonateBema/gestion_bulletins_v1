@@ -298,6 +298,10 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     # =========================================================
     # CADRE ÉTUDIANT
     # =========================================================
+    date_lieu_naissance = safe_date(etudiant.date_naissance)
+
+    if etudiant.lieu_naissance:
+       date_lieu_naissance += f" à {etudiant.lieu_naissance}"
 
     cadre_etudiant = Table(
         [
@@ -309,11 +313,11 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
                 )
             ],
             [
-                Paragraph("<b>Date de naissance</b>", SMALL),
-                Paragraph(
-                    safe_date(etudiant.date_naissance),
-                    SMALL
-                )
+                Paragraph("<b>Date et lieu de naissance</b>", SMALL),
+                 Paragraph(
+                date_lieu_naissance,
+                SMALL
+            )
             ],
             [
                 Paragraph("<b>Sexe</b>", SMALL),
@@ -987,13 +991,13 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     signature_table = Table(
         [[
             Paragraph(
-                "<b>RESPONSABLE</b><br/>",
+                "<b>DECISION</b><br/>",
                 styles["Normal"]
             ),
 
             Paragraph(
-                "<b>VISA</b><br/><br/>"
-                "Dr.JERRY TAFOTIE<br/><br/>",
+                "<b>VISA DU CHEF D'ETABLISSEMENT</b><br/><br/>"
+                "<br/><br/>",
                 styles["Normal"]
             ),
         ]],

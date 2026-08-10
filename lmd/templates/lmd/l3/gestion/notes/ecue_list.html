@@ -11,7 +11,7 @@
 
     <div>
         <h3 class="fw-bold text-primary mb-1">
-            📝 Saisie des notes LMD
+            📝 Saisie des notes LMD 
         </h3>
 
         <p class="text-muted mb-0">
@@ -29,7 +29,6 @@
 
 </div>
 
-
 <!-- ========================================================= -->
 <!-- FILTRES -->
 <!-- ========================================================= -->
@@ -39,7 +38,7 @@
     <div class="card-header bg-primary text-white py-3">
 
         <h5 class="mb-0 fw-bold">
-            🔎 Filtrer les enseignements
+            🔎 Filtrer les enseignements 
         </h5>
 
     </div>
@@ -57,7 +56,7 @@
                 <div class="col-md-4">
 
                     <label for="niveau" class="form-label fw-bold">
-                        🎓 Niveau
+                        🎓 Niveau 
                     </label>
 
                     <select
@@ -237,13 +236,10 @@
 
 </div>
 
-
 <!-- ========================================================= -->
 <!-- FILTRE ACTUEL -->
 <!-- ========================================================= -->
-
 {% if niveau_selectionne %}
-
     <div class="alert alert-info shadow-sm border-0">
 
         <div class="d-flex align-items-center">
@@ -288,13 +284,10 @@
 
 {% endif %}
 
-
 <!-- ========================================================= -->
 <!-- LISTE DES ECUE -->
 <!-- ========================================================= -->
-
 {% if ecues %}
-
     <div class="card shadow border-0">
 
         <div class="card-header bg-dark text-white py-3">
@@ -302,23 +295,12 @@
             <h5 class="mb-0 fw-bold">
                 📚 ECUE disponibles
             </h5>
-
         </div>
-
         <div class="card-body p-0">
-
             <div class="table-responsive">
-
                 <table class="table table-hover align-middle mb-0">
-
                     <thead class="table-dark">
-
                         <tr>
-
-                            <th class="text-center">
-                                #
-                            </th>
-
                             <th>
                                 UE
                             </th>
@@ -346,78 +328,46 @@
                         </tr>
 
                     </thead>
-
                     <tbody>
-
                         {% for ecue in ecues %}
 
                             <tr>
-
-                                <td class="text-center fw-bold">
-                                    {{ forloop.counter }}
-                                </td>
-
                                 <!-- UE -->
-
                                 <td>
-
                                     <strong class="text-primary">
                                         {{ ecue.ue.code }}
                                     </strong>
-
                                     <br>
-
                                     <small class="text-muted">
                                         {{ ecue.ue.libelle }}
                                     </small>
-
                                 </td>
-
-
                                 <!-- CODE ECUE -->
-
                                 <td>
-
                                     <span class="badge bg-dark">
                                         {{ ecue.code }}
                                     </span>
 
                                 </td>
-
-
                                 <!-- LIBELLE ECUE -->
-
                                 <td>
                                     {{ ecue.libelle }}
                                 </td>
-
-
                                 <!-- CREDIT -->
-
                                 <td class="text-center">
-
                                     <span class="badge bg-info text-dark">
                                         {{ ecue.credit }}
                                     </span>
-
                                 </td>
-
-
                                 <!-- COEFFICIENT -->
-
                                 <td class="text-center">
 
                                     <span class="badge bg-secondary">
                                         {{ ecue.coefficient }}
                                     </span>
-
                                 </td>
-
-
                                 <!-- ACTION -->
-
                                 <td class="text-center">
-
                                     <a
                                         href="{% url 'l3_gestion_saisie_notes' ecue.id %}"
                                         class="btn btn-success btn-sm"
@@ -427,9 +377,7 @@
                                     </a>
 
                                 </td>
-
                             </tr>
-
                         {% endfor %}
 
                     </tbody>
@@ -441,12 +389,8 @@
         </div>
 
     </div>
-
-
 {% elif niveau_selectionne and ue_selectionnee %}
-
     <div class="alert alert-warning text-center shadow-sm border-0">
-
         <div class="fs-3 mb-2">
             ⚠️
         </div>
@@ -460,8 +404,6 @@
         </div>
 
     </div>
-
-
 {% elif niveau_selectionne %}
 
     <div class="alert alert-warning text-center shadow-sm border-0">
@@ -469,30 +411,19 @@
         <div class="fs-3 mb-2">
             ⚠️
         </div>
-
         <strong>
             Aucune UE trouvée.
         </strong>
-
         <div class="small mt-1">
             Aucune UE n'est disponible pour le niveau
             <strong>{{ niveau_selectionne }}</strong>.
         </div>
 
     </div>
-
 {% endif %}
 
 </div>
-
-<!-- ========================================================= -->
-
-<!-- STYLE -->
-
-<!-- ========================================================= -->
-
 <style>
-
     .form-select {
         min-height: 45px;
         border-radius: 8px;
@@ -503,17 +434,14 @@
         cursor: not-allowed;
         opacity: 0.75;
     }
-
     .form-select:not(:disabled):focus {
         border-color: #0d6efd;
         box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
     }
-
     .card {
         border-radius: 12px;
         overflow: hidden;
     }
-
     .table th {
         white-space: nowrap;
     }
@@ -525,15 +453,11 @@
     .table tbody tr:hover {
         transform: translateY(-1px);
     }
-
     .badge {
         font-weight: 600;
     }
-
     .alert {
         border-radius: 10px;
     }
-
 </style>
-
 {% endblock %}
