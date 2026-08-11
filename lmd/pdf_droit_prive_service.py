@@ -71,13 +71,13 @@ def add_footer(canvas, doc):
 def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
     # Libellé affiché en haut du bulletin.
-    session_label = "Normale"
+    session_label = "1"
 
     # La base contient des valeurs hétérogènes pour désigner la session
     # normale selon comment les notes ont été saisies ("1", "Normale",
     # "NORMALE", ...). On accepte donc toutes ces variantes au lieu
     # d'en imposer une seule, pour ne pas rater des notes existantes.
-    SESSIONS_NORMALES = ["1", "Normale", "NORMALE", "normale"]
+    SESSIONS_NORMALES = ["1", "2", "3", "4"]
 
     moyennes_ues = []  # une valeur par UE (moyenne pondérée des ECUE de cette UE)
 

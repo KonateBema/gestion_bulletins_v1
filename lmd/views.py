@@ -1982,7 +1982,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import UE, FiliereLMD
 
 
-def l3_droit_ue(request):
+def l3_droit_ueAAA(request):
 
     # Récupérer la filière Droit Privé
     filiere = get_object_or_404(
@@ -2062,7 +2062,84 @@ def l3_droit_ue(request):
         "lmd/l3/droit/ue.html",
         context
     )   
-    
+def l3_droit_ue(request):
+
+    # =========================================================
+    # 1. RÉCUPÉRER LA FILIÈRE DROIT PRIVÉ
+    # =========================================================
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+    # =========================================================
+    # 2. RÉCUPÉRER LES FILTRES
+    # =========================================================
+
+    niveau = request.GET.get("niveau", "L1")
+    semestre = request.GET.get("semestre", "S1")
+
+    # =========================================================
+    # 3. SÉCURISER LE NIVEAU
+    # =========================================================
+
+    niveaux_valides = ["L1", "L2", "L3"]
+
+    if niveau not in niveaux_valides:
+        niveau = "L1"
+
+    # =========================================================
+    # 4. SÉCURISER LE SEMESTRE
+    # =========================================================
+
+    semestres_valides = [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+    ]
+
+    if semestre not in semestres_valides:
+        semestre = "S1"
+
+    # =========================================================
+    # 5. RÉCUPÉRER LES UE
+    # =========================================================
+
+    ues = (
+        UE.objects
+        .filter(
+            filiere=filiere,
+            niveau=niveau,
+            semestre=semestre
+        )
+        .prefetch_related("ecues")
+        .order_by("code")
+    )
+
+    # =========================================================
+    # 6. CONTEXTE
+    # =========================================================
+
+    context = {
+        "filiere": filiere,
+        "ues": ues,
+        "niveau": niveau,
+        "semestre": semestre,
+    }
+
+    # =========================================================
+    # 7. AFFICHAGE
+    # =========================================================
+
+    return render(
+        request,
+        "lmd/l3/droit/ue.html",
+        context
+    )    
 
 def l3_droit_ue_addAAZ(request):
 
@@ -2215,6 +2292,47 @@ def l3_droit_ue_deleteAAA(request, pk):
     )
 
 def l3_droit_ue_delete(request, pk):
+
+    # =========================================================
+    # 1. RÉCUPÉRER L'UE
+    # =========================================================
+
+    ue = get_object_or_404(
+        UE,
+        pk=pk,
+        filiere__libelle="Droit Privé"
+    )
+
+    # =========================================================
+    # 2. SUPPRESSION
+    # =========================================================
+
+    if request.method == "POST":
+
+        # Conserver les filtres avant suppression
+        niveau = ue.niveau
+        semestre = ue.semestre
+
+        ue.delete()
+
+        # Retour à la liste
+        return redirect(
+            f"{reverse('l3_droit_ue')}?niveau={niveau}&semestre={semestre}"
+        )
+
+    # =========================================================
+    # 3. PAGE DE CONFIRMATION
+    # =========================================================
+
+    return render(
+        request,
+        "lmd/l3/droit/ue_confirm_delete.html",
+        {
+            "ue": ue,
+        }
+    )
+    
+def l3_droit_ue_deleteAAZ(request, pk):
 
     ue = get_object_or_404(
         UE,
@@ -2524,113 +2642,6 @@ def l3_droit_prive_notes_detail(request):
         }
     )
 
-def l3_droit_notesDDF(request):
-    
-    notes = (
-        NoteLMD.objects
-        .filter(etudiant__filiere__libelle="Droit Privé")
-        .select_related("etudiant", "ecue")
-        .order_by(
-            "etudiant__nom",
-            "etudiant__prenoms",
-            "ecue__code"
-        )
-    )
-
-    etudiants = EtudiantLMD.objects.filter(
-        filiere__libelle__icontains="Droit",
-        niveau__icontains="L3"
-    ).order_by(
-        "nom",
-        "prenoms"
-    )
-
-    return render(
-        request,
-        "lmd/l3/droit/notes.html",
-        {
-            "etudiants": etudiants,
-             "notes": notes,
-           
-        }
-    )
-
-def l3_droit_notesAAA(request):
-
-    filiere = get_object_or_404(
-        FiliereLMD,
-        libelle="Droit Privé"
-    )
-
-    niveau = request.GET.get("niveau", "L1")
-
-    # sécurité
-    if niveau not in ["L1", "L2", "L3"]:
-        niveau = "L1"
-
-
-    semestre = request.GET.get("semestre", "S1")
-
-
-    # étudiants du niveau choisi
-
-    etudiants = (
-        EtudiantLMD.objects
-        .filter(
-            filiere=filiere,
-            niveau=niveau
-        )
-        .order_by(
-            "nom",
-            "prenoms"
-        )
-    )
-
-
-    # notes existantes
-
-    notes = (
-        NoteLMD.objects
-        .filter(
-            etudiant__filiere=filiere,
-            etudiant__niveau=niveau,
-            ecue__semestre=semestre
-        )
-        .select_related(
-            "etudiant",
-            "ecue"
-        )
-        .order_by(
-            "etudiant__nom",
-            "ecue__code"
-        )
-    )
-
-
-    # ECUE disponibles
-
-    ecues = (
-        ECUE.objects
-        .filter(
-            ue__filiere=filiere,
-            semestre=semestre
-        )
-        .order_by("code")
-    )
-
-
-    return render(
-        request,
-        "lmd/l3/droit/notes.html",
-        {
-            "etudiants": etudiants,
-            "notes": notes,
-            "ecues": ecues,
-            "niveau": niveau,
-            "semestre": semestre,
-        }
-    )
-
 def l3_droit_notes(request):
 
     # =========================================================
@@ -2783,89 +2794,7 @@ def droit_prive_notes_detail(request):
     )
 
 
-def droit_prive_note_addAZ(request):
-
-    if request.method == "POST":
-
-        ecue_id = request.POST.get("ecue_id")
-
-        ecue = get_object_or_404(
-            ECUE,
-            id=ecue_id
-        )
-
-        for key, value in request.POST.items():
-
-            if key.startswith("cc_"):
-
-                etudiant_id = key.replace(
-                    "cc_",
-                    ""
-                )
-
-                # récupération CC
-                cc = value.strip()
-
-                if cc == "":
-                    cc = 0
-                else:
-                    cc = float(cc)
-
-                # récupération examen
-                examen = request.POST.get(
-                    f"examen_{etudiant_id}",
-                    ""
-                )
-                examen = examen.strip()
-
-                if examen == "":
-                    examen = 0
-                else:
-                    examen = float(examen)
-
-                etudiant = get_object_or_404(
-                    EtudiantLMD,
-                    id=etudiant_id
-                )
-
-                moyenne = (
-                    cc * 0.4
-                    +
-                    examen * 0.6
-                )
-
-
-
-                NoteLMD.objects.update_or_create(
-
-                    etudiant=etudiant,
-
-                    ecue=ecue,
-
-                    defaults={
-
-                        "cc": cc,
-
-                        "examen": examen,
-
-                        "moyenne": moyenne
-
-                    }
-
-                )
-
-
-
-        messages.success(
-            request,
-            "Notes enregistrées avec succès"
-        )
-
-
-        return redirect(
-            "droit_prive_notes"
-        )
-        
+     
 def droit_prive_note_add(request):
 
     if request.method != "POST":
@@ -3017,6 +2946,284 @@ def droit_prive_note_add(request):
         f"{reverse('droit_prive_notes')}?"
         f"niveau={niveau}&semestre={semestre}"
     )
+ 
+
+def droit_prive_note_addAAAA(request):
+
+    if request.method != "POST":
+        return redirect("droit_prive_notes")
+
+    # =========================================================
+    # RÉCUPÉRATION DES DONNÉES
+    # =========================================================
+
+    ecue_id = request.POST.get("ecue_id")
+    niveau = request.POST.get("niveau")
+    semestre = request.POST.get("semestre")
+
+    # Session envoyée par le formulaire
+    # Session 1 par défaut
+    session = request.POST.get("session", "1")
+
+    # =========================================================
+    # VÉRIFICATION DU NIVEAU
+    # =========================================================
+
+    if niveau not in ["L1", "L2", "L3"]:
+        messages.error(
+            request,
+            "Niveau invalide."
+        )
+
+        return redirect("droit_prive_notes")
+
+    # =========================================================
+    # VÉRIFICATION DU SEMESTRE
+    # =========================================================
+
+    if semestre not in [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+    ]:
+        messages.error(
+            request,
+            "Semestre invalide."
+        )
+
+        return redirect(
+            f"{reverse('droit_prive_notes')}?"
+            f"niveau={niveau}&semestre=S1&session={session}"
+        )
+
+    # =========================================================
+    # VÉRIFICATION DE LA SESSION
+    # =========================================================
+
+    if session not in ["1", "2"]:
+        messages.error(
+            request,
+            "Session invalide."
+        )
+
+        return redirect(
+            f"{reverse('droit_prive_notes')}?"
+            f"niveau={niveau}&semestre={semestre}&session=1"
+        )
+
+    # =========================================================
+    # VÉRIFICATION DE L'ECUE
+    # =========================================================
+
+    if not ecue_id:
+
+        messages.error(
+            request,
+            "Veuillez sélectionner une ECUE."
+        )
+
+        return redirect(
+            f"{reverse('droit_prive_notes')}?"
+            f"niveau={niveau}&semestre={semestre}"
+            f"&session={session}"
+        )
+
+    # =========================================================
+    # RÉCUPÉRER L'ECUE
+    # =========================================================
+
+    ecue = get_object_or_404(
+        ECUE,
+        id=ecue_id
+    )
+
+    # =========================================================
+    # VÉRIFIER LE NIVEAU DE L'ECUE
+    # =========================================================
+
+    if ecue.ue.niveau != niveau:
+
+        messages.error(
+            request,
+            "L'ECUE sélectionnée ne correspond pas au niveau choisi."
+        )
+
+        return redirect(
+            f"{reverse('droit_prive_notes')}?"
+            f"niveau={niveau}&semestre={semestre}"
+            f"&session={session}"
+        )
+
+    # =========================================================
+    # VÉRIFIER LE SEMESTRE DE L'ECUE
+    # =========================================================
+
+    if ecue.ue.semestre != semestre:
+
+        messages.error(
+            request,
+            f"L'ECUE sélectionnée n'appartient pas au {semestre}."
+        )
+
+        return redirect(
+            f"{reverse('droit_prive_notes')}?"
+            f"niveau={niveau}&semestre={semestre}"
+            f"&session={session}"
+        )
+
+    # =========================================================
+    # PARCOURIR LES ÉTUDIANTS
+    # =========================================================
+
+    nombre_notes = 0
+
+    for key, value in request.POST.items():
+
+        # On récupère uniquement les champs CC
+        if not key.startswith("cc_"):
+            continue
+
+        # =====================================================
+        # RÉCUPÉRER L'ID DE L'ÉTUDIANT
+        # =====================================================
+
+        etudiant_id = key.replace("cc_", "")
+
+        etudiant = get_object_or_404(
+            EtudiantLMD,
+            id=etudiant_id
+        )
+
+        # =====================================================
+        # VÉRIFIER QUE L'ÉTUDIANT APPARTIENT AU BON NIVEAU
+        # =====================================================
+
+        if etudiant.niveau != niveau:
+
+            continue
+
+        # =====================================================
+        # CC
+        # =====================================================
+
+        cc_value = value.strip()
+
+        if cc_value == "":
+            cc = 0
+        else:
+            try:
+                cc = float(cc_value)
+            except (ValueError, TypeError):
+                cc = 0
+
+        # =====================================================
+        # EXAMEN
+        # =====================================================
+
+        examen_value = request.POST.get(
+            f"examen_{etudiant_id}",
+            ""
+        ).strip()
+
+        if examen_value == "":
+            examen = 0
+        else:
+            try:
+                examen = float(examen_value)
+            except (ValueError, TypeError):
+                examen = 0
+
+        # =====================================================
+        # VALIDATION DES NOTES
+        # =====================================================
+
+        if cc < 0 or cc > 20:
+
+            messages.error(
+                request,
+                f"La note de CC de "
+                f"{etudiant.nom} {etudiant.prenoms} "
+                f"doit être comprise entre 0 et 20."
+            )
+
+            return redirect(
+                f"{reverse('droit_prive_notes')}?"
+                f"niveau={niveau}&semestre={semestre}"
+                f"&session={session}"
+            )
+
+        if examen < 0 or examen > 20:
+
+            messages.error(
+                request,
+                f"La note d'examen de "
+                f"{etudiant.nom} {etudiant.prenoms} "
+                f"doit être comprise entre 0 et 20."
+            )
+
+            return redirect(
+                f"{reverse('droit_prive_notes')}?"
+                f"niveau={niveau}&semestre={semestre}"
+                f"&session={session}"
+            )
+
+        # =====================================================
+        # ENREGISTREMENT DE LA NOTE
+        # =====================================================
+
+        NoteLMD.objects.update_or_create(
+
+            etudiant=etudiant,
+
+            ecue=ecue,
+
+            semestre=semestre,
+
+            session=session,
+
+            defaults={
+                "cc": cc,
+                "examen": examen,
+            }
+        )
+
+        nombre_notes += 1
+
+    # =========================================================
+    # MESSAGE DE SUCCÈS
+    # =========================================================
+
+    if session == "1":
+
+        libelle_session = "Session 1"
+
+    else:
+
+        libelle_session = "Session 2"
+
+    messages.success(
+        request,
+        f"{nombre_notes} note(s) du {semestre} "
+        f"- {libelle_session} ont été enregistrée(s) "
+        f"avec succès."
+    )
+
+    # =========================================================
+    # RETOUR À LA PAGE AVEC LES FILTRES
+    # =========================================================
+
+    return redirect(
+        f"{reverse('droit_prive_notes')}?"
+        f"niveau={niveau}"
+        f"&semestre={semestre}"
+        f"&session={session}"
+    )
+
+
+ 
  
 def l3_droit_bulletins(request):
 
@@ -6588,7 +6795,7 @@ def l3_qhse_etudiant_delete(request,pk):
 # UE / ECUE QHSE
 # =====================================================
 
-def l3_qhse_ue(request):
+def l3_qhse_ueAAA(request):
     semestre = request.GET.get("semestre", "S1")
 
     ues = (
@@ -6611,7 +6818,78 @@ def l3_qhse_ue(request):
         context,
     )
 
+def l3_qhse_ue(request):
 
+    # =========================================================
+    # 1. RÉCUPÉRER LES FILTRES
+    # =========================================================
+
+    niveau = request.GET.get("niveau", "L1")
+    semestre = request.GET.get("semestre", "S1")
+
+    # =========================================================
+    # 2. SÉCURISER LE NIVEAU
+    # =========================================================
+
+    niveaux_valides = [
+        "L1",
+        "L2",
+        "L3",
+    ]
+
+    if niveau not in niveaux_valides:
+        niveau = "L3"
+
+    # =========================================================
+    # 3. SÉCURISER LE SEMESTRE
+    # =========================================================
+
+    semestres_valides = [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+    ]
+
+    if semestre not in semestres_valides:
+        semestre = "S1"
+
+    # =========================================================
+    # 4. RÉCUPÉRER LES UE QHSE
+    # =========================================================
+
+    ues = (
+        UE.objects
+        .filter(
+            filiere__code="QHSE-L3",
+            niveau=niveau,
+            semestre=semestre
+        )
+        .prefetch_related("ecues")
+        .order_by("ordre", "code")
+    )
+
+    # =========================================================
+    # 5. CONTEXTE
+    # =========================================================
+
+    context = {
+        "ues": ues,
+        "niveau": niveau,
+        "semestre": semestre,
+    }
+
+    # =========================================================
+    # 6. AFFICHAGE
+    # =========================================================
+
+    return render(
+        request,
+        "lmd/l3_qhse/ue.html",
+        context,
+    )
 # =====================================================
 # SAISIE NOTES QHSE
 # =====================================================

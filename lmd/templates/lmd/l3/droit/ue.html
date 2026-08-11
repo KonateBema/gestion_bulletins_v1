@@ -4,390 +4,34 @@
 
 <div class="container-fluid mt-4">
 
+<!-- ============================= -->
 
 <!-- HEADER -->
-<div class="card shadow border-0 mb-4">
 
-    <div class="card-body d-flex justify-content-between align-items-center">
-
-        <div>
-            <h3 class="fw-bold text-success mb-1">
-                ⚖️ UE / ECUE -  Droit Privé (L1 • L2 • L3)
-            </h3>
-
-            <p class="text-muted mb-0">
-                Gestion des unités d'enseignement et des ECUE de la filière Droit Privé.
-            </p>
-        </div>
-
-        <div>
-            <a href="{% url 'l3_droit_ue_add' %}"
-               class="btn btn-success">
-
-                <i class="bi bi-plus-circle"></i>
-                Ajouter une UE
-
-            </a>
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ============================= -->
-<!-- SELECTION DU SEMESTRE -->
 <!-- ============================= -->
 
 <div class="card shadow border-0 mb-4">
-    <div class="card-body">
 
-        <form method="get" class="row g-3">
+<div class="card-body d-flex justify-content-between align-items-center">
 
-            <div class="col-md-4">
+    <div>
 
-                <label class="form-label">
-                    Niveau
-                </label>
+        <h3 class="fw-bold text-success mb-1">
 
-                <select name="niveau" class="form-select">
+            ⚖️ UE / ECUE - Droit Privé
 
-                    <option value="L1"
-                        {% if niveau == "L1" %}selected{% endif %}>
-                        Licence 1
-                    </option>
+        </h3>
 
-                    <option value="L2"
-                        {% if niveau == "L2" %}selected{% endif %}>
-                        Licence 2
-                    </option>
+        <p class="text-muted mb-0">
 
-                    <option value="L3"
-                        {% if niveau == "L3" %}selected{% endif %}>
-                        Licence 3
-                    </option>
-
-                </select>
-
-            </div>
-
-            <div class="col-md-4">
-
-                <label class="form-label">
-                    Semestre
-                </label>
-
-                <select name="semestre" class="form-select">
-
-                    <option value="S1"
-                        {% if semestre == "S1" %}selected{% endif %}>
-                        Semestre 1
-                    </option>
-
-                    <option value="S2"
-                        {% if semestre == "S2" %}selected{% endif %}>
-                        Semestre 2
-                    </option>
-
-                </select>
-
-            </div>
-
-            <div class="col-md-2 d-flex align-items-end">
-
-                <button class="btn btn-success w-100">
-
-                    Filtrer
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-</div>
-
-<!-- ============================= -->
-<!-- TITRE DU SEMESTRE -->
-<!-- ============================= -->
-
-<div class="alert alert-success shadow-sm border-0">
-
-    <div class="d-flex align-items-center">
-
-        <i class="bi bi-journal-bookmark-fill fs-4 me-2"></i>
-
-        <div>
-
-            <strong>
-                {% if semestre == "S1" %}
-                    Semestre 1
-                {% elif semestre == "S2" %}
-                    Semestre 2
-                {% else %}
-                    Semestre non sélectionné
-                {% endif %}
-            </strong>
-
-            <br>
-
-            <small>
-                Liste des unités d'enseignement et ECUE du semestre sélectionné.
-            </small>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ============================= -->
-<!-- LISTE DES UE -->
-<!-- ============================= -->
-
-{% for ue in ues %}
-
-<div class="card shadow border-0 mb-4">
-
-    <!-- ENTETE UE -->
-
-    <div class="card-header bg-success text-white">
-
-        <div class="d-flex justify-content-between align-items-center">
-
-            <div>
-
-                <h5 class="mb-1 fw-bold">
-
-                    📘 {{ ue.code }} - {{ ue.libelle }}
-
-                </h5>
-
-                <div class="d-flex align-items-center gap-2">
-
-                    <small>
-                        Crédit UE :
-                    </small>
-
-                    <span class="badge bg-light text-dark">
-                        {{ ue.credit }}
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- ACTIONS UE -->
-
-            <div class="d-flex gap-2">
-
-                <a href="{% url 'l3_droit_ecue_add' ue.id %}"
-                   class="btn btn-light btn-sm">
-
-                    <i class="bi bi-plus-circle"></i>
-                    Ajouter ECUE
-
-                </a>
-
-
-                <a href="{% url 'l3_droit_ue_update' ue.id %}"
-                   class="btn btn-warning btn-sm">
-
-                    <i class="bi bi-pencil"></i>
-
-                </a>
-
-
-                <a href="{% url 'l3_droit_ue_delete' ue.id %}"
-                   class="btn btn-danger btn-sm">
-
-                    <i class="bi bi-trash"></i>
-
-                </a>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- TABLE ECUE -->
-
-    <div class="card-body">
-
-        <div class="table-responsive">
-
-            <table class="table table-hover align-middle mb-0">
-
-                <thead class="table-dark">
-
-                    <tr>
-
-                        <th>
-                            Code ECUE
-                        </th>
-
-                        <th>
-                            Libellé ECUE
-                        </th>
-
-                        <th>
-                            Coefficient
-                        </th>
-
-                        <th>
-                            Crédit
-                        </th>
-
-                        <th class="text-center">
-                            Actions
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                {% for ecue in ue.ecues.all %}
-
-                <tr>
-
-                    <td>
-
-                        <span class="badge bg-info text-dark">
-
-                            {{ ecue.code }}
-
-                        </span>
-
-                    </td>
-
-
-                    <td class="fw-semibold">
-
-                        {{ ecue.libelle }}
-
-                    </td>
-
-
-                    <td>
-
-                        {{ ecue.coefficient }}
-
-                    </td>
-
-
-                    <td>
-
-                        <span class="badge bg-success">
-
-                            {{ ecue.credit }}
-
-                        </span>
-
-                    </td>
-
-
-                    <td class="text-center">
-
-                        <a href="{% url 'l3_droit_ecue_update' ecue.id %}"
-                           class="btn btn-warning btn-sm"
-                           title="Modifier">
-
-                            <i class="bi bi-pencil"></i>
-
-                        </a>
-
-
-                        <a href="{% url 'l3_droit_ecue_delete' ecue.id %}"
-                           class="btn btn-danger btn-sm"
-                           title="Supprimer">
-
-                            <i class="bi bi-trash"></i>
-
-                        </a>
-
-                    </td>
-
-                </tr>
-
-
-                {% empty %}
-
-                <tr>
-
-                    <td colspan="5"
-                        class="text-center text-muted py-4">
-
-                        <i class="bi bi-journal-x fs-3"></i>
-
-                        <br>
-
-                        Aucun ECUE associé à cette UE.
-
-                        <br>
-
-                        <a href="{% url 'l3_droit_ecue_add' ue.id %}"
-                           class="btn btn-sm btn-outline-success mt-2">
-
-                            <i class="bi bi-plus-circle"></i>
-                            Ajouter un ECUE
-
-                        </a>
-
-                    </td>
-
-                </tr>
-
-                {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-{% empty %}
-
-
-<!-- AUCUNE UE -->
-
-<div class="card shadow border-0">
-
-    <div class="card-body text-center py-5">
-
-        <i class="bi bi-journal-x text-warning fs-1"></i>
-
-        <h5 class="mt-3">
-            Aucune UE enregistrée pour ce semestre
-        </h5>
-
-        <p class="text-muted">
-
-            Aucune unité d'enseignement n'est disponible pour
-
-            {% if semestre == "S1" %}
-                le Semestre 1.
-            {% elif semestre == "S2" %}
-                le Semestre 2.
-            {% else %}
-                ce semestre.
-            {% endif %}
+            Gestion des unités d'enseignement et des éléments constitutifs
 
         </p>
 
-        <a href="{% url 'l3_droit_ue_add' %}"
+    </div>
+    <div>
+
+        <a href="{% url 'l3_droit_ue_add' %}?niveau={{ niveau }}&semestre={{ semestre }}"
            class="btn btn-success">
 
             <i class="bi bi-plus-circle"></i>
@@ -400,9 +44,624 @@
 
 </div>
 
+</div>
+
+<!-- ============================= -->
+
+<!-- FILTRE NIVEAU -->
+
+<!-- ============================= -->
+<div class="card shadow border-0 mb-4">
+<div class="card-body">
+
+    <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+
+        <span class="fw-bold text-muted me-2">
+
+            <i class="bi bi-mortarboard"></i>
+
+            Sélectionner le niveau :
+
+        </span>
+        <!-- L1 -->
+
+        <a href="?niveau=L1&semestre={{ semestre }}"
+           class="btn
+           {% if niveau == 'L1' %}
+               btn-success
+           {% else %}
+               btn-outline-success
+           {% endif %}">
+
+            <i class="bi bi-1-circle"></i>
+
+            Licence 1
+
+        </a>
+
+        <!-- L2 -->
+
+        <a href="?niveau=L2&semestre={{ semestre }}"
+           class="btn
+           {% if niveau == 'L2' %}
+               btn-success
+           {% else %}
+               btn-outline-success
+           {% endif %}">
+
+            <i class="bi bi-2-circle"></i>
+
+            Licence 2
+
+        </a>
+        <!-- L3 -->
+
+        <a href="?niveau=L3&semestre={{ semestre }}"
+           class="btn
+           {% if niveau == 'L3' %}
+               btn-success
+           {% else %}
+               btn-outline-success
+           {% endif %}">
+
+            <i class="bi bi-3-circle"></i>
+            Licence 3
+        </a>
+    </div>
+</div>
+
+</div>
+
+<!-- ============================= -->
+
+<!-- FILTRE SEMESTRE -->
+
+<!-- ============================= -->
+<div class="card shadow border-0 mb-4">
+<div class="card-body">
+
+    <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+
+        <span class="fw-bold text-muted me-2">
+
+            <i class="bi bi-calendar3"></i>
+            Sélectionner le semestre :
+        </span>
+        <!-- S1 -->
+
+        <a href="?niveau={{ niveau }}&semestre=S1"
+           class="btn
+           {% if semestre == 'S1' %}
+               btn-success
+           {% else %}
+               btn-outline-success
+           {% endif %}">
+            <i class="bi bi-1-circle"></i>
+            Semestre 1
+        </a>
+        <!-- S2 -->
+
+        <a href="?niveau={{ niveau }}&semestre=S2"
+           class="btn
+           {% if semestre == 'S2' %}
+               btn-success
+           {% else %}
+               btn-outline-success
+           {% endif %}">
+
+            <i class="bi bi-2-circle"></i>
+
+            Semestre 2
+
+        </a>
+        <!-- S3 -->
+
+        <a href="?niveau={{ niveau }}&semestre=S3"
+           class="btn
+           {% if semestre == 'S3' %}
+               btn-success
+           {% else %}
+               btn-outline-success
+           {% endif %}">
+            <i class="bi bi-3-circle"></i>
+            Semestre 3
+        </a>
+
+        <!-- S4 -->
+
+        <a href="?niveau={{ niveau }}&semestre=S4"
+           class="btn
+           {% if semestre == 'S4' %}
+               btn-success
+           {% else %}
+               btn-outline-success
+           {% endif %}">
+
+            <i class="bi bi-4-circle"></i>
+
+            Semestre 4
+
+        </a>
+        <!-- S5 -->
+
+        <a href="?niveau={{ niveau }}&semestre=S5"
+           class="btn
+           {% if semestre == 'S5' %}
+               btn-success
+           {% else %}
+               btn-outline-success
+           {% endif %}">
+
+            <i class="bi bi-5-circle"></i>
+
+            Semestre 5
+
+        </a>
+
+        <!-- S6 -->
+
+        <a href="?niveau={{ niveau }}&semestre=S6"
+           class="btn
+           {% if semestre == 'S6' %}
+               btn-success
+           {% else %}
+               btn-outline-success
+           {% endif %}">
+
+            <i class="bi bi-6-circle"></i>
+
+            Semestre 6
+
+        </a>
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- ============================= -->
+
+<!-- INFORMATIONS -->
+
+<!-- ============================= -->
+
+<div class="alert alert-success shadow-sm border-0">
+
+<div class="d-flex align-items-center">
+
+    <i class="bi bi-journal-bookmark-fill fs-4 me-2"></i>
+
+    <div>
+
+        <strong>
+
+            {% if niveau == "L1" %}
+
+                Licence 1
+
+            {% elif niveau == "L2" %}
+
+                Licence 2
+
+            {% elif niveau == "L3" %}
+
+                Licence 3
+
+            {% endif %}
+
+            -
+
+            {% if semestre == "S1" %}
+
+                Semestre 1
+
+            {% elif semestre == "S2" %}
+
+                Semestre 2
+
+            {% elif semestre == "S3" %}
+
+                Semestre 3
+
+            {% elif semestre == "S4" %}
+
+                Semestre 4
+
+            {% elif semestre == "S5" %}
+
+                Semestre 5
+
+            {% elif semestre == "S6" %}
+
+                Semestre 6
+
+            {% endif %}
+
+        </strong>
+        <br>
+        <small>
+
+            Liste des unités d'enseignement et des ECUE du niveau et semestre sélectionnés.
+
+        </small>
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- ============================= -->
+
+<!-- LISTE DES UE -->
+
+<!-- ============================= -->
+
+{% for ue in ues %}
+
+<div class="card shadow border-0 mb-4">
+
+<!-- ============================= -->
+<!-- ENTÊTE UE -->
+<!-- ============================= -->
+
+<div class="card-header bg-success text-white">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        <div>
+
+            <h5 class="mb-1 fw-bold">
+
+                📘 {{ ue.code }} - {{ ue.libelle }}
+
+            </h5>
+
+
+            <div class="mt-1">
+
+                <span class="badge bg-light text-dark me-2">
+
+                    {{ ue.niveau }}
+
+                </span>
+
+
+                <span class="badge bg-light text-dark me-2">
+
+                    {{ ue.semestre }}
+
+                </span>
+
+
+                <span class="badge bg-light text-dark">
+
+                    {{ ue.credit }} crédit{{ ue.credit|pluralize }}
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- ACTIONS UE -->
+
+        <div class="d-flex gap-2">
+
+
+            <!-- AJOUTER ECUE -->
+
+            <a href="{% url 'l3_droit_ecue_add' ue.id %}"
+               class="btn btn-light btn-sm">
+
+                <i class="bi bi-plus-circle"></i>
+
+                Ajouter ECUE
+
+            </a>
+
+
+            <!-- MODIFIER UE -->
+
+            <a href="{% url 'l3_droit_ue_update' ue.id %}"
+               class="btn btn-warning btn-sm"
+               title="Modifier l'UE">
+
+                <i class="bi bi-pencil"></i>
+
+            </a>
+
+
+            <!-- SUPPRIMER UE -->
+
+            <a href="{% url 'l3_droit_ue_delete' ue.id %}"
+               class="btn btn-danger btn-sm"
+               title="Supprimer l'UE"
+               onclick="return confirm('Voulez-vous supprimer cette UE ?');">
+
+                <i class="bi bi-trash"></i>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- TABLE ECUE -->
+<!-- ============================= -->
+
+<div class="card-body">
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead class="table-dark">
+
+                <tr>
+
+                    <th width="60">
+                        #
+                    </th>
+
+                    <th>
+                        Code ECUE
+                    </th>
+
+                    <th>
+                        Libellé ECUE
+                    </th>
+
+                    <th>
+                        Coefficient
+                    </th>
+
+                    <th>
+                        Crédit
+                    </th>
+
+                    <th class="text-center">
+                        Actions
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+            {% for ecue in ue.ecues.all %}
+
+            <tr>
+
+
+                <!-- NUMÉRO -->
+
+                <td>
+
+                    {{ forloop.counter }}
+
+                </td>
+
+
+                <!-- CODE -->
+
+                <td>
+
+                    <span class="badge bg-info text-dark">
+
+                        {{ ecue.code }}
+
+                    </span>
+
+                </td>
+
+
+                <!-- LIBELLÉ -->
+
+                <td class="fw-semibold">
+
+                    {{ ecue.libelle }}
+
+                </td>
+
+
+                <!-- COEFFICIENT -->
+
+                <td>
+
+                    {{ ecue.coefficient }}
+
+                </td>
+
+
+                <!-- CRÉDIT -->
+
+                <td>
+
+                    <span class="badge bg-success">
+
+                        {{ ecue.credit }}
+
+                    </span>
+
+                </td>
+
+
+                <!-- ACTIONS -->
+
+                <td class="text-center">
+
+
+                    <!-- MODIFIER -->
+
+                    <a href="{% url 'l3_droit_ecue_update' ecue.id %}"
+                       class="btn btn-warning btn-sm"
+                       title="Modifier">
+
+                        <i class="bi bi-pencil"></i>
+
+                    </a>
+
+
+                    <!-- SUPPRIMER -->
+
+                    <a href="{% url 'l3_droit_ecue_delete' ecue.id %}"
+                       class="btn btn-danger btn-sm"
+                       title="Supprimer"
+                       onclick="return confirm('Voulez-vous supprimer cet ECUE ?');">
+
+                        <i class="bi bi-trash"></i>
+
+                    </a>
+
+                </td>
+
+            </tr>
+
+
+            {% empty %}
+
+
+            <!-- AUCUN ECUE -->
+
+            <tr>
+
+                <td colspan="6"
+                    class="text-center text-muted py-4">
+
+                    <i class="bi bi-journal-x fs-3"></i>
+
+                    <br>
+
+                    Aucun ECUE associé à cette UE.
+
+                    <br>
+
+                    <a href="{% url 'l3_droit_ecue_add' ue.id %}"
+                       class="btn btn-sm btn-outline-success mt-2">
+
+                        <i class="bi bi-plus-circle"></i>
+
+                        Ajouter un ECUE
+
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+
+</div>
+
+{% empty %}
+
+<!-- ============================= -->
+
+<!-- AUCUNE UE -->
+
+<!-- ============================= -->
+
+<div class="card shadow border-0">
+
+<div class="card-body text-center py-5">
+
+    <i class="bi bi-journal-x text-warning fs-1"></i>
+
+
+    <h5 class="mt-3">
+
+        Aucune UE enregistrée
+
+    </h5>
+
+
+    <p class="text-muted">
+
+        Aucune unité d'enseignement n'est disponible pour :
+
+        <br>
+
+        <strong>
+
+            {% if niveau == "L1" %}
+
+                Licence 1
+
+            {% elif niveau == "L2" %}
+
+                Licence 2
+
+            {% elif niveau == "L3" %}
+
+                Licence 3
+
+            {% endif %}
+
+            -
+
+            {% if semestre == "S1" %}
+
+                Semestre 1
+
+            {% elif semestre == "S2" %}
+
+                Semestre 2
+
+            {% elif semestre == "S3" %}
+
+                Semestre 3
+
+            {% elif semestre == "S4" %}
+
+                Semestre 4
+
+            {% elif semestre == "S5" %}
+
+                Semestre 5
+
+            {% elif semestre == "S6" %}
+
+                Semestre 6
+
+            {% endif %}
+
+        </strong>
+
+    </p>
+
+
+    <!-- AJOUTER UE -->
+
+    <a href="{% url 'l3_droit_ue_add' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+       class="btn btn-success">
+
+        <i class="bi bi-plus-circle"></i>
+
+        Ajouter une UE
+
+    </a>
+
+</div>
+
+</div>
 
 {% endfor %}
-
 
 </div>
 

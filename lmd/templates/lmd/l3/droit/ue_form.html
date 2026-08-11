@@ -2,95 +2,196 @@
 
 {% block content %}
 
-<div class="container mt-5">
+<div class="container-fluid mt-4">
 
+<!-- ========================================================= -->
+
+<!-- HEADER -->
+
+<!-- ========================================================= -->
+
+<div class="card shadow border-0 mb-4">
+
+<div class="card-body d-flex justify-content-between align-items-center">
+
+    <div>
+
+        <h3 class="fw-bold text-success mb-1">
+
+            {% if ue %}
+
+                <i class="bi bi-pencil-square me-1"></i>
+                Modifier une UE
+
+            {% else %}
+
+                <i class="bi bi-plus-circle me-1"></i>
+                Nouvelle UE - Droit Privé
+
+            {% endif %}
+
+        </h3>
+
+        <p class="text-muted mb-0">
+
+            Gestion des unités d'enseignement par niveau et semestre
+
+        </p>
+
+    </div>
+    <div>
+        <a
+            href="{% url 'l3_droit_ue' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+            class="btn btn-secondary"
+        >
+
+            <i class="bi bi-arrow-left me-1"></i>
+
+            Retour
+
+        </a>
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- ========================================================= -->
+
+<!-- MESSAGES -->
+
+<!-- ========================================================= -->
+
+{% if messages %}
+
+{% for message in messages %}
+
+    <div
+        class="alert
+        {% if message.tags == 'success' %}
+            alert-success
+        {% elif message.tags == 'error' %}
+            alert-danger
+        {% elif message.tags == 'warning' %}
+            alert-warning
+        {% else %}
+            alert-info
+        {% endif %}
+        alert-dismissible fade show shadow-sm"
+        role="alert"
+    >
+
+        {{ message }}
+
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Fermer"
+        ></button>
+
+    </div>
+
+{% endfor %}
+
+{% endif %}
+
+<!-- ========================================================= -->
+
+<!-- FORMULAIRE -->
+
+<!-- ========================================================= -->
+
+<div class="row justify-content-center">
+
+<div class="col-lg-9">
 
     <div class="card shadow border-0">
 
-        <div class="card-header bg-primary text-white">
+        <!-- ================================================= -->
+        <!-- HEADER FORMULAIRE -->
+        <!-- ================================================= -->
 
-            <h4 class="mb-0">
+        <div class="card-header bg-success text-white py-3">
 
-                <i class="bi bi-journal-plus"></i>
+            <h5 class="mb-0 fw-bold">
 
-                {{ titre }}
+                <i class="bi bi-journal-plus me-2"></i>
 
-            </h4>
+                Informations de l'UE
+
+            </h5>
 
         </div>
 
 
+        <!-- ================================================= -->
+        <!-- BODY -->
+        <!-- ================================================= -->
+
         <div class="card-body">
 
-            <form method="post">
+            <form method="POST">
 
                 {% csrf_token %}
 
 
-                <div class="row g-3">
+                <!-- ================================================= -->
+                <!-- NIVEAU + SEMESTRE -->
+                <!-- ================================================= -->
 
+                <div class="row">
 
-                    <!-- CODE UE -->
-
-                    <div class="col-md-4">
-
-                        <label class="form-label">
-                            Code UE
-                        </label>
-
-                        <input type="text" name="code" class="form-control" value="{{ ue.code|default:'' }}" required>
-
-                    </div>
-
-
-                    <!-- LIBELLE UE -->
-
-                    <div class="col-md-8">
-
-                        <label class="form-label">
-                            Libellé UE
-                        </label>
-
-                        <input type="text" name="libelle" class="form-control" value="{{ ue.libelle|default:'' }}"
-                            required>
-
-                    </div>
-
-
-                    <!-- CREDIT -->
-
-                    <div class="col-md-4">
-
-                        <label class="form-label">
-                            Crédit
-                        </label>
-
-                        <input type="number" name="credit" class="form-control" value="{{ ue.credit|default:'' }}"
-                            required>
-
-                    </div>
                     <!-- NIVEAU -->
 
-                    <div class="col-md-4">
-                        <label class="form-label">
+                    <div class="col-md-6 mb-4">
+
+                        <label
+                            for="id_niveau"
+                            class="form-label fw-bold"
+                        >
+
+                            <i class="bi bi-mortarboard me-1"></i>
+
                             Niveau
+
                         </label>
 
-                        <select name="niveau" class="form-select" required>
+
+                        <select
+                            name="niveau"
+                            id="id_niveau"
+                            class="form-select"
+                            required
+                        >
 
                             <option value="">
-                                -- Sélectionner un niveau --
-                            </option>
-                            <option value="L1" {% if ue.niveau == "L1" %}selected{% endif %}>
-                                Licence 1
+                                -- Sélectionner le niveau --
                             </option>
 
-                            <option value="L2" {% if ue.niveau == "L2" %}selected{% endif %}>
-                                Licence 2
+
+                            <option
+                                value="L1"
+                                {% if niveau == "L1" or ue.niveau == "L1" %}selected{% endif %}
+                            >
+                                Licence 1 (L1)
                             </option>
 
-                            <option value="L3" {% if ue.niveau == "L3" %}selected{% endif %}>
-                                Licence 3
+
+                            <option
+                                value="L2"
+                                {% if niveau == "L2" or ue.niveau == "L2" %}selected{% endif %}
+                            >
+                                Licence 2 (L2)
+                            </option>
+
+
+                            <option
+                                value="L3"
+                                {% if niveau == "L3" or ue.niveau == "L3" %}selected{% endif %}
+                            >
+                                Licence 3 (L3)
                             </option>
 
                         </select>
@@ -99,52 +200,346 @@
 
 
                     <!-- SEMESTRE -->
-                    <select name="semestre" class="form-select" required>
 
-                        <option value="">
-                            -- Sélectionner un semestre --
-                        </option>
-                        <option value="S1">
-                            Semestre 1
-                        </option>
-                        <option value="S2">
-                            Semestre 2
-                        </option>
-                        <option value="S3">
-                            Semestre 3
-                        </option>
-                        <option value="S4">
-                            Semestre 4
-                        </option>
-                        <option value="S5">
-                            Semestre 5
-                        </option>
-                        <option value="S6">
-                            Semestre 6
-                        </option>
-                    
-                    </select>
+                    <div class="col-md-6 mb-4">
+
+                        <label
+                            for="id_semestre"
+                            class="form-label fw-bold"
+                        >
+
+                            <i class="bi bi-calendar3 me-1"></i>
+
+                            Semestre
+
+                        </label>
+
+
+                        <select
+                            name="semestre"
+                            id="id_semestre"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                -- Sélectionner le semestre --
+                            </option>
+
+
+                            <option
+                                value="S1"
+                                {% if semestre == "S1" or ue.semestre == "S1" %}selected{% endif %}
+                            >
+                                Semestre 1
+                            </option>
+
+
+                            <option
+                                value="S2"
+                                {% if semestre == "S2" or ue.semestre == "S2" %}selected{% endif %}
+                            >
+                                Semestre 2
+                            </option>
+
+
+                            <option
+                                value="S3"
+                                {% if semestre == "S3" or ue.semestre == "S3" %}selected{% endif %}
+                            >
+                                Semestre 3
+                            </option>
+
+
+                            <option
+                                value="S4"
+                                {% if semestre == "S4" or ue.semestre == "S4" %}selected{% endif %}
+                            >
+                                Semestre 4
+                            </option>
+
+
+                            <option
+                                value="S5"
+                                {% if semestre == "S5" or ue.semestre == "S5" %}selected{% endif %}
+                            >
+                                Semestre 5
+                            </option>
+
+
+                            <option
+                                value="S6"
+                                {% if semestre == "S6" or ue.semestre == "S6" %}selected{% endif %}
+                            >
+                                Semestre 6
+                            </option>
+
+                        </select>
+
+                    </div>
 
                 </div>
 
+                <!-- ================================================= -->
+                <!-- CODE + ORDRE -->
+                <!-- ================================================= -->
+
+                <div class="row">
+
+                    <!-- CODE -->
+
+                    <div class="col-md-8 mb-4">
+
+                        <label
+                            for="id_code"
+                            class="form-label fw-bold"
+                        >
+
+                            <i class="bi bi-code-square me-1"></i>
+
+                            Code UE
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="code"
+                            id="id_code"
+                            class="form-control"
+                            value="{{ ue.code|default:'' }}"
+                            placeholder="Ex : DP-S1-UE01"
+                            required
+                        >
+
+                    </div>
+
+                    <!-- ORDRE -->
+
+                    <div class="col-md-4 mb-4">
+
+                        <label
+                            for="id_ordre"
+                            class="form-label fw-bold"
+                        >
+
+                            <i class="bi bi-sort-numeric-down me-1"></i>
+
+                            Ordre d'affichage
+
+                        </label>
+
+                        <input
+                            type="number"
+                            name="ordre"
+                            id="id_ordre"
+                            class="form-control"
+                            value="{{ ue.ordre|default:'1' }}"
+                            min="1"
+                            required
+                        >
+
+                        <small class="text-muted">
+
+                            Exemple : 1, 2, 3...
+
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <!-- ================================================= -->
+                <!-- LIBELLÉ -->
+                <!-- ================================================= -->
+
+                <div class="mb-4">
+
+                    <label
+                        for="id_libelle"
+                        class="form-label fw-bold"
+                    >
+
+                        <i class="bi bi-journal-text me-1"></i>
+
+                        Libellé de l'UE
+                    </label>
+
+                    <input
+                        type="text"
+                        name="libelle"
+                        id="id_libelle"
+                        class="form-control"
+                        value="{{ ue.libelle|default:'' }}"
+                        placeholder="Ex : Droit constitutionnel"
+                        required
+                    >
+                </div>
+
+                <!-- ================================================= -->
+                <!-- CRÉDIT + FILIÈRE -->
+                <!-- ================================================= -->
+
+                <div class="row">
+
+                    <!-- CRÉDIT -->
+
+                    <div class="col-md-6 mb-4">
+
+                        <label
+                            for="id_credit"
+                            class="form-label fw-bold"
+                        >
+
+                            <i class="bi bi-star me-1"></i>
+
+                            Nombre de crédits
+
+                        </label>
+                        <input
+                            type="number"
+                            name="credit"
+                            id="id_credit"
+                            class="form-control"
+                            value="{{ ue.credit|default:'' }}"
+                            placeholder="Ex : 6"
+                            min="1"
+                            required
+                        >
+
+                    </div>
+
+                    <!-- FILIÈRE -->
+
+                    <div class="col-md-6 mb-4">
+
+                        <label
+                            class="form-label fw-bold"
+                        >
+
+                            <i class="bi bi-building me-1"></i>
+
+                            Filière
+
+                        </label>
+
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="Droit Privé"
+                            readonly
+                        >
+
+                    </div>
+
+                </div>
+
+                <!-- ================================================= -->
+                <!-- INFORMATION -->
+                <!-- ================================================= -->
+
+                <div class="alert alert-info border-0 shadow-sm">
+
+                    <i class="bi bi-info-circle me-1"></i>
+
+                    <strong>Organisation :</strong>
+
+                    Les UE sont affichées selon le niveau,
+                    le semestre puis l'ordre d'affichage.
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- ================================================= -->
                 <!-- BOUTONS -->
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i>
-                        Enregistrer
+                <!-- ================================================= -->
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <!-- ANNULER -->
+
+                    <a
+                        href="{% url 'l3_droit_ue' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+                        class="btn btn-outline-secondary"
+                    >
+
+                        <i class="bi bi-arrow-left me-1"></i>
+
+                        Annuler
+
+                    </a>
+
+
+                    <!-- ENREGISTRER -->
+
+                    <button
+                        type="submit"
+                        class="btn btn-success px-4"
+                    >
+
+                        {% if ue %}
+
+                            <i class="bi bi-check-circle me-1"></i>
+
+                            Enregistrer les modifications
+
+                        {% else %}
+
+                            <i class="bi bi-save me-1"></i>
+
+                            Enregistrer l'UE
+
+                        {% endif %}
 
                     </button>
 
-                    <a href="{% url 'l3_droit_ue' %}" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left"></i>
-                        Retour
-                    </a>
                 </div>
+
             </form>
 
         </div>
 
     </div>
 </div>
+
+</div>
+
+</div>
+
+<!-- ========================================================= -->
+
+<!-- STYLE -->
+
+<!-- ========================================================= -->
+
+<style>
+
+    .form-select,
+    .form-control {
+        min-height: 45px;
+    }
+
+    .card {
+        border-radius: 14px;
+    }
+
+    .card-header {
+        border-radius: 14px 14px 0 0 !important;
+    }
+
+    .form-label {
+        color: #343a40;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.15);
+    }
+
+</style>
 
 {% endblock %}

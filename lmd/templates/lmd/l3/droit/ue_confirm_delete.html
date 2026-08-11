@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+<!-- ============================= -->
+<!-- HEADER -->
+<!-- ============================= -->
+
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-body">
+
+        <h3 class="fw-bold text-danger mb-1">
+
+            <i class="bi bi-trash"></i>
+
+            Suppression d'une UE
+
+        </h3>
+
+        <p class="text-muted mb-0">
+
+            Confirmation de la suppression de l'unité d'enseignement.
+
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- CONFIRMATION -->
+<!-- ============================= -->
+
+<div class="card shadow border-0">
+
+    <div class="card-body text-center py-5">
+
+        <div class="mb-4">
+
+            <i class="bi bi-exclamation-triangle-fill text-warning"
+               style="font-size: 4rem;">
+            </i>
+
+        </div>
+
+
+        <h4 class="fw-bold mb-3">
+
+            Voulez-vous vraiment supprimer cette UE ?
+
+        </h4>
+
+
+        <div class="alert alert-warning mx-auto"
+             style="max-width: 650px;">
+
+            <strong>
+
+                {{ ue.code }}
+
+            </strong>
+
+            -
+
+            {{ ue.libelle }}
+
+            <br>
+
+            <small class="text-muted">
+
+                Niveau : {{ ue.niveau }}
+
+                |
+
+                Semestre : {{ ue.semestre }}
+
+                |
+
+                Crédit : {{ ue.credit }}
+
+            </small>
+
+        </div>
+
+
+        <!-- AVERTISSEMENT -->
+
+        <div class="alert alert-danger mx-auto"
+             style="max-width: 650px;">
+
+            <i class="bi bi-exclamation-circle me-1"></i>
+
+            <strong>Attention :</strong>
+
+            La suppression de cette UE peut également entraîner
+            la suppression des ECUE qui lui sont associés.
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+
+            <!-- ANNULER -->
+
+
+            <!-- CONFIRMER -->
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <button type="submit"
+                        class="btn btn-danger">
+
+                    <i class="bi bi-trash"></i>
+
+                    Oui, supprimer l'UE
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+</div>
+
+{% endblock %}
