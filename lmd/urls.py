@@ -452,4 +452,29 @@ path("droit/grande-unites/ajouter/", views.l3_droit_grande_unite_add, name="l3_d
 path("droit/grande-unites/<int:pk>/modifier/", views.l3_droit_grande_unite_edit, name="l3_droit_grande_unite_edit"),
 path("droit/grande-unites/<int:pk>/supprimer/", views.l3_droit_grande_unite_delete, name="l3_droit_grande_unite_delete"),
 
+
+path(
+    "l3/gestion/grandes-unites/",
+    views.l3_gestion_grande_unite,
+    name="l3_gestion_grande_unite",
+),
+
+path(
+    "l3/gestion/grandes-unites/add/",
+    views.l3_gestion_grande_unite_add,
+    name="l3_gestion_grande_unite_add",
+),
+
+path(
+    "l3/gestion/grandes-unites/<int:pk>/edit/",
+    views.l3_gestion_grande_unite_edit,
+    name="l3_gestion_grande_unite_edit",
+),
+
+path(
+    "l3/gestion/grandes-unites/<int:pk>/delete/",
+    views.l3_gestion_grande_unite_delete,
+    name="l3_gestion_grande_unite_delete",
+),
+
 ]

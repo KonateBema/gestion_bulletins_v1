@@ -5080,52 +5080,6 @@ def l3_gestion_ue_list(request):
         }
     )
     
-def l3_gestion_ue_listdddd(request):
-
-    ues = UE.objects.filter(
-        filiere__libelle__icontains="Sciences de Gestion"
-    ).order_by("code")
-
-    return render(
-        request,
-        "lmd/l3/gestion/ue/list.html",
-        {
-            "ues": ues
-        }
-    )
-
-
-def l3_gestion_ue_addzz(request):
-
-    filiere = get_object_or_404(
-        FiliereLMD,
-        libelle="Sciences de Gestion"
-    )
-
-    if request.method == "POST":
-
-        semestre = request.POST.get("semestre")
-
-        UE.objects.create(
-            code=request.POST.get("code"),
-            libelle=request.POST.get("libelle"),
-            credit=request.POST.get("credit"),
-            semestre=semestre,
-            filiere=filiere
-        )
-
-        return redirect(
-            "l3_gestion_ue"
-        )
-
-    return render(
-        request,
-        "lmd/l3/gestion/ue/form.html",
-        {
-            "titre": "Ajouter une UE - L3 Sciences de Gestion"
-        }
-    )
-
 def l3_gestion_ue_add(request):
 
     filiere = get_object_or_404(
@@ -5133,44 +5087,71 @@ def l3_gestion_ue_add(request):
         libelle="Sciences de Gestion"
     )
 
-    # Valeurs par défaut
-    niveau = request.GET.get("niveau", "L3")
-    semestre = request.GET.get("semestre", "S5")
+    niveau = request.GET.get("niveau")
+    semestre = request.GET.get("semestre")
+
+    grandes_unites = GrandeUnite.objects.filter(
+        filiere=filiere
+    )
+
+    if niveau:
+        grandes_unites = grandes_unites.filter(
+            niveau=niveau
+        )
+
+    if semestre:
+        grandes_unites = grandes_unites.filter(
+            semestre=semestre
+        )
+
+    grandes_unites = grandes_unites.order_by(
+        "ordre"
+    )
 
     if request.method == "POST":
 
         niveau = request.POST.get("niveau")
         semestre = request.POST.get("semestre")
+        grande_unite_id = request.POST.get("grande_unite")
 
-        code = request.POST.get("code")
-        libelle = request.POST.get("libelle")
-        credit = request.POST.get("credit")
-        ordre = request.POST.get("ordre")
-
-        UE.objects.create(
-            code=code,
-            libelle=libelle,
-            credit=credit,
-            niveau=niveau,
-            semestre=semestre,
-            ordre=ordre,
+        grande_unite = get_object_or_404(
+            GrandeUnite,
+            id=grande_unite_id,
             filiere=filiere
         )
 
+        UE.objects.create(
+            code=request.POST.get("code"),
+            libelle=request.POST.get("libelle"),
+            credit=request.POST.get("credit"),
+            ordre=request.POST.get("ordre") or 1,
+            niveau=niveau,
+            semestre=semestre,
+            filiere=filiere,
+            grande_unite=grande_unite,
+        )
+
+        messages.success(
+            request,
+            "UE ajoutée avec succès."
+        )
+
         return redirect(
-            f"/lmd/l3/gestion/ue/?niveau={niveau}&semestre={semestre}"
+            f"{reverse('l3_gestion_ue_list')}"
+            f"?niveau={niveau}&semestre={semestre}"
         )
 
     return render(
         request,
         "lmd/l3/gestion/ue/form.html",
         {
-            "titre": "Ajouter une UE - Sciences de Gestion",
+            "titre": "Nouvelle UE - Sciences de Gestion",
+            "filiere": filiere,
             "niveau": niveau,
             "semestre": semestre,
+            "grandes_unites": grandes_unites,
         }
     )
-
 
 def l3_gestion_ecue_list(request, ue_id):
 
@@ -5221,233 +5202,6 @@ def l3_gestion_ecue_add(request, ue_id):
         }
     )
     
-
-def l3_gestion_saisie_notesAAA(request, ecue_id):
-
-    # =========================================================
-    # 1. RÉCUPÉRER L'ECUE
-    # =========================================================
-
-    ecue = get_object_or_404(
-        ECUE.objects.select_related(
-            "ue",
-            "ue__filiere",
-        ),
-        id=ecue_id,
-    )
-
-    ue = ecue.ue
-    filiere = ue.filiere
-    niveau = ue.niveau
-
-    # =========================================================
-    # 2. RÉCUPÉRER LES ÉTUDIANTS
-    # =========================================================
-
-    etudiants = (
-        EtudiantLMD.objects
-        .filter(
-            filiere=filiere,
-            niveau=niveau,
-        )
-        .order_by(
-            "nom",
-            "prenoms",
-        )
-    )
-
-    # =========================================================
-    # 3. ENREGISTREMENT DES NOTES
-    # =========================================================
-
-    if request.method == "POST":
-
-        nombre_notes = 0
-
-        for etudiant in etudiants:
-
-            cc_value = request.POST.get(
-                f"cc_{etudiant.id}",
-                ""
-            ).strip()
-
-            examen_value = request.POST.get(
-                f"examen_{etudiant.id}",
-                ""
-            ).strip()
-
-            # -------------------------------------------------
-            # Si aucun champ n'est rempli
-            # -------------------------------------------------
-
-            if not cc_value and not examen_value:
-                continue
-
-            # -------------------------------------------------
-            # Conversion
-            # -------------------------------------------------
-
-            try:
-
-                cc = float(cc_value) if cc_value else 0
-                examen = float(examen_value) if examen_value else 0
-
-            except (ValueError, TypeError):
-
-                messages.error(
-                    request,
-                    f"Note invalide pour "
-                    f"{etudiant.nom} {etudiant.prenoms}."
-                )
-
-                continue
-
-            # -------------------------------------------------
-            # Vérification CC
-            # -------------------------------------------------
-
-            if cc < 0 or cc > 20:
-
-                messages.error(
-                    request,
-                    f"Le CC de {etudiant.nom} {etudiant.prenoms} "
-                    f"doit être compris entre 0 et 20."
-                )
-
-                continue
-
-            # -------------------------------------------------
-            # Vérification examen
-            # -------------------------------------------------
-
-            if examen < 0 or examen > 20:
-
-                messages.error(
-                    request,
-                    f"L'examen de {etudiant.nom} {etudiant.prenoms} "
-                    f"doit être compris entre 0 et 20."
-                )
-
-                continue
-
-            # -------------------------------------------------
-            # CALCUL DE LA MOYENNE
-            # CC = 40%
-            # Examen = 60%
-            # -------------------------------------------------
-
-            moyenne = round(
-                (cc * 0.40) + (examen * 0.60),
-                2
-            )
-
-            # -------------------------------------------------
-            # ENREGISTRER / MODIFIER
-            # -------------------------------------------------
-
-            NoteLMD.objects.update_or_create(
-
-                etudiant=etudiant,
-
-                ecue=ecue,
-
-                # semestre=ecue.semestre,
-                semestre=semestre,
-
-                session="1",
-
-                defaults={
-                    "cc": cc,
-                    "examen": examen,
-                    "moyenne": moyenne,
-                }
-
-            )
-
-            nombre_notes += 1
-
-        # -----------------------------------------------------
-        # MESSAGE
-        # -----------------------------------------------------
-
-        messages.success(
-            request,
-            f"{nombre_notes} note(s) enregistrée(s) avec succès."
-        )
-
-        # -----------------------------------------------------
-        # RETOUR SUR LA MÊME ECUE
-        # -----------------------------------------------------
-
-        return redirect(
-            "l3_gestion_saisie_notes",
-            ecue_id=ecue.id,
-        )
-
-    # =========================================================
-    # 4. RÉCUPÉRER LES NOTES EXISTANTES
-    # =========================================================
-
-    notes = (
-        NoteLMD.objects
-        .filter(
-            ecue=ecue,
-            semestre=ecue.semestre,
-            session="1",
-        )
-    )
-
-    # =========================================================
-    # 5. DICTIONNAIRE INTERNE
-    # =========================================================
-
-    notes_dict = {
-        note.etudiant_id: note
-        for note in notes
-    }
-
-    # =========================================================
-    # 6. PRÉPARER ÉTUDIANT + NOTE
-    # =========================================================
-
-    etudiants_notes = []
-
-    for etudiant in etudiants:
-
-        note = notes_dict.get(etudiant.id)
-
-        etudiants_notes.append({
-            "etudiant": etudiant,
-            "note": note,
-        })
-
-    # =========================================================
-    # 7. CONTEXTE
-    # =========================================================
-
-    context = {
-
-        "ecue": ecue,
-
-        "ue": ue,
-
-        "filiere": filiere,
-
-        "niveau": niveau,
-
-        "etudiants_notes": etudiants_notes,
-
-    }
-
-    # =========================================================
-    # 8. AFFICHAGE
-    # =========================================================
-
-    return render(
-        request,
-        "lmd/l3/gestion/notes/saisie.html",
-        context,
-    )
 
 
 def l3_gestion_saisie_notes(request, ecue_id):
@@ -5729,38 +5483,74 @@ def l3_gestion_saisie_notes(request, ecue_id):
         context,
     )
 
+def l3_gestion_ue_edit(request, pk):
 
-def l3_gestion_ue_edituuu(request, pk):
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Sciences de Gestion"
+    )
 
     ue = get_object_or_404(
         UE,
         pk=pk,
-        filiere__libelle="Sciences de Gestion"
+        filiere=filiere
     )
 
+    niveau = request.GET.get("niveau") or ue.niveau
+    semestre = request.GET.get("semestre") or ue.semestre
+
+    grandes_unites = GrandeUnite.objects.filter(
+        filiere=filiere,
+        niveau=niveau,
+        semestre=semestre
+    ).order_by("ordre")
+
     if request.method == "POST":
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+        grande_unite_id = request.POST.get("grande_unite")
+
+        grande_unite = get_object_or_404(
+            GrandeUnite,
+            id=grande_unite_id,
+            filiere=filiere
+        )
 
         ue.code = request.POST.get("code")
         ue.libelle = request.POST.get("libelle")
         ue.credit = request.POST.get("credit")
-        ue.semestre = request.POST.get("semestre")
+        ue.ordre = request.POST.get("ordre") or 1
+        ue.niveau = niveau
+        ue.semestre = semestre
+        ue.grande_unite = grande_unite
 
         ue.save()
 
+        messages.success(
+            request,
+            "UE modifiée avec succès."
+        )
+
         return redirect(
-            "l3_gestion_ue"
+            f"{reverse('l3_gestion_ue_list')}"
+            f"?niveau={niveau}&semestre={semestre}"
         )
 
     return render(
         request,
-        "lmd/l3/gestion/ue/form.html",
+        "lmd/l3/gestion/eu/form.html",
         {
-            "titre": "Modifier UE - L3 Sciences de Gestion",
-            "ue": ue
+            "titre": "Modifier une UE - Sciences de Gestion",
+            "filiere": filiere,
+            "ue": ue,
+            "niveau": niveau,
+            "semestre": semestre,
+            "grandes_unites": grandes_unites,
         }
     )
 
-def l3_gestion_ue_edit(request, pk):
+def l3_gestion_ue_editAAA(request, pk):
 
     # =========================================================
     # 1. RÉCUPÉRER L'UE
@@ -5835,8 +5625,7 @@ def l3_gestion_ue_delete(request, pk):
         }
     )
 
-from django.shortcuts import get_object_or_404, redirect, render
-from .models import ECUE
+
 
 
 def l3_gestion_ecue_edit(request, pk):
@@ -9414,4 +9203,168 @@ def l3_droit_grande_unite_delete(request, pk):
 
     return redirect(
         f"{reverse('l3_droit_grande_unite')}?niveau={niveau}&semestre={semestre}"
+    )
+    
+    
+def l3_gestion_grande_unite(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Sciences de Gestion"
+    )
+
+    niveau = request.GET.get("niveau")
+    semestre = request.GET.get("semestre")
+
+    grandes_unites = GrandeUnite.objects.filter(
+        filiere=filiere
+    ).order_by("niveau", "semestre", "ordre")
+
+    if niveau:
+        grandes_unites = grandes_unites.filter(
+            niveau=niveau
+        )
+
+    if semestre:
+        grandes_unites = grandes_unites.filter(
+            semestre=semestre
+        )
+
+    return render(
+        request,
+        "lmd/l3/gestion/grande_unite_list.html",
+        {
+            "filiere": filiere,
+            "grandes_unites": grandes_unites,
+            "niveau": niveau,
+            "semestre": semestre,
+        }
+    )
+    
+def l3_gestion_grande_unite_add(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Sciences de Gestion"
+    )
+
+    if request.method == "POST":
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+
+        GrandeUnite.objects.create(
+            code=request.POST.get("code"),
+            nom=request.POST.get("nom"),
+            ordre=request.POST.get("ordre") or 1,
+            niveau=niveau,
+            semestre=semestre,
+            filiere=filiere,
+        )
+
+        messages.success(
+            request,
+            "Grande unité ajoutée avec succès."
+        )
+
+        return redirect(
+            f"{reverse('l3_gestion_grande_unite')}"
+            f"?niveau={niveau}&semestre={semestre}"
+        )
+
+    return render(
+        request,
+        "lmd/l3/gestion/grande_unite_form.html",
+        {
+            "titre": "Ajouter une grande unité - Sciences de Gestion",
+            "filiere": filiere,
+            "niveau": request.GET.get("niveau"),
+            "semestre": request.GET.get("semestre"),
+        }
+    )
+
+def l3_gestion_grande_unite_edit(request, pk):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Sciences de Gestion"
+    )
+
+    grande_unite = get_object_or_404(
+        GrandeUnite,
+        pk=pk,
+        filiere=filiere
+    )
+
+    if request.method == "POST":
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+
+        grande_unite.code = request.POST.get("code")
+        grande_unite.nom = request.POST.get("nom")
+        grande_unite.ordre = request.POST.get("ordre") or 1
+        grande_unite.niveau = niveau
+        grande_unite.semestre = semestre
+
+        grande_unite.save()
+
+        messages.success(
+            request,
+            "Grande unité modifiée avec succès."
+        )
+
+        return redirect(
+            f"{reverse('l3_gestion_grande_unite')}"
+            f"?niveau={niveau}&semestre={semestre}"
+        )
+
+    return render(
+        request,
+        "lmd/l3/gestion/grande_unite_form.html",
+        {
+            "titre": "Modifier une grande unité - Sciences de Gestion",
+            "filiere": filiere,
+            "grande_unite": grande_unite,
+            "niveau": request.GET.get("niveau"),
+            "semestre": request.GET.get("semestre"),
+        }
+    )
+    
+def l3_gestion_grande_unite_delete(request, pk):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Sciences de Gestion"
+    )
+
+    grande_unite = get_object_or_404(
+        GrandeUnite,
+        pk=pk,
+        filiere=filiere
+    )
+
+    niveau = request.GET.get("niveau")
+    semestre = request.GET.get("semestre")
+
+    if grande_unite.ues.exists():
+
+        messages.error(
+            request,
+            "Impossible de supprimer : des UE sont encore "
+            "rattachées à cette grande unité."
+        )
+
+    else:
+
+        grande_unite.delete()
+
+        messages.success(
+            request,
+            "Grande unité supprimée avec succès."
+        )
+
+    return redirect(
+        f"{reverse('l3_gestion_grande_unite')}"
+        f"?niveau={niveau}&semestre={semestre}"
     )

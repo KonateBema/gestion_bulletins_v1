@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-diagram-3"></i>
+                Grandes unités
+            </h3>
+
+            <p class="text-muted mb-0">
+                Filière :
+                <strong>{{ filiere.libelle }}</strong>
+            </p>
+        </div>
+
+        <a
+            href="{% url 'l3_gestion_grande_unite_add' %}?niveau={{ niveau|default:'' }}&semestre={{ semestre|default:'' }}"
+            class="btn btn-success"
+        >
+            <i class="bi bi-plus-circle"></i>
+            Ajouter une grande unité
+        </a>
+
+    </div>
+
+
+    <!-- Filtres -->
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-body">
+
+            <form method="get" class="row g-3 align-items-end">
+
+                <!-- Niveau -->
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        Niveau
+                    </label>
+
+                    <select
+                        name="niveau"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Tous les niveaux
+                        </option>
+
+                        <option
+                            value="L1"
+                            {% if niveau == "L1" %}selected{% endif %}
+                        >
+                            Licence 1
+                        </option>
+
+                        <option
+                            value="L2"
+                            {% if niveau == "L2" %}selected{% endif %}
+                        >
+                            Licence 2
+                        </option>
+
+                        <option
+                            value="L3"
+                            {% if niveau == "L3" %}selected{% endif %}
+                        >
+                            Licence 3
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Semestre -->
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        Semestre
+                    </label>
+
+                    <select
+                        name="semestre"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Tous les semestres
+                        </option>
+
+                        <option
+                            value="S1"
+                            {% if semestre == "S1" %}selected{% endif %}
+                        >
+                            Semestre 1
+                        </option>
+
+                        <option
+                            value="S2"
+                            {% if semestre == "S2" %}selected{% endif %}
+                        >
+                            Semestre 2
+                        </option>
+
+                        <option
+                            value="S3"
+                            {% if semestre == "S3" %}selected{% endif %}
+                        >
+                            Semestre 3
+                        </option>
+
+                        <option
+                            value="S4"
+                            {% if semestre == "S4" %}selected{% endif %}
+                        >
+                            Semestre 4
+                        </option>
+
+                        <option
+                            value="S5"
+                            {% if semestre == "S5" %}selected{% endif %}
+                        >
+                            Semestre 5
+                        </option>
+
+                        <option
+                            value="S6"
+                            {% if semestre == "S6" %}selected{% endif %}
+                        >
+                            Semestre 6
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Boutons -->
+                <div class="col-md-4 d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        <i class="bi bi-search"></i>
+                        Filtrer
+                    </button>
+
+                    <a
+                        href="{% url 'l3_gestion_grande_unite' %}"
+                        class="btn btn-outline-secondary"
+                    >
+                        <i class="bi bi-arrow-clockwise"></i>
+                        Réinitialiser
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- Tableau -->
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-success text-white">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul"></i>
+                    Liste des grandes unités
+                </h5>
+
+                <span class="badge bg-light text-dark">
+                    {{ grandes_unites|length }} unité(s)
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-0">
+
+            {% if grandes_unites %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover table-bordered mb-0 align-middle">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th class="text-center">
+                                    #
+                                </th>
+
+                                <th>
+                                    Code
+                                </th>
+
+                                <th>
+                                    Grande unité
+                                </th>
+
+                                <th class="text-center">
+                                    Niveau
+                                </th>
+
+                                <th class="text-center">
+                                    Semestre
+                                </th>
+
+                                <th class="text-center">
+                                    Ordre
+                                </th>
+
+                                <th class="text-center">
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for grande_unite in grandes_unites %}
+
+                            <tr>
+
+                                <td class="text-center fw-semibold">
+                                    {{ forloop.counter }}
+                                </td>
+
+
+                                <td>
+                                    <span class="badge bg-primary">
+                                        {{ grande_unite.code }}
+                                    </span>
+                                </td>
+
+
+                                <td class="fw-semibold">
+                                    {{ grande_unite.nom }}
+                                </td>
+
+
+                                <td class="text-center">
+
+                                    {% if grande_unite.niveau == "L1" %}
+                                        <span class="badge bg-info">
+                                            L1
+                                        </span>
+
+                                    {% elif grande_unite.niveau == "L2" %}
+                                        <span class="badge bg-warning text-dark">
+                                            L2
+                                        </span>
+
+                                    {% elif grande_unite.niveau == "L3" %}
+                                        <span class="badge bg-success">
+                                            L3
+                                        </span>
+
+                                    {% else %}
+                                        {{ grande_unite.niveau }}
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td class="text-center">
+                                    <span class="badge bg-secondary">
+                                        {{ grande_unite.semestre }}
+                                    </span>
+                                </td>
+
+
+                                <td class="text-center">
+                                    {{ grande_unite.ordre }}
+                                </td>
+
+
+                                <td class="text-center">
+
+                                    <div class="btn-group">
+
+                                        <a
+                                            href="{% url 'l3_gestion_grande_unite_edit' grande_unite.pk %}?niveau={{ niveau|default:'' }}&semestre={{ semestre|default:'' }}"
+                                            class="btn btn-sm btn-warning"
+                                            title="Modifier"
+                                        >
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+
+                                        <a
+                                            href="{% url 'l3_gestion_grande_unite_delete' grande_unite.pk %}?niveau={{ niveau|default:'' }}&semestre={{ semestre|default:'' }}"
+                                            class="btn btn-sm btn-danger"
+                                            title="Supprimer"
+                                            onclick="return confirm('Voulez-vous vraiment supprimer cette grande unité ?');"
+                                        >
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="text-center py-5">
+
+                    <i
+                        class="bi bi-inbox"
+                        style="font-size: 3rem;"
+                    ></i>
+
+                    <h5 class="mt-3">
+                        Aucune grande unité trouvée
+                    </h5>
+
+                    <p class="text-muted">
+                        Aucune grande unité ne correspond aux critères sélectionnés.
+                    </p>
+
+                    <a
+                        href="{% url 'l3_gestion_grande_unite_add' %}?niveau={{ niveau|default:'' }}&semestre={{ semestre|default:'' }}"
+                        class="btn btn-success"
+                    >
+                        <i class="bi bi-plus-circle"></i>
+                        Ajouter une grande unité
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

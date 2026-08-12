@@ -29,17 +29,27 @@
         </div>
 
 
-        <div>
 
+        <div class="d-flex gap-2">
+
+            <a href="{% url 'l3_gestion_grande_unite' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+               class="btn btn-outline-success">
+        
+                <i class="bi bi-diagram-3"></i>
+        
+                Grandes Unités
+        
+            </a>
+        
             <a href="{% url 'l3_gestion_ue_add' %}?niveau={{ niveau }}&semestre={{ semestre }}"
                class="btn btn-success">
-
+        
                 <i class="bi bi-plus-circle"></i>
-
+        
                 Ajouter une UE
-
+        
             </a>
-
+        
         </div>
 
     </div>
@@ -388,7 +398,7 @@
 
                     <i class="bi bi-plus-circle"></i>
 
-                    Ajouter ECUE
+                    Ajouter ECUE 
 
                 </a>
 
