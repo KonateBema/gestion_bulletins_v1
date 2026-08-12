@@ -25,6 +25,7 @@ from .models import (
     NoteLMD,
     SessionAcademique
 )
+from .models import UE, ECUE, NoteLMD, GrandeUnite
 
 
 def niveau_list(request):
@@ -2170,7 +2171,8 @@ def l3_droit_ue_addAAZ(request):
         }
     )
 
-def l3_droit_ue_add(request):
+
+def l3_droit_ue_addAAAABIEN(request):
 
     filiere = get_object_or_404(
         FiliereLMD,
@@ -2205,6 +2207,38 @@ def l3_droit_ue_add(request):
         {
             "titre": "Ajouter une UE - Droit Privé",
             "filiere": filiere,
+        }
+    )
+
+def l3_droit_ue_add(request):
+
+    filiere = get_object_or_404(FiliereLMD, libelle="Droit Privé")
+
+    if request.method == "POST":
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+        grande_unite_id = request.POST.get("grande_unite")
+
+        UE.objects.create(
+            code=request.POST.get("code"),
+            libelle=request.POST.get("libelle"),
+            credit=request.POST.get("credit"),
+            niveau=niveau,
+            semestre=semestre,
+            filiere=filiere,
+            grande_unite_id=grande_unite_id or None,
+        )
+
+        return redirect("l3_droit_ue")
+
+    return render(
+        request,
+        "lmd/l3/droit/ue_form.html",
+        {
+            "titre": "Ajouter une UE - Droit Privé",
+            "filiere": filiere,
+            "grandes_unites": GrandeUnite.objects.filter(filiere=filiere),
         }
     )
 # =========================================================
@@ -4545,11 +4579,11 @@ def master_bulletin_pdf(request, id, semestre):
     )
 
 
-def l3_droit_ecue_add(request, ue_id):
+def l3_droit_ecue_addAZ(request, pk):
 
     ue = get_object_or_404(
         UE,
-        id=ue_id,
+        id=pk,
         filiere__libelle="Droit Privé"
     )
 
@@ -4572,17 +4606,56 @@ def l3_droit_ecue_add(request, ue_id):
 
 
         return redirect(
-            "droit_prive_ecue",
+            "l3_droit_ecue",
             ue.id
         )
 
 
     return render(
         request,
-        "lmd/droit_prive/ecue_form.html",
+        "lmd/l3/droit/ecue_form.html",
         {
             "ue":ue,
             "titre":"Ajouter ECUE - Droit Privé"
+        }
+    )
+
+def l3_droit_ecue_add(request, pk):
+
+    ue = get_object_or_404(
+        UE,
+        id=pk,
+        filiere__libelle="Droit Privé"
+    )
+
+    if request.method == "POST":
+
+        form = ECUEForm(request.POST)
+
+        if form.is_valid():
+
+            ecue = form.save(commit=False)
+
+            ecue.ue = ue
+
+            ecue.save()
+
+            return redirect(
+                "l3_droit_ecue",
+                ue.id
+            )
+
+    else:
+
+        form = ECUEForm()
+
+    return render(
+        request,
+        "lmd/l3/droit/ecue_form.html",
+        {
+            "ue": ue,
+            "form": form,
+            "titre": "Ajouter ECUE - Droit Privé"
         }
     )
 
@@ -9224,3 +9297,121 @@ def sciences_gestion_etudiant_delete(request, id):
         "l3_sciences_gestion_etudiants"
     )
     
+def l3_droit_grande_unite(request):
+
+    filiere = get_object_or_404(FiliereLMD, libelle="Droit Privé")
+
+    niveau = request.GET.get("niveau")
+    semestre = request.GET.get("semestre")
+
+    grandes_unites = GrandeUnite.objects.filter(filiere=filiere)
+
+    if niveau:
+        grandes_unites = grandes_unites.filter(niveau=niveau)
+    if semestre:
+        grandes_unites = grandes_unites.filter(semestre=semestre)
+
+    return render(
+        request,
+        "lmd/l3/droit/grande_unite_list.html",
+        {
+            "filiere": filiere,
+            "grandes_unites": grandes_unites,
+            "niveau": niveau,
+            "semestre": semestre,
+        }
+    )
+
+
+def l3_droit_grande_unite_add(request):
+
+    filiere = get_object_or_404(FiliereLMD, libelle="Droit Privé")
+
+    if request.method == "POST":
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+
+        GrandeUnite.objects.create(
+            code=request.POST.get("code"),
+            nom=request.POST.get("nom"),
+            ordre=request.POST.get("ordre") or 1,
+            niveau=niveau,
+            semestre=semestre,
+            filiere=filiere,
+        )
+
+        messages.success(request, "Grande unité ajoutée avec succès.")
+
+        return redirect(
+            f"{reverse('l3_droit_grande_unite')}?niveau={niveau}&semestre={semestre}"
+        )
+
+    return render(
+        request,
+        "lmd/l3/droit/grande_unite_form.html",
+        {
+            "titre": "Ajouter une grande unité - Droit Privé",
+            "filiere": filiere,
+            "niveau": request.GET.get("niveau"),
+            "semestre": request.GET.get("semestre"),
+        }
+    )
+    
+    
+def l3_droit_grande_unite_edit(request, pk):
+
+    filiere = get_object_or_404(FiliereLMD, libelle="Droit Privé")
+    grande_unite = get_object_or_404(GrandeUnite, pk=pk, filiere=filiere)
+
+    if request.method == "POST":
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+
+        grande_unite.code = request.POST.get("code")
+        grande_unite.nom = request.POST.get("nom")
+        grande_unite.ordre = request.POST.get("ordre") or 1
+        grande_unite.niveau = niveau
+        grande_unite.semestre = semestre
+        grande_unite.save()
+
+        messages.success(request, "Grande unité modifiée avec succès.")
+
+        return redirect(
+            f"{reverse('l3_droit_grande_unite')}?niveau={niveau}&semestre={semestre}"
+        )
+
+    return render(
+        request,
+        "lmd/l3/droit/grande_unite_form.html",
+        {
+            "titre": "Modifier une grande unité - Droit Privé",
+            "filiere": filiere,
+            "grande_unite": grande_unite,
+            "niveau": request.GET.get("niveau"),
+            "semestre": request.GET.get("semestre"),
+        }
+    )
+
+
+def l3_droit_grande_unite_delete(request, pk):
+
+    filiere = get_object_or_404(FiliereLMD, libelle="Droit Privé")
+    grande_unite = get_object_or_404(GrandeUnite, pk=pk, filiere=filiere)
+
+    niveau = request.GET.get("niveau")
+    semestre = request.GET.get("semestre")
+
+    if grande_unite.ues.exists():
+        messages.error(
+            request,
+            "Impossible de supprimer : des UE sont encore rattachées à cette grande unité."
+        )
+    else:
+        grande_unite.delete()
+        messages.success(request, "Grande unité supprimée avec succès.")
+
+    return redirect(
+        f"{reverse('l3_droit_grande_unite')}?niveau={niveau}&semestre={semestre}"
+    )

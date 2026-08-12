@@ -69,6 +69,7 @@ class UE(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.libelle}"
+
 # =====================
 # ECUE (Élément Constitutif d’UE)
 # =====================
@@ -458,14 +459,14 @@ class FiliereLMD(models.Model):
         return self.libelle
 
 
-class GrandeUnite(models.Model):
-    nom = models.CharField(max_length=150)
-    filiere = models.ForeignKey("FiliereLMD", on_delete=models.CASCADE)
-    semestre = models.CharField(max_length=2)
+# class GrandeUnite(models.Model):
+#     nom = models.CharField(max_length=150)
+#     filiere = models.ForeignKey("FiliereLMD", on_delete=models.CASCADE)
+#     semestre = models.CharField(max_length=2)
 
-    def __str__(self):
-        filiere = getattr(self.filiere, "libelle", "Sans filière")
-        return f"{self.nom} - {filiere} ({self.semestre})"
+#     def __str__(self):
+#         filiere = getattr(self.filiere, "libelle", "Sans filière")
+#         return f"{self.nom} - {filiere} ({self.semestre})"
 
 class SaisieNoteLMD(models.Model):
 
@@ -1107,4 +1108,60 @@ class ResultatSemestreMaster(models.Model):
     def __str__(self):
 
         return f"{self.etudiant} - {self.semestre}"
-    
+
+class GrandeUnite(models.Model):
+
+    NIVEAU_CHOICES = (
+        ("L1", "Licence 1"),
+        ("L2", "Licence 2"),
+        ("L3", "Licence 3"),
+    )
+
+    SEMESTRE_CHOICES = (
+        ("S1", "Semestre 1"),
+        ("S2", "Semestre 2"),
+        ("S3", "Semestre 3"),
+        ("S4", "Semestre 4"),
+        ("S5", "Semestre 5"),
+        ("S6", "Semestre 6"),
+    )
+
+    code = models.CharField(
+        max_length=20,
+        default="ffr02",
+        help_text="Ex : UFO1, UCG2, USP3"
+    )
+
+    nom = models.CharField(
+        max_length=200,
+        help_text="Ex : UNITES FONDAMENTALES"
+    )
+
+    filiere = models.ForeignKey(
+        "FiliereLMD",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="grandes_unites"
+    )
+
+    niveau = models.CharField(
+        max_length=2,
+        choices=NIVEAU_CHOICES,
+        default="L1"
+    )
+
+    semestre = models.CharField(
+        max_length=2,
+        choices=SEMESTRE_CHOICES,
+        default="S1"
+    )
+
+    ordre = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ["niveau", "semestre", "ordre"]
+        unique_together = ("code", "filiere", "niveau", "semestre")
+
+    def __str__(self):
+        return f"{self.code} - {self.nom}"

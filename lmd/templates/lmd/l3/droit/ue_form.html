@@ -279,6 +279,42 @@
                     </div>
 
                 </div>
+                <!-- ================================================= -->
+<!-- GRANDE UNITÉ -->
+<!-- ================================================= -->
+
+<div class="mb-4">
+
+    <label for="id_grande_unite" class="form-label fw-bold">
+        <i class="bi bi-diagram-3 me-1"></i>
+        Grande unité
+    </label>
+
+    <select name="grande_unite" id="id_grande_unite" class="form-select">
+        <option value="">-- Aucune --</option>
+        {% for gu in grandes_unites %}
+            <option
+                value="{{ gu.id }}"
+                {% if ue.grande_unite_id == gu.id %}selected{% endif %}
+            >
+                {{ gu.niveau }} / {{ gu.semestre }} — {{ gu.code }} : {{ gu.nom }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <small class="text-muted">
+        Pas trouvé la tienne ?
+        <a href="{% url 'l3_droit_grande_unite_add' %}?niveau={{ niveau }}&semestre={{ semestre }}">
+            Créer une nouvelle grande unité
+        </a>
+    </small>
+
+</div>
+
+
+
+
+
 
                 <!-- ================================================= -->
                 <!-- CODE + ORDRE -->

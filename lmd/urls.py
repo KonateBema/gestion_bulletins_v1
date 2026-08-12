@@ -447,5 +447,9 @@ path( "sciences-gestion/etudiants/<int:id>/modifier/", views.sciences_gestion_et
 # Supprimer étudiant
 path( "sciences-gestion/etudiants/<int:id>/supprimer/", views.sciences_gestion_etudiant_delete, name="sciences_gestion_etudiant_delete", ),
 
+path("droit/grande-unites/", views.l3_droit_grande_unite, name="l3_droit_grande_unite"),
+path("droit/grande-unites/ajouter/", views.l3_droit_grande_unite_add, name="l3_droit_grande_unite_add"),
+path("droit/grande-unites/<int:pk>/modifier/", views.l3_droit_grande_unite_edit, name="l3_droit_grande_unite_edit"),
+path("droit/grande-unites/<int:pk>/supprimer/", views.l3_droit_grande_unite_delete, name="l3_droit_grande_unite_delete"),
 
 ]

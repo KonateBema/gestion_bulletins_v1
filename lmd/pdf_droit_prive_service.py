@@ -11,11 +11,10 @@ from .models import UE, ECUE, NoteLMD
 from reportlab.platypus import HRFlowable
 from .models import SaisieNoteLMD
 from django.db.models import Prefetch
-
+from reportlab.platypus import PageTemplate, Frame
 
 def safe_date(date):
     return date.strftime("%d/%m/%Y") if date else "Non renseignée"
-
 
 styles = getSampleStyleSheet()
 
@@ -107,7 +106,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         bottomMargin=2.8 * cm,  # laisser la place au footer
     )
 
-    from reportlab.platypus import PageTemplate, Frame
 
     frame = Frame(
         doc.leftMargin,
@@ -196,7 +194,14 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     ))
     SMALL_INFO = ParagraphStyle( "SmallInfo", parent=styles["Normal"], fontName="Helvetica", fontSize=7, leading=9, )
 
-    specialite = etudiant.filiere.libelle if etudiant.filiere else " DROIT PRIVE"
+    # En L1/L2, les étudiants sont en tronc commun (pas encore de
+    # spécialisation) : on affiche "Tronc Commun" quel que soit le
+    # libellé réel de la filière. À partir de L3, on affiche la
+    # spécialité réelle de l'étudiant.
+    if etudiant.niveau in ("L1", "L2"):
+        specialite = "Tronc Commun"
+    else:
+        specialite = etudiant.filiere.libelle if etudiant.filiere else " DROIT PRIVE"
 
     cadre_universite = Table([[
         Paragraph(f"""
@@ -282,19 +287,23 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
     grande_unite_actuelle = None
 
-    # --- Accumulateurs pour la ligne de sous-total (crédits + moyenne
-    # pondérée) de la grande unité en cours de traitement ---
-    credits_gu = 0
-    ponderation_gu = 0  # somme(moyenne_ue * credit_ue) pour la grande unité en cours
+    # --- Accumulateurs pour la ligne récapitulative de la grande unité
+    # en cours de traitement. IMPORTANT : le total "crédits ECUE" et le
+    # total "crédits UE" sont deux sommes DIFFÉRENTES (elles ne
+    # coïncident pas forcément), il faut donc les accumuler séparément.
+    credits_ue_gu = 0     # somme des ue.credit de la grande unité en cours
+    credits_ecue_gu = 0   # somme des ecue.credit de la grande unité en cours
+    ponderation_gu = 0    # somme(moyenne_ue * credit_ue), pour la moyenne pondérée
 
-    def inserer_ligne_grande_unite(grande_unite, credits, ponderation):
+    def inserer_ligne_grande_unite(grande_unite, credits_ue, credits_ecue, ponderation):
         """Ajoute la ligne récapitulative d'une grande unité (ex: UFO1,
-        UCG2, ...) juste après les UE qui la composent, dans le style du
-        bulletin papier : code, libellé, total crédits, moyenne pondérée
-        et décision. `data`/`table_style` sont capturés par closure."""
-        if credits == 0:
+        UCG2, USP3, ...) juste après les UE qui la composent, dans le
+        style du bulletin papier : code, libellé, total crédits ECUE,
+        total crédits UE, moyenne pondérée et décision. `data`/
+        `table_style` sont capturés par closure."""
+        if credits_ue == 0:
             return
-        moyenne_gu = round(ponderation / credits, 2)
+        moyenne_gu = round(ponderation / credits_ue, 2)
         gu_validee = moyenne_gu >= 10
         if gu_validee:
             decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", SMALL)
@@ -309,15 +318,17 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
             Paragraph(f"<b>{code_gu}</b>", SMALL),
             Paragraph(f"<b>UE : {grande_unite.nom}</b>", SMALL),
             "",
-            Paragraph(f"<b>{credits:.2f}</b>", SMALL),
-            Paragraph(f"<b>{credits:.2f}</b>", SMALL),
+            Paragraph(f"<b>{credits_ecue:.2f}</b>", SMALL),
+            Paragraph(f"<b>{credits_ue:.2f}</b>", SMALL),
             "",
             Paragraph(f"<b>{moyenne_gu:.2f}</b>", SMALL),
             decision_gu,
         ])
         ligne = len(data) - 1
-        table_style.append(("SPAN", (1, ligne), (2, ligne)))
+        # IMPORTANT : le BACKGROUND doit être déclaré AVANT le SPAN,
+        # sinon le fond ne s'affiche pas sur la ligne fusionnée.
         table_style.append(("BACKGROUND", (0, ligne), (7, ligne), colors.HexColor("#D9D9D9")))
+        table_style.append(("SPAN", (1, ligne), (2, ligne)))
         table_style.append(("FONTNAME", (0, ligne), (7, ligne), "Helvetica-Bold"))
         table_style.append(("ALIGN", (0, ligne), (-1, ligne), "CENTER"))
         table_style.append(("TEXTCOLOR", (7, ligne), (7, ligne), couleur_gu))
@@ -336,8 +347,11 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         # sa ligne récapitulative (code, crédits, moyenne, décision).
         if ue.grande_unite != grande_unite_actuelle:
             if grande_unite_actuelle is not None:
-                inserer_ligne_grande_unite(grande_unite_actuelle, credits_gu, ponderation_gu)
-                credits_gu = 0
+                inserer_ligne_grande_unite(
+                    grande_unite_actuelle, credits_ue_gu, credits_ecue_gu, ponderation_gu
+                )
+                credits_ue_gu = 0
+                credits_ecue_gu = 0
                 ponderation_gu = 0
 
             grande_unite_actuelle = ue.grande_unite
@@ -361,6 +375,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
             stats["ecues_total"] += 1
             stats["credits_ecue_total"] += ecue.credit
+            credits_ecue_gu += ecue.credit
             if moyenne >= 10:
                 stats["ecues_validees"] += 1
                 stats["credits_ecue_obtenus"] += ecue.credit
@@ -370,8 +385,8 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         moyenne_ue = round(somme / coef, 2) if coef > 0 else 0
         moyennes_ues.append(moyenne_ue)  # une seule valeur par UE, correcte
 
-        # accumulation pour le sous-total de la grande unité en cours
-        credits_gu += ue.credit
+        # accumulation pour la ligne récapitulative de la grande unité en cours
+        credits_ue_gu += ue.credit
         ponderation_gu += moyenne_ue * ue.credit
 
         ue_validee = moyenne_ue >= 10
@@ -415,7 +430,9 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     # passe jamais par le "if" de changement de grande unité ci-dessus,
     # donc on la clôture manuellement ici.
     if grande_unite_actuelle is not None:
-        inserer_ligne_grande_unite(grande_unite_actuelle, credits_gu, ponderation_gu)
+        inserer_ligne_grande_unite(
+            grande_unite_actuelle, credits_ue_gu, credits_ecue_gu, ponderation_gu
+        )
 
     # Moyenne générale calculée dès maintenant pour pouvoir l'afficher à
     # la fois sur la ligne "TOTAL CREDITS ACQUIS" et dans le récapitulatif
@@ -427,11 +444,14 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     )
 
     # --- Ligne finale "TOTAL CREDITS ACQUIS" (TCA) ---
+    # Comme pour les grandes unités, CRÉD ECUE et CRÉD UE sont deux
+    # totaux distincts : la somme de tous les crédits ECUE d'un côté,
+    # la somme de tous les crédits UE de l'autre.
     data.append([
         Paragraph("<b>TCA</b>", SMALL),
         Paragraph("<b>TOTAL CREDITS ACQUIS</b>", SMALL),
         "",
-        Paragraph(f"<b>{stats['credits_total']:.2f}</b>", SMALL),
+        Paragraph(f"<b>{stats['credits_ecue_total']:.2f}</b>", SMALL),
         Paragraph(f"<b>{stats['credits_total']:.2f}</b>", SMALL),
         "",
         Paragraph(f"<b>{moyenne_generale:.2f}</b>", SMALL),
