@@ -137,149 +137,173 @@
                 {% csrf_token %}
 
 
-                <!-- ================================================= -->
-                <!-- NIVEAU + SEMESTRE -->
-                <!-- ================================================= -->
+              <!-- ================================================= -->
+<!-- NIVEAU + SEMESTRE + SESSION -->
+<!-- ================================================= -->
 
-                <div class="row">
+<div class="row">
 
-                    <!-- NIVEAU -->
+    <!-- NIVEAU -->
 
-                    <div class="col-md-6 mb-4">
+    <div class="col-md-4 mb-4">
 
-                        <label
-                            for="id_niveau"
-                            class="form-label fw-bold"
-                        >
+        <label
+            for="id_niveau"
+            class="form-label fw-bold"
+        >
 
-                            <i class="bi bi-mortarboard me-1"></i>
+            <i class="bi bi-mortarboard me-1"></i>
 
-                            Niveau
+            Niveau
 
-                        </label>
+        </label>
 
+        <select
+            name="niveau"
+            id="id_niveau"
+            class="form-select"
+            required
+        >
 
-                        <select
-                            name="niveau"
-                            id="id_niveau"
-                            class="form-select"
-                            required
-                        >
+            <option value="">
+                -- Sélectionner le niveau --
+            </option>
 
-                            <option value="">
-                                -- Sélectionner le niveau --
-                            </option>
+            <option
+                value="L1"
+                {% if niveau == "L1" or ue.niveau == "L1" %}selected{% endif %}
+            >
+                Licence 1 (L1)
+            </option>
 
+            <option
+                value="L2"
+                {% if niveau == "L2" or ue.niveau == "L2" %}selected{% endif %}
+            >
+                Licence 2 (L2)
+            </option>
 
-                            <option
-                                value="L1"
-                                {% if niveau == "L1" or ue.niveau == "L1" %}selected{% endif %}
-                            >
-                                Licence 1 (L1)
-                            </option>
+            <option
+                value="L3"
+                {% if niveau == "L3" or ue.niveau == "L3" %}selected{% endif %}
+            >
+                Licence 3 (L3)
+            </option>
 
+        </select>
 
-                            <option
-                                value="L2"
-                                {% if niveau == "L2" or ue.niveau == "L2" %}selected{% endif %}
-                            >
-                                Licence 2 (L2)
-                            </option>
-
-
-                            <option
-                                value="L3"
-                                {% if niveau == "L3" or ue.niveau == "L3" %}selected{% endif %}
-                            >
-                                Licence 3 (L3)
-                            </option>
-
-                        </select>
-
-                    </div>
+    </div>
 
 
-                    <!-- SEMESTRE -->
+    <!-- SEMESTRE -->
 
-                    <div class="col-md-6 mb-4">
+    <div class="col-md-4 mb-4">
 
-                        <label
-                            for="id_semestre"
-                            class="form-label fw-bold"
-                        >
+        <label
+            for="id_semestre"
+            class="form-label fw-bold"
+        >
 
-                            <i class="bi bi-calendar3 me-1"></i>
+            <i class="bi bi-calendar3 me-1"></i>
 
-                            Semestre
+            Semestre
 
-                        </label>
+        </label>
 
+        <select
+            name="semestre"
+            id="id_semestre"
+            class="form-select"
+            required
+        >
 
-                        <select
-                            name="semestre"
-                            id="id_semestre"
-                            class="form-select"
-                            required
-                        >
+            <option value="">
+                -- Sélectionner le semestre --
+            </option>
 
-                            <option value="">
-                                -- Sélectionner le semestre --
-                            </option>
+            <option value="S1"
+                {% if semestre == "S1" or ue.semestre == "S1" %}selected{% endif %}>
+                Semestre 1
+            </option>
 
+            <option value="S2"
+                {% if semestre == "S2" or ue.semestre == "S2" %}selected{% endif %}>
+                Semestre 2
+            </option>
 
-                            <option
-                                value="S1"
-                                {% if semestre == "S1" or ue.semestre == "S1" %}selected{% endif %}
-                            >
-                                Semestre 1
-                            </option>
+            <option value="S3"
+                {% if semestre == "S3" or ue.semestre == "S3" %}selected{% endif %}>
+                Semestre 3
+            </option>
 
+            <option value="S4"
+                {% if semestre == "S4" or ue.semestre == "S4" %}selected{% endif %}>
+                Semestre 4
+            </option>
 
-                            <option
-                                value="S2"
-                                {% if semestre == "S2" or ue.semestre == "S2" %}selected{% endif %}
-                            >
-                                Semestre 2
-                            </option>
+            <option value="S5"
+                {% if semestre == "S5" or ue.semestre == "S5" %}selected{% endif %}>
+                Semestre 5
+            </option>
 
+            <option value="S6"
+                {% if semestre == "S6" or ue.semestre == "S6" %}selected{% endif %}>
+                Semestre 6
+            </option>
 
-                            <option
-                                value="S3"
-                                {% if semestre == "S3" or ue.semestre == "S3" %}selected{% endif %}
-                            >
-                                Semestre 3
-                            </option>
+        </select>
 
-
-                            <option
-                                value="S4"
-                                {% if semestre == "S4" or ue.semestre == "S4" %}selected{% endif %}
-                            >
-                                Semestre 4
-                            </option>
-
-
-                            <option
-                                value="S5"
-                                {% if semestre == "S5" or ue.semestre == "S5" %}selected{% endif %}
-                            >
-                                Semestre 5
-                            </option>
+    </div>
 
 
-                            <option
-                                value="S6"
-                                {% if semestre == "S6" or ue.semestre == "S6" %}selected{% endif %}
-                            >
-                                Semestre 6
-                            </option>
+    <!-- SESSION -->
 
-                        </select>
+    <div class="col-md-4 mb-4">
 
-                    </div>
+        <label
+            for="id_session"
+            class="form-label fw-bold"
+        >
 
-                </div>
-                <!-- ================================================= -->
+            <i class="bi bi-arrow-repeat me-1"></i>
+
+            Session
+
+        </label>
+
+        <select
+            name="session"
+            id="id_session"
+            class="form-select"
+            required
+        >
+
+            <option value="">
+                -- Sélectionner la session --
+            </option>
+
+            <option
+                value="1"
+                {% if session == "1" or ue.session == "1" %}selected{% endif %}
+            >
+                Session 1
+            </option>
+
+            <option
+                value="2"
+                {% if session == "2" or ue.session == "2" %}selected{% endif %}
+            >
+                Session 2 (Rattrapage)
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
+
+
+
 <!-- GRANDE UNITÉ -->
 <!-- ================================================= -->
 
@@ -310,12 +334,6 @@
     </small>
 
 </div>
-
-
-
-
-
-
                 <!-- ================================================= -->
                 <!-- CODE + ORDRE -->
                 <!-- ================================================= -->
@@ -333,7 +351,7 @@
 
                             <i class="bi bi-code-square me-1"></i>
 
-                            Code UE
+                            Code UE 
 
                         </label>
 
@@ -348,7 +366,6 @@
                         >
 
                     </div>
-
                     <!-- ORDRE -->
 
                     <div class="col-md-4 mb-4">

@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block content %}
@@ -23,6 +24,11 @@
         opacity: .85;
     }
 
+
+    /* =========================
+       BOUTON AJOUTER
+       ========================= */
+
     .btn-add {
         background: white;
         color: #0d6efd;
@@ -38,6 +44,33 @@
         background: #f8f9fa;
         color: #0b5ed7;
     }
+
+
+    /* =========================
+       BOUTON IMPORT EXCEL
+       ========================= */
+
+    .btn-import {
+        background: rgba(255, 255, 255, .15);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, .5);
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 11px 18px;
+        transition: .2s ease;
+    }
+
+    .btn-import:hover {
+        transform: translateY(-2px);
+        background: white;
+        color: #198754;
+        border-color: white;
+    }
+
+
+    /* =========================
+       STATISTIQUES
+       ========================= */
 
     .stat-card {
         border: none;
@@ -75,12 +108,22 @@
         color: #212529;
     }
 
+
+    /* =========================
+       CARTE PRINCIPALE
+       ========================= */
+
     .main-card {
         border: none;
         border-radius: 18px;
         overflow: hidden;
         box-shadow: 0 5px 25px rgba(0, 0, 0, .07);
     }
+
+
+    /* =========================
+       HEADER TABLEAU
+       ========================= */
 
     .table-header {
         padding: 20px 22px;
@@ -92,6 +135,11 @@
         font-weight: 700;
         margin-bottom: 3px;
     }
+
+
+    /* =========================
+       RECHERCHE
+       ========================= */
 
     .search-box {
         position: relative;
@@ -111,10 +159,25 @@
         border: 1px solid #dee2e6;
     }
 
+    .search-box input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .10);
+    }
+
+
+    /* =========================
+       FILTRE
+       ========================= */
+
     .filter-select {
         border-radius: 10px;
         min-width: 150px;
     }
+
+
+    /* =========================
+       TABLEAU
+       ========================= */
 
     .table {
         margin-bottom: 0;
@@ -142,6 +205,11 @@
         background-color: #f8f9fa;
     }
 
+
+    /* =========================
+       AVATAR
+       ========================= */
+
     .student-avatar {
         width: 38px;
         height: 38px;
@@ -153,6 +221,7 @@
         justify-content: center;
         font-weight: 700;
         margin-right: 10px;
+        flex-shrink: 0;
     }
 
     .student-name {
@@ -165,6 +234,11 @@
         font-size: 13px;
     }
 
+
+    /* =========================
+       MATRICULE
+       ========================= */
+
     .matricule {
         font-family: monospace;
         background: #f1f3f5;
@@ -172,6 +246,11 @@
         border-radius: 6px;
         font-size: 13px;
     }
+
+
+    /* =========================
+       BADGES NIVEAU
+       ========================= */
 
     .niveau-badge {
         border-radius: 20px;
@@ -195,6 +274,11 @@
         color: #146c43;
     }
 
+
+    /* =========================
+       BOUTONS ACTION
+       ========================= */
+
     .action-btn {
         width: 35px;
         height: 35px;
@@ -210,6 +294,11 @@
         transform: translateY(-2px);
     }
 
+
+    /* =========================
+       ETAT VIDE
+       ========================= */
+
     .empty-state {
         padding: 60px 20px;
         text-align: center;
@@ -221,14 +310,20 @@
         margin-bottom: 15px;
     }
 
+
+    /* =========================
+       RESPONSIVE
+       ========================= */
+
     @media (max-width: 768px) {
 
         .gestion-header {
             padding: 20px;
         }
 
-        .gestion-header .btn-add {
-            margin-top: 15px;
+        .gestion-header .btn-add,
+        .gestion-header .btn-import {
+            margin-top: 10px;
             width: 100%;
         }
 
@@ -244,251 +339,71 @@
 
 </style>
 
+
 <div class="container-fluid px-3 px-md-4 mt-4">
 
 
-<!-- ================= HEADER ================= -->
-
-<div class="gestion-header">
-
-    <div class="row align-items-center">
-
-        <div class="col-md-8">
-
-            <h3>
-                <i class="bi bi-bar-chart-fill me-2"></i>
-                Sciences de Gestion
-            </h3>
-
-            <p>
-                Gestion des étudiants de Licence 1, Licence 2 et Licence 3
-            </p>
-
-        </div>
-
-        <div class="col-md-4 text-md-end">
-
-            <a href="{% url 'sciences_gestion_etudiant_add' %}"
-               class="btn btn-add">
-
-                <i class="bi bi-person-plus-fill me-1"></i>
-                Ajouter un étudiant
-
-            </a>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ================= STATISTIQUES ================= -->
-
-<div class="row g-3 mb-4">
-
-
-    <!-- TOTAL -->
-
-    <div class="col-md-3">
-
-        <div class="stat-card">
-
-            <div class="d-flex align-items-center">
-
-                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-
-                    <i class="bi bi-people-fill"></i>
-
-                </div>
-
-                <div class="ms-3">
-
-                    <div class="stat-title">
-                        Total étudiants
-                    </div>
-
-                    <div class="stat-number">
-                        {{ etudiants|length }}
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- L1 -->
-
-    <div class="col-md-3">
-
-        <div class="stat-card">
-
-            <div class="d-flex align-items-center">
-
-                <div class="stat-icon bg-info bg-opacity-10 text-info">
-
-                    <i class="bi bi-1-circle-fill"></i>
-
-                </div>
-
-                <div class="ms-3">
-
-                    <div class="stat-title">
-                        Licence 1
-                    </div>
-
-                    <div class="stat-number" id="totalL1">
-                        0
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- L2 -->
-
-    <div class="col-md-3">
-
-        <div class="stat-card">
-
-            <div class="d-flex align-items-center">
-
-                <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-
-                    <i class="bi bi-2-circle-fill"></i>
-
-                </div>
-
-                <div class="ms-3">
-
-                    <div class="stat-title">
-                        Licence 2
-                    </div>
-
-                    <div class="stat-number" id="totalL2">
-                        0
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- L3 -->
-
-    <div class="col-md-3">
-
-        <div class="stat-card">
-
-            <div class="d-flex align-items-center">
-
-                <div class="stat-icon bg-success bg-opacity-10 text-success">
-
-                    <i class="bi bi-3-circle-fill"></i>
-
-                </div>
-
-                <div class="ms-3">
-
-                    <div class="stat-title">
-                        Licence 3
-                    </div>
-
-                    <div class="stat-number" id="totalL3">
-                        0
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ================= TABLE ================= -->
-
-<div class="card main-card">
-
-
-    <!-- TABLE HEADER -->
-
-    <div class="table-header">
+    <!-- ===================================================== -->
+    <!-- HEADER -->
+    <!-- ===================================================== -->
+
+    <div class="gestion-header">
 
         <div class="row align-items-center">
 
-            <div class="col-md-5">
+            <!-- TITRE -->
 
-                <h5>
-                    <i class="bi bi-people me-2"></i>
-                    Liste des étudiants
-                </h5>
+            <div class="col-md-7">
 
-                <small class="text-muted">
-                    Tous les étudiants de Sciences de Gestion
-                </small>
+                <h3>
 
-            </div>
+                    <i class="bi bi-bar-chart-fill me-2"></i>
 
+                    Sciences de Gestion
 
-            <div class="col-md-4">
+                </h3>
 
-                <div class="search-box">
+                <p>
 
-                    <i class="bi bi-search"></i>
+                    Gestion des étudiants de Licence 1,
+                    Licence 2 et Licence 3
 
-                    <input
-                        type="text"
-                        id="searchStudent"
-                        class="form-control"
-                        placeholder="Rechercher un étudiant..."
-                    >
-
-                </div>
+                </p>
 
             </div>
 
 
-            <div class="col-md-3">
+            <!-- BOUTONS -->
 
-                <select
-                    id="filterNiveau"
-                    class="form-select filter-select"
+            <div class="col-md-5 text-md-end">
+
+
+                <!-- ================= IMPORT EXCEL ================= -->
+
+                <a
+                    href="{% url 'sciences_gestion_etudiant_import' %}"
+                    class="btn btn-import me-1"
                 >
 
-                    <option value="">
-                        Tous les niveaux
-                    </option>
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i>
 
-                    <option value="L1">
-                        Licence 1
-                    </option>
+                    Importer Excel
 
-                    <option value="L2">
-                        Licence 2
-                    </option>
+                </a>
 
-                    <option value="L3">
-                        Licence 3
-                    </option>
 
-                </select>
+                <!-- ================= AJOUTER ================= -->
+
+                <a
+                    href="{% url 'sciences_gestion_etudiant_add' %}"
+                    class="btn btn-add"
+                >
+
+                    <i class="bi bi-person-plus-fill me-1"></i>
+
+                    Ajouter un étudiant
+
+                </a>
 
             </div>
 
@@ -497,249 +412,566 @@
     </div>
 
 
-    <!-- TABLE -->
+    <!-- ===================================================== -->
+    <!-- STATISTIQUES -->
+    <!-- ===================================================== -->
 
-    <div class="table-responsive">
-
-        <table class="table table-hover align-middle"
-               id="studentsTable">
-
-            <thead>
-
-                <tr>
-
-                    <th>#</th>
-
-                    <th>Étudiant</th>
-
-                    <th>Matricule</th>
-
-                    <th>Niveau</th>
-
-                    <th>Filière</th>
-
-                    <th class="text-center">
-                        Actions
-                    </th>
-
-                </tr>
-
-            </thead>
+    <div class="row g-3 mb-4">
 
 
-            <tbody>
+        <!-- ================= TOTAL ================= -->
 
+        <div class="col-md-3">
 
-            {% for e in etudiants %}
+            <div class="stat-card">
 
-                <tr
-                    data-niveau="{{ e.niveau }}"
-                    data-search="
-                        {{ e.nom }}
-                        {{ e.prenoms }}
-                        {{ e.matricule }}
-                    "
-                >
+                <div class="d-flex align-items-center">
 
-                    <td class="fw-bold text-muted">
-                        {{ forloop.counter }}
-                    </td>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
 
+                        <i class="bi bi-people-fill"></i>
 
-                    <!-- ETUDIANT -->
+                    </div>
 
-                    <td>
+                    <div class="ms-3">
 
-                        <div class="d-flex align-items-center">
+                        <div class="stat-title">
 
-                            <div class="student-avatar">
-
-                                {{ e.nom|first|upper }}
-
-                            </div>
-
-                            <div>
-
-                                <div class="student-name">
-
-                                    {{ e.nom }}
-
-                                </div>
-
-                                <div class="student-firstname">
-
-                                    {{ e.prenoms }}
-
-                                </div>
-
-                            </div>
+                            Total étudiants
 
                         </div>
 
-                    </td>
+                        <div class="stat-number">
+
+                            {{ etudiants|length }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
 
 
-                    <!-- MATRICULE -->
+        <!-- ================= L1 ================= -->
 
-                    <td>
+        <div class="col-md-3">
 
-                        <span class="matricule">
+            <div class="stat-card">
 
-                            {{ e.matricule }}
+                <div class="d-flex align-items-center">
 
-                        </span>
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
 
-                    </td>
+                        <i class="bi bi-1-circle-fill"></i>
 
+                    </div>
 
-                    <!-- NIVEAU -->
+                    <div class="ms-3">
 
-                    <td>
+                        <div class="stat-title">
 
-                        {% if e.niveau == "L1" %}
+                            Licence 1
 
-                            <span class="niveau-badge niveau-l1">
-                                Licence 1
-                            </span>
+                        </div>
 
-                        {% elif e.niveau == "L2" %}
-
-                            <span class="niveau-badge niveau-l2">
-                                Licence 2
-                            </span>
-
-                        {% elif e.niveau == "L3" %}
-
-                            <span class="niveau-badge niveau-l3">
-                                Licence 3
-                            </span>
-
-                        {% else %}
-
-                            <span class="badge bg-secondary">
-                                {{ e.niveau }}
-                            </span>
-
-                        {% endif %}
-
-                    </td>
-
-
-                    <!-- FILIERE -->
-
-                    <td>
-
-                        <span class="text-muted">
-
-                            <i class="bi bi-mortarboard me-1"></i>
-
-                            {{ e.filiere.libelle }}
-
-                        </span>
-
-                    </td>
-
-
-                    <!-- ACTIONS -->
-
-                    <td class="text-center">
-
-                        <a
-                            href="{% url 'sciences_gestion_etudiant_edit' e.id %}"
-                            class="action-btn btn btn-warning me-1"
-                            title="Modifier"
+                        <div
+                            class="stat-number"
+                            id="totalL1"
                         >
 
-                            <i class="bi bi-pencil"></i>
+                            0
 
-                        </a>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
 
 
-                        <a
-                            href="{% url 'sciences_gestion_etudiant_delete' e.id %}"
-                            class="action-btn btn btn-danger"
-                            title="Supprimer"
+        <!-- ================= L2 ================= -->
+
+        <div class="col-md-3">
+
+            <div class="stat-card">
+
+                <div class="d-flex align-items-center">
+
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+
+                        <i class="bi bi-2-circle-fill"></i>
+
+                    </div>
+
+                    <div class="ms-3">
+
+                        <div class="stat-title">
+
+                            Licence 2
+
+                        </div>
+
+                        <div
+                            class="stat-number"
+                            id="totalL2"
                         >
 
-                            <i class="bi bi-trash"></i>
+                            0
 
-                        </a>
+                        </div>
 
-                    </td>
+                    </div>
 
-                </tr>
+                </div>
+
+            </div>
+
+        </div>
 
 
-            {% empty %}
+        <!-- ================= L3 ================= -->
 
-                <tr>
+        <div class="col-md-3">
 
-                    <td colspan="6">
+            <div class="stat-card">
 
-                        <div class="empty-state">
+                <div class="d-flex align-items-center">
 
-                            <i class="bi bi-people"></i>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
 
-                            <h5>
-                                Aucun étudiant trouvé
-                            </h5>
+                        <i class="bi bi-3-circle-fill"></i>
 
-                            <p class="text-muted">
+                    </div>
 
-                                Aucun étudiant n'est actuellement
-                                enregistré en Sciences de Gestion.
+                    <div class="ms-3">
 
-                            </p>
+                        <div class="stat-title">
+
+                            Licence 3
+
+                        </div>
+
+                        <div
+                            class="stat-number"
+                            id="totalL3"
+                        >
+
+                            0
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- TABLEAU PRINCIPAL -->
+    <!-- ===================================================== -->
+
+    <div class="card main-card">
+
+
+        <!-- ================= HEADER TABLEAU ================= -->
+
+        <div class="table-header">
+
+            <div class="row align-items-center">
+
+
+                <!-- TITRE -->
+
+                <div class="col-md-5">
+
+                    <h5>
+
+                        <i class="bi bi-people me-2"></i>
+
+                        Liste des étudiants
+
+                    </h5>
+
+                    <small class="text-muted">
+
+                        Tous les étudiants de Sciences de Gestion
+
+                    </small>
+
+                </div>
+
+
+                <!-- RECHERCHE -->
+
+                <div class="col-md-4">
+
+                    <div class="search-box">
+
+                        <i class="bi bi-search"></i>
+
+                        <input
+                            type="text"
+                            id="searchStudent"
+                            class="form-control"
+                            placeholder="Rechercher un étudiant..."
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- FILTRE NIVEAU -->
+
+                <div class="col-md-3">
+
+                    <select
+                        id="filterNiveau"
+                        class="form-select filter-select"
+                    >
+
+                        <option value="">
+
+                            Tous les niveaux
+
+                        </option>
+
+                        <option value="L1">
+
+                            Licence 1
+
+                        </option>
+
+                        <option value="L2">
+
+                            Licence 2
+
+                        </option>
+
+                        <option value="L3">
+
+                            Licence 3
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= TABLE ================= -->
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-hover align-middle"
+                id="studentsTable"
+            >
+
+                <thead>
+
+                    <tr>
+
+                        <th>#</th>
+
+                        <th>Étudiant</th>
+
+                        <th>Matricule</th>
+
+                        <th>Niveau</th>
+
+                        <th>Filière</th>
+
+                        <th class="text-center">
+
+                            Actions
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                {% for e in etudiants %}
+
+                    <tr
+                        data-niveau="{{ e.niveau }}"
+                        data-search="{{ e.nom }} {{ e.prenoms }} {{ e.matricule }}"
+                    >
+
+
+                        <!-- NUMERO -->
+
+                        <td class="fw-bold text-muted">
+
+                            {{ forloop.counter }}
+
+                        </td>
+
+
+                        <!-- ETUDIANT -->
+
+                        <td>
+
+                            <div class="d-flex align-items-center">
+
+                                <div class="student-avatar">
+
+                                    {{ e.nom|first|upper }}
+
+                                </div>
+
+                                <div>
+
+                                    <div class="student-name">
+
+                                        {{ e.nom }}
+
+                                    </div>
+
+                                    <div class="student-firstname">
+
+                                        {{ e.prenoms }}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- MATRICULE -->
+
+                        <td>
+
+                            <span class="matricule">
+
+                                {{ e.matricule }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- NIVEAU -->
+
+                        <td>
+
+                            {% if e.niveau == "L1" %}
+
+                                <span class="niveau-badge niveau-l1">
+
+                                    Licence 1
+
+                                </span>
+
+                            {% elif e.niveau == "L2" %}
+
+                                <span class="niveau-badge niveau-l2">
+
+                                    Licence 2
+
+                                </span>
+
+                            {% elif e.niveau == "L3" %}
+
+                                <span class="niveau-badge niveau-l3">
+
+                                    Licence 3
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+
+                                    {{ e.niveau }}
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- FILIERE -->
+
+                        <td>
+
+                            <span class="text-muted">
+
+                                <i class="bi bi-mortarboard me-1"></i>
+
+                                {{ e.filiere.libelle }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- ACTIONS -->
+
+                        <td class="text-center">
+
+
+                            <!-- MODIFIER -->
 
                             <a
-                                href="{% url 'sciences_gestion_etudiant_add' %}"
-                                class="btn btn-primary"
+                                href="{% url 'sciences_gestion_etudiant_edit' e.id %}"
+                                class="action-btn btn btn-warning me-1"
+                                title="Modifier"
                             >
 
-                                <i class="bi bi-person-plus"></i>
-
-                                Ajouter le premier étudiant
+                                <i class="bi bi-pencil"></i>
 
                             </a>
 
-                        </div>
 
-                    </td>
+                            <!-- SUPPRIMER -->
 
-                </tr>
+                            <a
+                                href="{% url 'sciences_gestion_etudiant_delete' e.id %}"
+                                class="action-btn btn btn-danger"
+                                title="Supprimer"
+                                onclick="return confirm('Voulez-vous supprimer cet étudiant ?')"
+                            >
 
-            {% endfor %}
+                                <i class="bi bi-trash"></i>
+
+                            </a>
+
+                        </td>
+
+                    </tr>
 
 
-            </tbody>
+                {% empty %}
 
-        </table>
+                    <tr>
+
+                        <td colspan="6">
+
+                            <div class="empty-state">
+
+                                <i class="bi bi-people"></i>
+
+                                <h5>
+
+                                    Aucun étudiant trouvé
+
+                                </h5>
+
+                                <p class="text-muted">
+
+                                    Aucun étudiant n'est actuellement
+                                    enregistré en Sciences de Gestion.
+
+                                </p>
+
+
+                                <div class="d-flex justify-content-center gap-2">
+
+
+                                    <!-- IMPORT -->
+
+                                    <a
+                                        href="{% url 'sciences_gestion_etudiant_import' %}"
+                                        class="btn btn-outline-success"
+                                    >
+
+                                        <i class="bi bi-file-earmark-excel me-1"></i>
+
+                                        Importer Excel
+
+                                    </a>
+
+
+                                    <!-- AJOUTER -->
+
+                                    <a
+                                        href="{% url 'sciences_gestion_etudiant_add' %}"
+                                        class="btn btn-primary"
+                                    >
+
+                                        <i class="bi bi-person-plus me-1"></i>
+
+                                        Ajouter le premier étudiant
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
 
     </div>
 
 </div>
 
 
-</div>
-
-<!-- ================= JAVASCRIPT ================= -->
+<!-- ===================================================== -->
+<!-- JAVASCRIPT -->
+<!-- ===================================================== -->
 
 <script>
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    const searchInput = document.getElementById("searchStudent");
-    const filterNiveau = document.getElementById("filterNiveau");
+    const searchInput =
+        document.getElementById("searchStudent");
 
-    const rows = document.querySelectorAll(
-        "#studentsTable tbody tr[data-niveau]"
-    );
+    const filterNiveau =
+        document.getElementById("filterNiveau");
+
+    const rows =
+        document.querySelectorAll(
+            "#studentsTable tbody tr[data-niveau]"
+        );
 
 
     function filterStudents() {
 
-        const search = searchInput.value.toLowerCase().trim();
-        const niveau = filterNiveau.value;
+        const search =
+            searchInput.value
+                .toLowerCase()
+                .trim();
+
+        const niveau =
+            filterNiveau.value;
+
 
         let l1 = 0;
         let l2 = 0;
@@ -748,26 +980,63 @@ document.addEventListener("DOMContentLoaded", function () {
 
         rows.forEach(function (row) {
 
-            const rowNiveau = row.dataset.niveau;
-
-            const text = row.dataset.search
-                .toLowerCase();
+            const rowNiveau =
+                row.dataset.niveau;
 
 
-            if (rowNiveau === "L1") l1++;
-            if (rowNiveau === "L2") l2++;
-            if (rowNiveau === "L3") l3++;
+            const text =
+                row.dataset.search
+                    .toLowerCase();
 
+
+            /*
+             * Statistiques par niveau
+             */
+
+            if (rowNiveau === "L1") {
+
+                l1++;
+
+            }
+
+            if (rowNiveau === "L2") {
+
+                l2++;
+
+            }
+
+            if (rowNiveau === "L3") {
+
+                l3++;
+
+            }
+
+
+            /*
+             * Recherche
+             */
 
             const matchSearch =
                 text.includes(search);
+
+
+            /*
+             * Filtre niveau
+             */
 
             const matchNiveau =
                 niveau === "" ||
                 rowNiveau === niveau;
 
 
-            if (matchSearch && matchNiveau) {
+            /*
+             * Affichage
+             */
+
+            if (
+                matchSearch &&
+                matchNiveau
+            ) {
 
                 row.style.display = "";
 
@@ -780,12 +1049,25 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
 
-        document.getElementById("totalL1").textContent = l1;
-        document.getElementById("totalL2").textContent = l2;
-        document.getElementById("totalL3").textContent = l3;
+        /*
+         * Mise à jour statistiques
+         */
+
+        document.getElementById("totalL1")
+            .textContent = l1;
+
+        document.getElementById("totalL2")
+            .textContent = l2;
+
+        document.getElementById("totalL3")
+            .textContent = l3;
 
     }
 
+
+    /*
+     * Recherche en temps réel
+     */
 
     searchInput.addEventListener(
         "input",
@@ -793,11 +1075,19 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 
+    /*
+     * Filtre niveau
+     */
+
     filterNiveau.addEventListener(
         "change",
         filterStudents
     );
 
+
+    /*
+     * Initialisation
+     */
 
     filterStudents();
 
@@ -805,4 +1095,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </script>
 
+
 {% endblock %}
+

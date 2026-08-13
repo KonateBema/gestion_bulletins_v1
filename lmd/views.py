@@ -27,6 +27,7 @@ from .models import (
 )
 from .models import UE, ECUE, NoteLMD, GrandeUnite
 
+import pandas as pd
 
 def niveau_list(request):
     niveaux = Niveau.objects.all()
@@ -407,113 +408,6 @@ def note_lmd_delete(request, pk):
     note.delete()
 
     return redirect("note_lmd_list")
-
-from .models import EtudiantLMD
-
-from django.db.models import Q
-
-def bulletin_lmd_listDD(request):
-
-    classes = ClasseLMD.objects.select_related('filiere')
-
-    matricule = request.GET.get("matricule")
-    nom = request.GET.get("nom")
-    telephone = request.GET.get("telephone")
-    niveau = request.GET.get("niveau")
-    classe = request.GET.get("classe")
-
-    if matricule:
-        etudiants = etudiants.filter(matricule__icontains=matricule)
-
-    if nom:
-        etudiants = etudiants.filter(
-            Q(nom__icontains=nom) |
-            Q(prenoms__icontains=nom)
-        )
-
-    if telephone:
-        etudiants = etudiants.filter(
-            telephone__icontains=telephone
-        )
-
-    if niveau:
-        etudiants = etudiants.filter(
-            niveau=request.POST.get("niveau"),   # 🔥 IMPORTANT
-        )
-
-    if classe:
-        etudiants = etudiants.filter(
-            classe_id=classe
-        )
-
-    return render(
-        request,
-        "lmd/bulletins/list.html",
-        {
-            "etudiants": etudiants,
-            "niveaux": NiveauLMD.objects.all(),
-            "classes": ClasseLMD.objects.all(),
-        }
-    )
-
-from django.db.models import Q
-
-def bulletin_lmd_listQQ(request):
-
-    matricule = request.GET.get("matricule")
-    nom = request.GET.get("nom")
-    telephone = request.GET.get("telephone")
-    niveau = request.GET.get("niveau")
-    classe = request.GET.get("classe")
-
-    # Charger tous les étudiants au départ
-    etudiants = EtudiantLMD.objects.select_related(
-        "niveau",
-        "classe"
-    ).all()
-
-    if matricule:
-        etudiants = etudiants.filter(
-            matricule__icontains=matricule
-        )
-
-    if nom:
-        etudiants = etudiants.filter(
-            Q(nom__icontains=nom) |
-            Q(prenoms__icontains=nom)
-        )
-
-    if telephone:
-        etudiants = etudiants.filter(
-            telephone__icontains=telephone
-        )
-
-    if niveau:
-        etudiants = etudiants.filter(
-            niveau_id=niveau
-        )
-
-    if classe:
-        etudiants = etudiants.filter(
-            classe_id=classe
-        )
-
-    return render(
-        request,
-        "lmd/bulletins/list.html",
-        {
-            "etudiants": etudiants,
-            "niveaux": NiveauLMD.objects.all(),
-            "classes": ClasseLMD.objects.select_related("filiere"),
-            "matricule": matricule,
-            "nom": nom,
-            "telephone": telephone,
-            "niveau_selected": niveau,
-            "classe_selected": classe,
-        }
-    )
-
-from django.db.models import Q
 
 def bulletin_lmd_listRE(request):
 
@@ -2142,75 +2036,7 @@ def l3_droit_ue(request):
         context
     )    
 
-def l3_droit_ue_addAAZ(request):
-
-    filiere = get_object_or_404(
-        FiliereLMD,
-        libelle="Droit Privé"
-    )
-
-    if request.method == "POST":
-
-        UE.objects.create(
-            code=request.POST.get("code"),
-            libelle=request.POST.get("libelle"),
-            credit=request.POST.get("credit"),
-            semestre=request.POST.get("semestre"),
-            niveau=request.POST.get("niveau"),
-            filiere=filiere,
-        )
-
-        return redirect("l3_droit_ue")
-
-    return render(
-        request,
-        "lmd/l3/droit/ue_form.html",
-        {
-            "titre": "Ajouter une UE - Droit Privé",
-            "filiere": filiere,
-        }
-    )
-
-
-def l3_droit_ue_addAAAABIEN(request):
-
-    filiere = get_object_or_404(
-        FiliereLMD,
-        libelle="Droit Privé"
-    )
-
-
-    if request.method == "POST":
-
-        niveau = request.POST.get("niveau")
-        semestre = request.POST.get("semestre")
-
-
-        UE.objects.create(
-            code=request.POST.get("code"),
-            libelle=request.POST.get("libelle"),
-            credit=request.POST.get("credit"),
-            niveau=niveau,
-            semestre=semestre,
-            filiere=filiere,
-        )
-
-
-        return redirect(
-            "l3_droit_ue"
-        )
-
-
-    return render(
-        request,
-        "lmd/l3/droit/ue_form.html",
-        {
-            "titre": "Ajouter une UE - Droit Privé",
-            "filiere": filiere,
-        }
-    )
-
-def l3_droit_ue_add(request):
+def l3_droit_ue_addAAAA(request):
 
     filiere = get_object_or_404(FiliereLMD, libelle="Droit Privé")
 
@@ -2241,6 +2067,83 @@ def l3_droit_ue_add(request):
             "grandes_unites": GrandeUnite.objects.filter(filiere=filiere),
         }
     )
+
+def l3_droit_ue_add(request):
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Droit Privé"
+    )
+
+    if request.method == "POST":
+
+        # =========================================================
+        # RÉCUPÉRATION DES DONNÉES
+        # =========================================================
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+        session = request.POST.get("session")
+        code = request.POST.get("code")
+        libelle = request.POST.get("libelle")
+        credit = request.POST.get("credit")
+        ordre = request.POST.get("ordre")
+        grande_unite_id = request.POST.get("grande_unite")
+
+        # =========================================================
+        # CRÉATION DE L'UE
+        # =========================================================
+
+        UE.objects.create(
+            code=code,
+            libelle=libelle,
+            credit=credit,
+            niveau=niveau,
+            semestre=semestre,
+            session=session,
+            ordre=ordre,
+            filiere=filiere,
+            grande_unite_id=grande_unite_id or None,
+        )
+
+        # =========================================================
+        # REDIRECTION
+        # =========================================================
+
+        return redirect(
+            f"/lmd/l3/droit/ue/?niveau={niveau}&semestre={semestre}&session={session}"
+        )
+
+    # =============================================================
+    # AFFICHAGE DU FORMULAIRE
+    # =============================================================
+
+    niveau = request.GET.get("niveau", "")
+    semestre = request.GET.get("semestre", "")
+    session = request.GET.get("session", "1")
+
+    grandes_unites = GrandeUnite.objects.filter(
+        filiere=filiere
+    ).order_by(
+        "niveau",
+        "semestre",
+        "ordre"
+    )
+
+    return render(
+        request,
+        "lmd/l3/droit/ue_form.html",
+        {
+            "titre": "Ajouter une UE - Droit Privé",
+            "filiere": filiere,
+            "niveau": niveau,
+            "semestre": semestre,
+            "session": session,
+            "grandes_unites": grandes_unites,
+        }
+    )
+
+
 # =========================================================
 # MODIFIER UNE UE - L3 DROIT PRIVÉ
 # =========================================================
@@ -5080,7 +4983,7 @@ def l3_gestion_ue_list(request):
         }
     )
     
-def l3_gestion_ue_add(request):
+def l3_gestion_ue_addAAAA(request):
 
     filiere = get_object_or_404(
         FiliereLMD,
@@ -5149,6 +5052,135 @@ def l3_gestion_ue_add(request):
             "filiere": filiere,
             "niveau": niveau,
             "semestre": semestre,
+            "grandes_unites": grandes_unites,
+        }
+    )
+
+def l3_gestion_ue_add(request):
+
+    # =========================================================
+    # FILIÈRE
+    # =========================================================
+
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Sciences de Gestion"
+    )
+
+    # =========================================================
+    # RÉCUPÉRATION DES FILTRES
+    # =========================================================
+
+    niveau = request.GET.get("niveau", "")
+    semestre = request.GET.get("semestre", "")
+    session = request.GET.get("session", "1")
+
+    # =========================================================
+    # GRANDES UNITÉS
+    # =========================================================
+
+    grandes_unites = GrandeUnite.objects.filter(
+        filiere=filiere
+    )
+
+    if niveau:
+        grandes_unites = grandes_unites.filter(
+            niveau=niveau
+        )
+
+    if semestre:
+        grandes_unites = grandes_unites.filter(
+            semestre=semestre
+        )
+
+    grandes_unites = grandes_unites.order_by(
+        "ordre"
+    )
+
+    # =========================================================
+    # TRAITEMENT DU FORMULAIRE
+    # =========================================================
+
+    if request.method == "POST":
+
+        # -----------------------------------------------------
+        # RÉCUPÉRATION DES DONNÉES
+        # -----------------------------------------------------
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+        session = request.POST.get("session", "1")
+
+        code = request.POST.get("code")
+        libelle = request.POST.get("libelle")
+        credit = request.POST.get("credit")
+        ordre = request.POST.get("ordre") or 1
+
+        grande_unite_id = request.POST.get(
+            "grande_unite"
+        )
+
+        # -----------------------------------------------------
+        # VÉRIFICATION GRANDE UNITÉ
+        # -----------------------------------------------------
+
+        grande_unite = get_object_or_404(
+            GrandeUnite,
+            id=grande_unite_id,
+            filiere=filiere,
+            niveau=niveau,
+            semestre=semestre
+        )
+
+        # -----------------------------------------------------
+        # CRÉATION DE L'UE
+        # -----------------------------------------------------
+
+        UE.objects.create(
+            code=code,
+            libelle=libelle,
+            credit=credit,
+            ordre=ordre,
+            niveau=niveau,
+            semestre=semestre,
+            session=session,
+            filiere=filiere,
+            grande_unite=grande_unite,
+        )
+
+        # -----------------------------------------------------
+        # MESSAGE
+        # -----------------------------------------------------
+
+        messages.success(
+            request,
+            "UE ajoutée avec succès."
+        )
+
+        # -----------------------------------------------------
+        # REDIRECTION
+        # -----------------------------------------------------
+
+        return redirect(
+            f"{reverse('l3_gestion_ue_list')}"
+            f"?niveau={niveau}"
+            f"&semestre={semestre}"
+            f"&session={session}"
+        )
+
+    # =========================================================
+    # AFFICHAGE DU FORMULAIRE
+    # =========================================================
+
+    return render(
+        request,
+        "lmd/l3/gestion/ue/form.html",
+        {
+            "titre": "Nouvelle UE - Sciences de Gestion",
+            "filiere": filiere,
+            "niveau": niveau,
+            "semestre": semestre,
+            "session": session,
             "grandes_unites": grandes_unites,
         }
     )
@@ -5483,7 +5515,7 @@ def l3_gestion_saisie_notes(request, ecue_id):
         context,
     )
 
-def l3_gestion_ue_edit(request, pk):
+def l3_gestion_ue_editAAAA(request, pk):
 
     filiere = get_object_or_404(
         FiliereLMD,
@@ -5539,7 +5571,7 @@ def l3_gestion_ue_edit(request, pk):
 
     return render(
         request,
-        "lmd/l3/gestion/eu/form.html",
+         "lmd/l3/gestion/ue/form.html",
         {
             "titre": "Modifier une UE - Sciences de Gestion",
             "filiere": filiere,
@@ -5550,55 +5582,131 @@ def l3_gestion_ue_edit(request, pk):
         }
     )
 
-def l3_gestion_ue_editAAA(request, pk):
+def l3_gestion_ue_edit(request, pk):
 
     # =========================================================
-    # 1. RÉCUPÉRER L'UE
+    # FILIÈRE
     # =========================================================
 
-    ue = get_object_or_404(
-        UE.objects.select_related("filiere"),
-        pk=pk,
-        filiere__libelle="Sciences de Gestion",
+    filiere = get_object_or_404(
+        FiliereLMD,
+        libelle="Sciences de Gestion"
     )
 
     # =========================================================
-    # 2. MODIFICATION
+    # RÉCUPÉRER L'UE
+    # =========================================================
+
+    ue = get_object_or_404(
+        UE,
+        pk=pk,
+        filiere=filiere
+    )
+
+    # =========================================================
+    # VALEURS PAR DÉFAUT
+    # =========================================================
+
+    niveau = request.GET.get("niveau") or ue.niveau
+    semestre = request.GET.get("semestre") or ue.semestre
+    session = request.GET.get("session") or ue.session
+
+    # =========================================================
+    # GRANDES UNITÉS
+    # =========================================================
+
+    grandes_unites = GrandeUnite.objects.filter(
+        filiere=filiere,
+        niveau=niveau,
+        semestre=semestre
+    ).order_by("ordre")
+
+    # =========================================================
+    # TRAITEMENT DU FORMULAIRE
     # =========================================================
 
     if request.method == "POST":
 
-        ue.niveau = request.POST.get("niveau")
-        ue.semestre = request.POST.get("semestre")
-        ue.code = request.POST.get("code")
-        ue.libelle = request.POST.get("libelle")
-        ue.credit = request.POST.get("credit")
-        ue.ordre = request.POST.get("ordre")
+        # -----------------------------------------------------
+        # RÉCUPÉRATION DES DONNÉES
+        # -----------------------------------------------------
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+        session = request.POST.get("session", "1")
+
+        code = request.POST.get("code")
+        libelle = request.POST.get("libelle")
+        credit = request.POST.get("credit")
+        ordre = request.POST.get("ordre") or 1
+
+        grande_unite_id = request.POST.get(
+            "grande_unite"
+        )
+
+        # -----------------------------------------------------
+        # VÉRIFICATION GRANDE UNITÉ
+        # -----------------------------------------------------
+
+        grande_unite = get_object_or_404(
+            GrandeUnite,
+            id=grande_unite_id,
+            filiere=filiere,
+            niveau=niveau,
+            semestre=semestre
+        )
+
+        # -----------------------------------------------------
+        # MODIFICATION DE L'UE
+        # -----------------------------------------------------
+
+        ue.code = code
+        ue.libelle = libelle
+        ue.credit = credit
+        ue.ordre = ordre
+        ue.niveau = niveau
+        ue.semestre = semestre
+        ue.session = session
+        ue.grande_unite = grande_unite
 
         ue.save()
 
+        # -----------------------------------------------------
+        # MESSAGE
+        # -----------------------------------------------------
+
         messages.success(
             request,
-            f"L'UE « {ue.code} — {ue.libelle} » a été modifiée avec succès."
+            "UE modifiée avec succès."
         )
 
+        # -----------------------------------------------------
+        # REDIRECTION
+        # -----------------------------------------------------
+
         return redirect(
-            "l3_gestion_ue_list"
+            f"{reverse('l3_gestion_ue_list')}"
+            f"?niveau={niveau}"
+            f"&semestre={semestre}"
+            f"&session={session}"
         )
 
     # =========================================================
-    # 3. AFFICHAGE
+    # AFFICHAGE DU FORMULAIRE
     # =========================================================
 
     return render(
         request,
         "lmd/l3/gestion/ue/form.html",
         {
+            "titre": "Modifier une UE - Sciences de Gestion",
+            "filiere": filiere,
             "ue": ue,
-            "niveau": ue.niveau,
-            "semestre": ue.semestre,
-            "titre": "Modifier UE - L3 Sciences de Gestion",
-        },
+            "niveau": niveau,
+            "semestre": semestre,
+            "session": session,
+            "grandes_unites": grandes_unites,
+        }
     )
 
 def l3_gestion_ue_delete(request, pk):
@@ -8942,6 +9050,12 @@ def sciences_gestion_etudiant_edit(request, id):
         niveau = request.POST.get("niveau")
 
         sexe = request.POST.get("sexe")
+        if not sexe:
+            # Si aucun sexe n'est sélectionné,
+            # on conserve l'ancienne valeur
+            sexe = etudiant.sexe
+
+        
         date_naissance = request.POST.get("date_naissance")
         lieu_naissance = request.POST.get("lieu_naissance")
         statut = request.POST.get("statut")
@@ -8971,7 +9085,8 @@ def sciences_gestion_etudiant_edit(request, id):
         etudiant.nom = nom
         etudiant.prenoms = prenoms
         etudiant.niveau = niveau
-        etudiant.sexe = sexe or None
+        # etudiant.sexe = sexe or None
+        etudiant.sexe = sexe
         etudiant.date_naissance = date_naissance or None
         etudiant.lieu_naissance = lieu_naissance
         etudiant.statut = statut
@@ -9367,4 +9482,196 @@ def l3_gestion_grande_unite_delete(request, pk):
     return redirect(
         f"{reverse('l3_gestion_grande_unite')}"
         f"?niveau={niveau}&semestre={semestre}"
+    )
+    
+    
+def sciences_gestion_etudiant_import(request):
+
+    if request.method == "POST":
+
+        fichier = request.FILES.get("fichier")
+
+        if not fichier:
+            messages.error(
+                request,
+                "Veuillez sélectionner un fichier Excel."
+            )
+
+            return redirect("l3_sciences_gestion_etudiants")
+
+
+        # Vérification extension
+        if not fichier.name.lower().endswith((".xlsx", ".xls")):
+
+            messages.error(
+                request,
+                "Veuillez sélectionner un fichier Excel valide (.xlsx ou .xls)."
+            )
+
+            return redirect("l3_sciences_gestion_etudiants")
+
+
+        try:
+
+            # Lecture Excel
+            df = pd.read_excel(fichier)
+
+            # Nettoyage des noms de colonnes
+            df.columns = (
+                df.columns
+                .astype(str)
+                .str.strip()
+                .str.lower()
+            )
+
+
+            # Colonnes obligatoires
+            colonnes_obligatoires = [
+                "matricule",
+                "nom",
+                "prenoms",
+                "niveau",
+            ]
+
+
+            colonnes_manquantes = [
+                colonne
+                for colonne in colonnes_obligatoires
+                if colonne not in df.columns
+            ]
+
+
+            if colonnes_manquantes:
+
+                messages.error(
+                    request,
+                    "Colonnes manquantes : "
+                    + ", ".join(colonnes_manquantes)
+                )
+
+                return redirect(
+                    "sciences_gestion_etudiant_import"
+                )
+
+
+            # Recherche de la filière
+            filiere = FiliereLMD.objects.filter(
+                libelle__iexact="Sciences de Gestion"
+            ).first()
+
+
+            if not filiere:
+
+                messages.error(
+                    request,
+                    "La filière Sciences de Gestion "
+                    "n'existe pas dans la base de données."
+                )
+
+                return redirect(
+                    "sciences_gestion_etudiant_import"
+                )
+
+
+            importes = 0
+            ignores = 0
+
+
+            for _, ligne in df.iterrows():
+
+                matricule = str(
+                    ligne.get("matricule", "")
+                ).strip()
+
+                nom = str(
+                    ligne.get("nom", "")
+                ).strip()
+
+                prenoms = str(
+                    ligne.get("prenoms", "")
+                ).strip()
+
+                niveau = str(
+                    ligne.get("niveau", "")
+                ).strip().upper()
+
+
+                # Ignorer les lignes vides
+                if not matricule or not nom or not prenoms:
+
+                    ignores += 1
+                    continue
+
+
+                # Vérification niveau
+                if niveau not in ["L1", "L2", "L3"]:
+
+                    ignores += 1
+                    continue
+
+
+                # Vérifier si l'étudiant existe déjà
+                existe = EtudiantLMD.objects.filter(
+                    matricule=matricule
+                ).exists()
+
+
+                if existe:
+
+                    ignores += 1
+                    continue
+
+
+                # Création étudiant
+                EtudiantLMD.objects.create(
+
+                    matricule=matricule,
+
+                    nom=nom,
+
+                    prenoms=prenoms,
+
+                    niveau=niveau,
+
+                    filiere=filiere,
+
+                )
+
+                importes += 1
+
+
+            messages.success(
+                request,
+                f"{importes} étudiant(s) importé(s) avec succès."
+            )
+
+
+            if ignores:
+
+                messages.warning(
+                    request,
+                    f"{ignores} ligne(s) ignorée(s)."
+                )
+
+
+            return redirect(
+                "sciences_gestion_etudiants"
+            )
+
+
+        except Exception as e:
+
+            messages.error(
+                request,
+                f"Erreur lors de l'importation : {str(e)}"
+            )
+
+            return redirect(
+                "sciences_gestion_etudiant_import"
+            )
+
+
+    return render(
+        request,
+            "lmd/l3/gestion/etudiant_import.html"
     )

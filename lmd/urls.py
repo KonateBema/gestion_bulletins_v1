@@ -476,5 +476,16 @@ path(
     views.l3_gestion_grande_unite_delete,
     name="l3_gestion_grande_unite_delete",
 ),
+ path(
+        "sciences-gestion/etudiants/import/",
+        views.sciences_gestion_etudiant_import,
+        name="sciences_gestion_etudiant_import"
+    ),
+ path(
+    "sciences-gestion/etudiants/",
+    views.l3_sciences_gestion_etudiants,
+    name="l3_sciences_gestion_etudiants",
+),
+
 
 ]

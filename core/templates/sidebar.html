@@ -1,41 +1,99 @@
 {% load static %}
 
 <style>
-    .accordion-button {
+    /* =====================================================
+       SIDEBAR ROUGE
+    ===================================================== */
+
+    .sidebar {
+        background: #b71c1c !important;
         color: #fff;
-        font-weight: 600;
     }
 
-    .accordion-button:not(.collapsed) {
-        background: rgba(255, 255, 255, .08);
+    /* Logo / titre */
+    .sidebar-brand {
         color: #fff;
     }
 
-    .accordion-button:focus {
-        box-shadow: none;
+    .sidebar-brand h5,
+    .sidebar-brand small {
+        color: #fff;
     }
 
-    .menu-subtitle {
-        color: #adb5bd;
-        font-size: 13px;
-        padding: 8px 15px;
-        font-weight: 600;
-    }
-
+    /* Titres des menus */
     .menu-title {
         color: #fff;
         font-weight: 600;
         padding: 10px 15px;
     }
 
+    /* Sous-titres */
+    .menu-subtitle {
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 13px;
+        padding: 8px 15px;
+        font-weight: 600;
+    }
+
+    /* Liens */
     .menu-link {
         display: flex;
         align-items: center;
         gap: 10px;
+        color: #fff !important;
+        text-decoration: none;
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin: 2px 8px;
+        transition: all 0.2s ease;
     }
 
     .menu-link i {
         min-width: 20px;
+        color: #fff;
+    }
+
+    /* Survol */
+    .menu-link:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff !important;
+        transform: translateX(3px);
+    }
+
+    /* Menu actif */
+    .menu-link.active {
+        background: #ffffff;
+        color: #b71c1c !important;
+        font-weight: 600;
+    }
+
+    .menu-link.active i {
+        color: #b71c1c;
+    }
+
+    /* Accordion */
+    .accordion-button {
+        color: #fff !important;
+        font-weight: 600;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background: rgba(255, 255, 255, 0.12) !important;
+        color: #fff !important;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+    }
+
+    /* Icône accordion */
+    .accordion-button::after {
+        filter: brightness(0) invert(1);
+    }
+
+    /* Déconnexion */
+    .menu-link.logout:hover {
+        background: rgba(0, 0, 0, 0.15);
     }
 </style>
 

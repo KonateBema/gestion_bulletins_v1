@@ -29,6 +29,15 @@ class UE(models.Model):
         ("S5", "Semestre 5"),
         ("S6", "Semestre 6"),
     )
+    
+    session = models.CharField(
+    max_length=1,
+    choices=[
+        ("1", "Session 1"),
+        ("2", "Session 2 (Rattrapage)"),
+     ],
+     default="1"
+     )
 
     code = models.CharField(
         max_length=20

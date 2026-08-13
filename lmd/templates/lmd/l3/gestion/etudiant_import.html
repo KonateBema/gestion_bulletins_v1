@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+
+    .import-header {
+        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        color: white;
+        border-radius: 18px;
+        padding: 28px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(13, 110, 253, .18);
+    }
+
+    .import-header h3 {
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .import-header p {
+        margin-bottom: 0;
+        opacity: .85;
+    }
+
+    .import-card {
+        border: none;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, .07);
+    }
+
+    .import-card-header {
+        padding: 20px 24px;
+        background: white;
+        border-bottom: 1px solid #eee;
+    }
+
+    .import-card-header h5 {
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .import-card-body {
+        padding: 30px;
+    }
+
+    .upload-box {
+        border: 2px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 40px 25px;
+        text-align: center;
+        background: #f8f9fa;
+        transition: .2s ease;
+    }
+
+    .upload-box:hover {
+        border-color: #0d6efd;
+        background: #f1f6ff;
+    }
+
+    .upload-icon {
+        font-size: 55px;
+        color: #198754;
+        margin-bottom: 15px;
+    }
+
+    .btn-import {
+        border-radius: 10px;
+        padding: 11px 22px;
+        font-weight: 600;
+    }
+
+    .btn-back {
+        border-radius: 10px;
+        padding: 11px 20px;
+        font-weight: 600;
+    }
+
+</style>
+
+
+<div class="container-fluid px-3 px-md-4 mt-4">
+
+
+    <!-- HEADER -->
+
+    <div class="import-header">
+
+        <h3>
+
+            <i class="bi bi-file-earmark-excel-fill me-2"></i>
+
+            Importation des étudiants
+
+        </h3>
+
+        <p>
+
+            Importer les étudiants de Sciences de Gestion
+            depuis un fichier Excel.
+
+        </p>
+
+    </div>
+
+
+    <!-- CARD -->
+
+    <div class="card import-card">
+
+        <div class="import-card-header">
+
+            <h5>
+
+                <i class="bi bi-upload me-2 text-primary"></i>
+
+                Importer un fichier Excel
+
+            </h5>
+
+            <small class="text-muted">
+
+                Les étudiants L1, L2 et L3 peuvent être importés.
+
+            </small>
+
+        </div>
+
+
+        <div class="import-card-body">
+
+
+            <form
+                method="post"
+                enctype="multipart/form-data"
+            >
+
+                {% csrf_token %}
+
+
+                <div class="upload-box">
+
+                    <div class="upload-icon">
+
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+
+                    </div>
+
+
+                    <h5>
+
+                        Sélectionnez votre fichier Excel
+
+                    </h5>
+
+
+                    <p class="text-muted">
+
+                        Formats acceptés : .xlsx et .xls
+
+                    </p>
+
+
+                    <input
+                        type="file"
+                        name="fichier"
+                        class="form-control mt-3"
+                        accept=".xlsx,.xls"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- FORMAT ATTENDU -->
+
+                <div class="alert alert-info mt-4">
+
+                    <strong>
+
+                        <i class="bi bi-info-circle me-1"></i>
+
+                        Format du fichier
+
+                    </strong>
+
+                    <p class="mb-2 mt-2">
+
+                        Votre fichier Excel doit contenir au minimum
+                        les colonnes suivantes :
+
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-2">
+
+                        <span class="badge bg-primary">
+                            matricule
+                        </span>
+
+                        <span class="badge bg-primary">
+                            nom
+                        </span>
+
+                        <span class="badge bg-primary">
+                            prenoms
+                        </span>
+
+                        <span class="badge bg-primary">
+                            niveau
+                        </span>
+
+                    </div>
+
+                    <p class="mb-0 mt-2">
+
+                        Les niveaux doivent être indiqués sous la forme :
+                        <strong>L1</strong>, <strong>L2</strong> ou
+                        <strong>L3</strong>.
+
+                    </p>
+
+                </div>
+
+
+                <!-- BOUTONS -->
+
+                <div class="d-flex justify-content-between mt-4">
+
+
+                    <a href="{% url 'l3_sciences_gestion_etudiants' %}"
+   class="btn btn-outline-secondary">
+
+    <i class="bi bi-arrow-left me-1"></i>
+    Retour
+
+</a>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-success btn-import"
+                    >
+
+                        <i class="bi bi-cloud-upload me-1"></i>
+
+                        Importer les étudiants
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

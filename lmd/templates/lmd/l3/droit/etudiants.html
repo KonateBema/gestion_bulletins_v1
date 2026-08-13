@@ -1,90 +1,395 @@
+
 {% extends "base.html" %}
 
 {% block content %}
 
-<div class="container-fluid mt-4">
-<!-- ========================= -->
-<!-- HEADER -->
-<!-- ========================= -->
+<style>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+    .gestion-header {
+        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        color: white;
+        border-radius: 18px;
+        padding: 28px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(13, 110, 253, 0.18);
+    }
 
-    <div>
+    .gestion-header h3 {
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
 
-        <h3 class="fw-bold mb-1">
+    .gestion-header p {
+        margin-bottom: 0;
+        opacity: .85;
+    }
 
-            <i class="bi bi-book"></i>
+    .btn-add {
+        background: white;
+        color: #0d6efd;
+        border: none;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 11px 18px;
+        transition: .2s ease;
+    }
 
-            Droit Privé
+    .btn-add:hover {
+        transform: translateY(-2px);
+        background: #f8f9fa;
+        color: #0b5ed7;
+    }
 
-        </h3>
+    .btn-import {
+        background: rgba(255, 255, 255, .15);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, .5);
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 11px 18px;
+        transition: .2s ease;
+    }
 
-        <p class="text-muted mb-0">
+    .btn-import:hover {
+        transform: translateY(-2px);
+        background: white;
+        color: #198754;
+    }
 
-            Gestion des étudiants de la filière Droit Privé
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        padding: 20px;
+        background: white;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .07);
+        transition: .25s ease;
+    }
 
-        </p>
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, .10);
+    }
 
-    </div>
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+
+    .stat-title {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 3px;
+    }
+
+    .stat-number {
+        font-size: 25px;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .main-card {
+        border: none;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, .07);
+    }
+
+    .table-header {
+        padding: 20px 22px;
+        border-bottom: 1px solid #eee;
+        background: #fff;
+    }
+
+    .table-header h5 {
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+
+    .search-box input {
+        padding-left: 38px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+
+    .filter-select {
+        border-radius: 10px;
+        min-width: 150px;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background: #212529;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 14px;
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        padding: 14px;
+        vertical-align: middle;
+    }
+
+    .table tbody tr {
+        transition: .15s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .student-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: #212529;
+    }
+
+    .student-firstname {
+        color: #6c757d;
+        font-size: 13px;
+    }
+
+    .matricule {
+        font-family: monospace;
+        background: #f1f3f5;
+        padding: 5px 8px;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .niveau-badge {
+        border-radius: 20px;
+        padding: 6px 11px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .niveau-l1 {
+        background: #e7f1ff;
+        color: #0d6efd;
+    }
+
+    .niveau-l2 {
+        background: #fff3cd;
+        color: #997404;
+    }
+
+    .niveau-l3 {
+        background: #d1e7dd;
+        color: #146c43;
+    }
+
+    .sexe-m {
+        background: #e7f1ff;
+        color: #0d6efd;
+        border-radius: 20px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .sexe-f {
+        background: #f8d7da;
+        color: #b02a37;
+        border-radius: 20px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .statut-actif {
+        background: #d1e7dd;
+        color: #146c43;
+        border-radius: 20px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .statut-inactif {
+        background: #e9ecef;
+        color: #495057;
+        border-radius: 20px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .action-btn {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: .2s ease;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .empty-state i {
+        font-size: 50px;
+        color: #adb5bd;
+        margin-bottom: 15px;
+    }
+
+    @media (max-width: 768px) {
+
+        .gestion-header {
+            padding: 20px;
+        }
+
+        .gestion-header .btn-add,
+        .gestion-header .btn-import {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .table-header .row > div {
+            margin-bottom: 10px;
+        }
+
+        .table-responsive {
+            border-radius: 0;
+        }
+
+    }
+
+</style>
 
 
-    <div class="d-flex gap-2">
-
-        <a href="{% url 'l3_droit_etudiant_import' %}"
-           class="btn btn-success shadow-sm">
-
-            <i class="bi bi-file-earmark-excel"></i>
-
-            Importer Excel
-
-        </a>
+<div class="container-fluid px-3 px-md-4 mt-4">
 
 
-        <a href="{% url 'l3_droit_etudiant_add' %}"
-           class="btn btn-primary shadow-sm">
+<!-- ================= HEADER ================= -->
 
-            <i class="bi bi-person-plus"></i>
+<div class="gestion-header">
 
-            Ajouter étudiant
+    <div class="row align-items-center">
 
-        </a>
+        <div class="col-md-7">
+
+            <h3>
+
+                <i class="bi bi-book me-2"></i>
+
+                Droit Privé
+
+            </h3>
+
+            <p>
+
+                Gestion des étudiants de Licence 1, Licence 2 et Licence 3
+
+            </p>
+
+        </div>
+
+
+        <div class="col-md-5 text-md-end">
+
+            <!-- CONSERVÉ : IMPORT EXCEL -->
+
+            <a href="{% url 'l3_droit_etudiant_import' %}"
+               class="btn btn-import me-1">
+
+                <i class="bi bi-file-earmark-excel me-1"></i>
+
+                Importer Excel
+
+            </a>
+
+
+            <!-- CONSERVÉ : AJOUTER ÉTUDIANT -->
+
+            <a href="{% url 'l3_droit_etudiant_add' %}"
+               class="btn btn-add">
+
+                <i class="bi bi-person-plus-fill me-1"></i>
+
+                Ajouter un étudiant
+
+            </a>
+
+        </div>
 
     </div>
 
 </div>
 
 
-<!-- ========================= -->
-<!-- STATISTIQUES -->
-<!-- ========================= -->
+<!-- ================= STATISTIQUES ================= -->
 
-<div class="row g-4 mb-4">
+<div class="row g-3 mb-4">
+
+
+    <!-- TOTAL -->
 
     <div class="col-md-3">
 
-        <div class="card border-0 shadow-sm h-100">
+        <div class="stat-card">
 
-            <div class="card-body">
+            <div class="d-flex align-items-center">
 
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
 
-                    <div>
+                    <i class="bi bi-people-fill"></i>
 
-                        <small class="text-muted">
-                            Total étudiants
-                        </small>
+                </div>
 
-                        <h2 class="fw-bold mb-0">
+                <div class="ms-3">
 
-                            {{ total_etudiants }}
+                    <div class="stat-title">
 
-                        </h2>
+                        Total étudiants
 
                     </div>
 
-                    <div class="bg-primary text-white rounded-circle p-3">
+                    <div class="stat-number">
 
-                        <i class="bi bi-people fs-4"></i>
+                        {{ etudiants|length }}
 
                     </div>
 
@@ -97,29 +402,105 @@
     </div>
 
 
+    <!-- L1 -->
+
     <div class="col-md-3">
 
-        <div class="card border-0 shadow-sm h-100">
+        <div class="stat-card">
 
-            <div class="card-body">
+            <div class="d-flex align-items-center">
 
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="stat-icon bg-info bg-opacity-10 text-info">
 
-                    <div>
+                    <i class="bi bi-1-circle-fill"></i>
 
-                        <small class="text-muted">
-                            Niveau
-                        </small>
+                </div>
 
-                        <h5 class="fw-bold mb-0">
-                            Licence 1 , 2 et 3
-                        </h5>
+                <div class="ms-3">
+
+                    <div class="stat-title">
+
+                        Licence 1
 
                     </div>
 
-                    <div class="bg-success text-white rounded-circle p-3">
+                    <div class="stat-number" id="totalL1">
 
-                        <i class="bi bi-mortarboard fs-4"></i>
+                        0
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- L2 -->
+
+    <div class="col-md-3">
+
+        <div class="stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+
+                    <i class="bi bi-2-circle-fill"></i>
+
+                </div>
+
+                <div class="ms-3">
+
+                    <div class="stat-title">
+
+                        Licence 2
+
+                    </div>
+
+                    <div class="stat-number" id="totalL2">
+
+                        0
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- L3 -->
+
+    <div class="col-md-3">
+
+        <div class="stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="stat-icon bg-success bg-opacity-10 text-success">
+
+                    <i class="bi bi-3-circle-fill"></i>
+
+                </div>
+
+                <div class="ms-3">
+
+                    <div class="stat-title">
+
+                        Licence 3
+
+                    </div>
+
+                    <div class="stat-number" id="totalL3">
+
+                        0
 
                     </div>
 
@@ -134,322 +515,515 @@
 </div>
 
 
-<!-- ========================= -->
-<!-- RECHERCHE -->
-<!-- ========================= -->
+<!-- ================= TABLE ================= -->
 
-<div class="card shadow-sm border-0 mb-4">
+<div class="card main-card">
 
-    <div class="card-body">
 
-        <form method="get">
+    <!-- TABLE HEADER -->
 
-            <div class="row g-2">
+    <div class="table-header">
 
-                <div class="col-md-5">
+        <div class="row align-items-center">
+
+            <div class="col-md-5">
+
+                <h5>
+
+                    <i class="bi bi-people me-2"></i>
+
+                    Liste des étudiants
+
+                </h5>
+
+                <small class="text-muted">
+
+                    Tous les étudiants de Droit Privé
+
+                </small>
+
+            </div>
+
+
+            <!-- RECHERCHE CONSERVÉE -->
+
+            <div class="col-md-4">
+
+                <div class="search-box">
+
+                    <i class="bi bi-search"></i>
 
                     <input
                         type="text"
-                        name="q"
-                        value="{{ request.GET.q }}"
+                        id="searchStudent"
                         class="form-control"
-                        placeholder="🔍 Rechercher matricule, nom ou prénom"
+                        placeholder="Rechercher matricule, nom ou prénom..."
                     >
 
                 </div>
 
-
-                <div class="col-md-3">
-
-                    <select name="niveau"
-                            class="form-select">
-
-                        <option value="">
-                            Tous les niveaux
-                        </option>
-
-                        <option value="L1"
-                            {% if request.GET.niveau == "L1" %}
-                                selected
-                            {% endif %}
-                        >
-                            Licence 1
-                        </option>
-
-                        <option value="L2"
-                            {% if request.GET.niveau == "L2" %}
-                                selected
-                            {% endif %}
-                        >
-                            Licence 2
-                        </option>
-
-                        <option value="L3"
-                            {% if request.GET.niveau == "L3" %}
-                                selected
-                            {% endif %}
-                        >
-                            Licence 3
-                        </option>
-
-                    </select>
-
-                </div>
+            </div>
 
 
-                <div class="col-md-2">
+            <!-- FILTRE NIVEAU -->
 
-                    <button type="submit"
-                            class="btn btn-dark w-100">
+            <div class="col-md-3">
 
-                        <i class="bi bi-search"></i>
+                <select
+                    id="filterNiveau"
+                    class="form-select filter-select"
+                >
 
-                        Rechercher
+                    <option value="">
 
-                    </button>
+                        Tous les niveaux
 
-                </div>
+                    </option>
 
+                    <option value="L1">
 
-                <div class="col-md-2">
+                        Licence 1
 
-                    <a href="{% url 'droit_prive_etudiants' %}"
-                       class="btn btn-secondary w-100">
+                    </option>
 
-                        Réinitialiser
+                    <option value="L2">
 
-                    </a>
+                        Licence 2
 
-                </div>
+                    </option>
+
+                    <option value="L3">
+
+                        Licence 3
+
+                    </option>
+
+                </select>
 
             </div>
 
-        </form>
-
-    </div>
-
-</div>
-
-
-<!-- ========================= -->
-<!-- TABLEAU -->
-<!-- ========================= -->
-
-<div class="card shadow-sm border-0">
-
-    <div class="card-header bg-dark text-white">
-
-        <h5 class="mb-0">
-
-            <i class="bi bi-list-ul"></i>
-
-            Liste des étudiants en Droit Privé
-
-        </h5>
+        </div>
 
     </div>
 
 
-    <div class="card-body p-0">
+    <!-- TABLE -->
 
-        <div class="table-responsive">
+    <div class="table-responsive">
 
-            <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle"
+               id="studentsTable">
 
-                <thead class="table-light">
+            <thead>
 
-                    <tr>
+                <tr>
 
-                        <th>Matricule</th>
+                    <th>Étudiant</th>
 
-                        <th>Nom</th>
+                    <th>Matricule</th>
 
-                        <th>Prénoms</th>
+                    <th>Niveau</th>
 
-                        <th>Niveau</th>
+                    <th>Sexe</th>
 
-                        <th>Sexe</th>
+                    <th>Téléphone</th>
 
-                        <th>Téléphone</th>
+                    <th>Statut</th>
 
-                        <th>Statut</th>
+                    <th class="text-center">
 
-                        <th width="180">
-                            Actions
-                        </th>
+                        Actions
 
-                    </tr>
+                    </th>
 
-                </thead>
+                </tr>
+
+            </thead>
 
 
-                <tbody>
+            <tbody>
 
-                {% for e in etudiants %}
 
-                    <tr>
+            {% for e in etudiants %}
 
-                        <td class="fw-bold">
+                <tr
+                    data-niveau="{{ e.niveau }}"
+                    data-search="{{ e.nom }} {{ e.prenoms }} {{ e.matricule }}"
+                >
+
+
+                    <!-- ETUDIANT -->
+
+                    <td>
+
+                        <div class="d-flex align-items-center">
+
+                            <div class="student-avatar">
+
+                                {{ e.nom|first|upper }}
+
+                            </div>
+
+                            <div>
+
+                                <div class="student-name">
+
+                                    {{ e.nom }}
+
+                                </div>
+
+                                <div class="student-firstname">
+
+                                    {{ e.prenoms }}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- MATRICULE -->
+
+                    <td>
+
+                        <span class="matricule">
 
                             {{ e.matricule }}
 
-                        </td>
+                        </span>
+
+                    </td>
 
 
-                        <td>
+                    <!-- NIVEAU -->
 
-                            {{ e.nom }}
+                    <td>
 
-                        </td>
+                        {% if e.niveau == "L1" %}
 
+                            <span class="niveau-badge niveau-l1">
 
-                        <td>
+                                Licence 1
 
-                            {{ e.prenoms }}
+                            </span>
 
-                        </td>
+                        {% elif e.niveau == "L2" %}
 
+                            <span class="niveau-badge niveau-l2">
 
-                        <td>
+                                Licence 2
 
-                            <span class="badge bg-info">
+                            </span>
+
+                        {% elif e.niveau == "L3" %}
+
+                            <span class="niveau-badge niveau-l3">
+
+                                Licence 3
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge bg-secondary">
 
                                 {{ e.niveau }}
 
                             </span>
 
-                        </td>
+                        {% endif %}
+
+                    </td>
 
 
-                        <td>
+                    <!-- SEXE -->
 
-                            {% if e.sexe == "M" %}
+                    <td>
 
-                                <span class="badge bg-primary">
+                        {% if e.sexe == "M" %}
 
-                                    Masculin
+                            <span class="sexe-m">
 
-                                </span>
+                                <i class="bi bi-gender-male me-1"></i>
 
-                            {% elif e.sexe == "F" %}
+                                Masculin
 
-                                <span class="badge bg-danger">
+                            </span>
 
-                                    Féminin
+                        {% elif e.sexe == "F" %}
 
-                                </span>
+                            <span class="sexe-f">
 
-                            {% else %}
+                                <i class="bi bi-gender-female me-1"></i>
 
-                                <span class="badge bg-secondary">
+                                Féminin
 
-                                    -
+                            </span>
 
-                                </span>
+                        {% else %}
 
-                            {% endif %}
+                            <span class="badge bg-secondary">
 
-                        </td>
+                                -
 
+                            </span>
 
-                        <td>
+                        {% endif %}
 
-                            {{ e.telephone|default:"-" }}
-
-                        </td>
-
-
-                        <td>
-
-                            {% if e.actif %}
-
-                                <span class="badge bg-success">
-
-                                    Actif
-
-                                </span>
-
-                            {% else %}
-
-                                <span class="badge bg-secondary">
-
-                                    Inactif
-
-                                </span>
-
-                            {% endif %}
-
-                        </td>
+                    </td>
 
 
-                        <td>
+                    <!-- TELEPHONE -->
 
-                            <div class="d-flex gap-1">
+                    <td>
 
-                                <a href="{% url 'l3_droit_etudiant_update' e.id %}"
-                                   class="btn btn-sm btn-warning"
-                                   title="Modifier">
+                        {% if e.telephone %}
 
-                                    <i class="bi bi-pencil"></i>
+                            <span class="text-muted">
 
-                                </a>
+                                <i class="bi bi-telephone me-1"></i>
 
+                                {{ e.telephone }}
 
-                                <a href="#"
-                                   class="btn btn-sm btn-info text-white"
-                                   title="Voir">
+                            </span>
 
-                                    <i class="bi bi-eye"></i>
+                        {% else %}
 
-                                </a>
+                            <span class="text-muted">
 
+                                -
 
-                                <a href="{% url 'l3_droit_etudiant_delete' e.id %}"
-                                   class="btn btn-sm btn-danger"
-                                   onclick="return confirm('Voulez-vous supprimer cet étudiant ?')"
-                                   title="Supprimer">
+                            </span>
 
-                                    <i class="bi bi-trash"></i>
+                        {% endif %}
 
-                                </a>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
+                    </td>
 
 
-                {% empty %}
+                    <!-- STATUT -->
 
-                    <tr>
+                    <td>
 
-                        <td colspan="8"
-                            class="text-center py-5">
+                        {% if e.actif %}
 
-                            <i class="bi bi-person-x fs-1 text-muted"></i>
+                            <span class="statut-actif">
 
-                            <h5 class="mt-3">
+                                <i class="bi bi-check-circle me-1"></i>
+
+                                Actif
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="statut-inactif">
+
+                                <i class="bi bi-dash-circle me-1"></i>
+
+                                Inactif
+
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- ACTIONS -->
+
+                    <td class="text-center">
+
+                        <!-- CONSERVÉ : MODIFIER -->
+
+                        <a
+                            href="{% url 'l3_droit_etudiant_update' e.id %}"
+                            class="action-btn btn btn-warning me-1"
+                            title="Modifier"
+                        >
+
+                            <i class="bi bi-pencil"></i>
+
+                        </a>
+
+
+                        <!-- CONSERVÉ : VOIR -->
+
+                        <a
+                            href="#"
+                            class="action-btn btn btn-info text-white me-1"
+                            title="Voir"
+                        >
+
+                            <i class="bi bi-eye"></i>
+
+                        </a>
+
+
+                        <!-- CONSERVÉ : SUPPRIMER -->
+
+                        <a
+                            href="{% url 'l3_droit_etudiant_delete' e.id %}"
+                            class="action-btn btn btn-danger"
+                            onclick="return confirm('Voulez-vous supprimer cet étudiant ?')"
+                            title="Supprimer"
+                        >
+
+                            <i class="bi bi-trash"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+
+            {% empty %}
+
+                <tr>
+
+                    <td colspan="8">
+
+                        <div class="empty-state">
+
+                            <i class="bi bi-person-x"></i>
+
+                            <h5>
 
                                 Aucun étudiant trouvé
 
                             </h5>
 
-                        </td>
+                            <p class="text-muted">
 
-                    </tr>
+                                Aucun étudiant n'est actuellement
+                                enregistré en Droit Privé.
 
-                {% endfor %}
+                            </p>
 
-                </tbody>
+                            <a
+                                href="{% url 'l3_droit_etudiant_add' %}"
+                                class="btn btn-primary"
+                            >
 
-            </table>
+                                <i class="bi bi-person-plus"></i>
 
-        </div>
+                                Ajouter le premier étudiant
+
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+
+            </tbody>
+
+        </table>
 
     </div>
 
 </div>
+
 </div>
 
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("searchStudent");
+    const filterNiveau = document.getElementById("filterNiveau");
+
+    const rows = document.querySelectorAll(
+        "#studentsTable tbody tr[data-niveau]"
+    );
+
+
+    function filterStudents() {
+
+        const search = searchInput.value
+            .toLowerCase()
+            .trim();
+
+        const niveau = filterNiveau.value;
+
+        let l1 = 0;
+        let l2 = 0;
+        let l3 = 0;
+
+
+        rows.forEach(function (row) {
+
+            const rowNiveau = row.dataset.niveau;
+
+            const text = row.dataset.search
+                .toLowerCase();
+
+
+            /*
+             * Les statistiques restent basées
+             * sur l'ensemble des étudiants.
+             */
+
+            if (rowNiveau === "L1") l1++;
+            if (rowNiveau === "L2") l2++;
+            if (rowNiveau === "L3") l3++;
+
+
+            const matchSearch =
+                text.includes(search);
+
+            const matchNiveau =
+                niveau === "" ||
+                rowNiveau === niveau;
+
+
+            if (matchSearch && matchNiveau) {
+
+                row.style.display = "";
+
+            } else {
+
+                row.style.display = "none";
+
+            }
+
+        });
+
+
+        document.getElementById("totalL1").textContent = l1;
+        document.getElementById("totalL2").textContent = l2;
+        document.getElementById("totalL3").textContent = l3;
+
+    }
+
+
+    searchInput.addEventListener(
+        "input",
+        filterStudents
+    );
+
+
+    filterNiveau.addEventListener(
+        "change",
+        filterStudents
+    );
+
+
+    filterStudents();
+
+});
+
+</script>
+
 {% endblock %}
+
