@@ -32,7 +32,7 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,gestion-bulletins-v1-1.onrender.com,uic.eu.com"
+    "localhost,127.0.0.1,gestion-bulletins-v1-2.onrender.com,uic.eu.com"
 ).split(",")
 
 
@@ -43,8 +43,8 @@ ALLOWED_HOSTS = os.environ.get(
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "https://gestion-bulletins-v1-1.onrender.com",
-    "https://uic.eu.com",
+    "http://gestion-bulletins-v1-2.onrender.com",
+    "http://uic.eu.com",
 ]
 
 
@@ -233,7 +233,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # PRODUCTION SECURITY
 # =========================================================
 
-if not DEBUG:
+# =========================================================
+# PRODUCTION SECURITY
+# =========================================================
+
+IS_RENDER = bool(os.environ.get("RENDER"))
+
+if IS_RENDER:
 
     SECURE_SSL_REDIRECT = True
 
@@ -255,3 +261,12 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
     X_FRAME_OPTIONS = "DENY"
+
+else:
+
+    # Développement local http://127.0.0.1:8000
+    SECURE_SSL_REDIRECT = False
+
+    SESSION_COOKIE_SECURE = False
+
+    CSRF_COOKIE_SECURE = False

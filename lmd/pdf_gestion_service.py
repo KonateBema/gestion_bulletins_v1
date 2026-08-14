@@ -70,6 +70,34 @@ def add_footer(canvas, doc):
 
     canvas.restoreState()
 
+
+def decision_ecue_paragraph(moyenne, ue_validee):
+    """Retourne (Paragraph, couleur, acquise) pour la décision d'un ECUE.
+
+    - moyenne >= 10                  -> "Validée"
+    - moyenne < 10 mais UE validée    -> "Validée par compensation"
+    - moyenne < 10 et UE non validée  -> "Non validée"
+    """
+    if moyenne >= 10:
+        return (
+            Paragraph("<font color='green'><b>Validée</b></font>", SMALL),
+            colors.green,
+            True,
+        )
+    elif ue_validee:
+        return (
+            Paragraph("<font color='#B8860B'><b>Validée par compensation</b></font>", SMALL),
+            colors.HexColor("#B8860B"),
+            True,
+        )
+    else:
+        return (
+            Paragraph("<font color='red'><b>Non validée</b></font>", SMALL),
+            colors.red,
+            False,
+        )
+
+
 def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
 
     # Libellé affiché en haut du bulletin.
@@ -379,9 +407,11 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
             stats["ecues_total"] += 1
             stats["credits_ecue_total"] += ecue.credit
             credits_ecue_gu += ecue.credit
-            if moyenne >= 10:
-                stats["ecues_validees"] += 1
-                stats["credits_ecue_obtenus"] += ecue.credit
+            # NOTE : la validation de l'ECUE (et donc le décompte des
+            # crédits/ECUE validés) dépend de la moyenne de l'UE, qui
+            # n'est connue qu'une fois toutes les notes de l'UE lues.
+            # Le décompte se fait donc plus bas, une fois `moyenne_ue`
+            # et `ue_validee` calculés.
 
             ecue_data.append((ecue, moyenne))
 
@@ -396,16 +426,21 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         if ue_validee:
             stats["ue_validees"] += 1
             stats["credits_obtenus"] += ue.credit
-            decision = Paragraph("<font color='green'><b>VALIDÉE</b></font>", SMALL)
-            couleur_decision = colors.green
-        else:
-            decision = Paragraph("<font color='red'><b>NON VALID</b></font>", SMALL)
-            couleur_decision = colors.red
 
-        # --- 2) On construit les lignes du tableau avec la moyenne UE finale ---
+        # --- 2) On construit les lignes du tableau, une décision PAR ECUE ---
+        # Règle de décision par ECUE :
+        #   - moyenne ECUE >= 10                        -> "Validée"
+        #   - moyenne ECUE < 10 mais moyenne UE >= 10    -> "Validée par compensation"
+        #   - moyenne ECUE < 10 et moyenne UE < 10       -> "Non validée"
         lignes_ue = []
         premiere_ligne = True
         for ecue, moyenne in ecue_data:
+            decision_ecue, couleur_ecue, ecue_acquise = decision_ecue_paragraph(moyenne, ue_validee)
+
+            if ecue_acquise:
+                stats["ecues_validees"] += 1
+                stats["credits_ecue_obtenus"] += ecue.credit
+
             lignes_ue.append([
                 Paragraph(ue.code if premiere_ligne else "", SMALL),
                 Paragraph(ue.libelle if premiere_ligne else "", SMALL),
@@ -414,7 +449,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
                 Paragraph(str(ue.credit) if premiere_ligne else "", SMALL),
                 Paragraph(f"{moyenne:.2f}", SMALL),
                 Paragraph(f"{moyenne_ue:.2f}" if premiere_ligne else "", SMALL),
-                decision if premiere_ligne else "",
+                decision_ecue,
             ])
             premiere_ligne = False
 
@@ -422,12 +457,10 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         data.extend(lignes_ue)
         fin = len(data) - 1
 
-        # fusion des cellules communes à toute l'UE
-        for col in [0, 1, 4, 6, 7]:
+        # fusion des cellules communes à toute l'UE (la colonne DÉCISION
+        # n'est PLUS fusionnée puisqu'elle est désormais propre à chaque ECUE)
+        for col in [0, 1, 4, 6]:
             table_style.append(("SPAN", (col, debut), (col, fin)))
-
-        table_style.append(("TEXTCOLOR", (7, debut), (7, fin), couleur_decision))
-        table_style.append(("FONTNAME", (7, debut), (7, fin), "Helvetica-Bold"))
 
     # Ligne récapitulative de la toute dernière grande unité : elle ne
     # passe jamais par le "if" de changement de grande unité ci-dessus,
@@ -471,10 +504,10 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         6 * cm,     # UE
         6 * cm,     # ECUE
         1.3 * cm,   # Crédit ECUE
-        1.3 * cm,   # Crédit UE
-        1.3 * cm,   # Moy ECUE
-        1.3 * cm,   # Moy UE
-        1.8 * cm,   # Décision
+        1.2 * cm,   # Crédit UE
+        1.2 * cm,   # Moy ECUE
+        1.2 * cm,   # Moy UE
+        2 * cm,   # Décision
     ], rowHeights=[30] + [15] * (len(data) - 1))
 
     table.setStyle(TableStyle([
@@ -502,18 +535,24 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     credits_ue_restants = credits_ue_total - credits_ue_acquis
     credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
 
-    if credits_ue_restants == 0 and credits_ecue_restants == 0:
+    # Décision finale : ADMIS(E) uniquement si TOUS les crédits UE et TOUS
+    # les crédits ECUE sont acquis (les ECUE validées par compensation
+    # comptent comme acquises, cf. calcul de credits_ecue_obtenus plus haut).
+    admis = credits_ue_restants == 0 and credits_ecue_restants == 0
+    if admis:
         decision_globale = (
             '<para align="center">'
-            '<font color="green"><b>ADMIS</b></font>'
+            '<font color="green"><b>ADMIS(E)</b></font>'
             '</para>'
         )
+        decision_globale_inline = "<font color='green'><b>ADMIS(E)</b></font>"
     else:
         decision_globale = (
             '<para align="center">'
             '<font color="red"><b>SESSION DE RATTRAPAGE</b></font>'
             '</para>'
         )
+        decision_globale_inline = "<font color='red'><b>SESSION DE RATTRAPAGE</b></font>"
 
     ecues_total = stats["ecues_total"]
     ecues_validees = stats["ecues_validees"]
@@ -548,9 +587,8 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
             Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""", SMALL),
             Paragraph(f"{annee}", SMALL),
             # Paragraph(decision_globale, SMALL),
-            # Paragraph("", SMALL),
         ]
-    ], colWidths=[8.5 * cm, 6 * cm, 6 * cm, 4 * cm],
+    ], colWidths=[7.5 * cm, 5 * cm, 4.5 * cm],
        rowHeights=[0.8 * cm, 2.7 * cm])
 
     recap_final_table.setStyle(TableStyle([
@@ -569,8 +607,12 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
 
     elements.append(recap_final_table)
 
+    DECISION_STYLE = ParagraphStyle(
+        "DecisionStyle", parent=styles["Normal"], alignment=1, fontSize=12, leading=16,
+    )
+
     signature_table = Table([[
-        Paragraph("<b>DECISION</b><br/>", styles["Normal"]),
+        Paragraph(f"<b>DECISION</b><br/><br/>{decision_globale_inline}", DECISION_STYLE),
         Paragraph("<b>VISA DU CHEF D'ETABLISSEMENT</b><br/><br/>""<br/><br/>""", styles["Normal"]),
     ]], colWidths=[8 * cm, 8 * cm], rowHeights=[3 * cm])
 
