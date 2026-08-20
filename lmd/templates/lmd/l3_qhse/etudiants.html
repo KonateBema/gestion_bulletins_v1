@@ -2,62 +2,626 @@
 
 {% block content %}
 
-<div class="container-fluid mt-4">
+<style>
+
+    .gestion-header {
+        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        color: white;
+        border-radius: 18px;
+        padding: 28px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(13, 110, 253, 0.18);
+    }
+
+    .gestion-header h3 {
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .gestion-header p {
+        margin-bottom: 0;
+        opacity: .85;
+    }
+
+    .btn-add {
+        background: white;
+        color: #0d6efd;
+        border: none;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 11px 18px;
+        transition: .2s ease;
+    }
+
+    .btn-add:hover {
+        transform: translateY(-2px);
+        background: #f8f9fa;
+        color: #0b5ed7;
+    }
+
+    .btn-import {
+        background: rgba(255, 255, 255, .15);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, .5);
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 11px 18px;
+        transition: .2s ease;
+    }
+
+    .btn-import:hover {
+        transform: translateY(-2px);
+        background: white;
+        color: #198754;
+    }
+
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        padding: 20px;
+        background: white;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .07);
+        transition: .25s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, .10);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+
+    .stat-title {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 3px;
+    }
+
+    .stat-number {
+        font-size: 25px;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .main-card {
+        border: none;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, .07);
+    }
+
+    .table-header {
+        padding: 20px 22px;
+        border-bottom: 1px solid #eee;
+        background: #fff;
+    }
+
+    .table-header h5 {
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+
+    .search-box input {
+        padding-left: 38px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+
+    .filter-select {
+        border-radius: 10px;
+        min-width: 150px;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background: #212529;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 14px;
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        padding: 14px;
+        vertical-align: middle;
+    }
+
+    .table tbody tr {
+        transition: .15s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .student-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: #212529;
+    }
+
+    .student-firstname {
+        color: #6c757d;
+        font-size: 13px;
+    }
+
+    .matricule {
+        font-family: monospace;
+        background: #f1f3f5;
+        padding: 5px 8px;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .niveau-badge {
+        border-radius: 20px;
+        padding: 6px 11px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .niveau-l1 {
+        background: #e7f1ff;
+        color: #0d6efd;
+    }
+
+    .niveau-l2 {
+        background: #fff3cd;
+        color: #997404;
+    }
+
+    .niveau-l3 {
+        background: #d1e7dd;
+        color: #146c43;
+    }
+
+    .sexe-m {
+        background: #e7f1ff;
+        color: #0d6efd;
+        border-radius: 20px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .sexe-f {
+        background: #f8d7da;
+        color: #b02a37;
+        border-radius: 20px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .statut-actif {
+        background: #d1e7dd;
+        color: #146c43;
+        border-radius: 20px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .statut-inactif {
+        background: #e9ecef;
+        color: #495057;
+        border-radius: 20px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .action-btn {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: .2s ease;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .empty-state i {
+        font-size: 50px;
+        color: #adb5bd;
+        margin-bottom: 15px;
+    }
+
+    @media (max-width: 768px) {
+
+        .gestion-header {
+            padding: 20px;
+        }
+
+        .gestion-header .btn-add,
+        .gestion-header .btn-import {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .table-header .row > div {
+            margin-bottom: 10px;
+        }
+
+        .table-responsive {
+            border-radius: 0;
+        }
+
+    }
+
+</style>
 
 
-    <div class="card shadow border-0">
+<div class="container-fluid px-3 px-md-4 mt-4">
 
 
-        <div class="card-header bg-primary text-white d-flex justify-content-between">
+    <!-- ================= HEADER ================= -->
 
-            <h4>
-                🦺 Étudiants L3 QHSE 
-            </h4>
+    <div class="gestion-header">
+
+        <div class="row align-items-center">
+
+            <div class="col-md-7">
+
+                <h3>
+
+                    <i class="bi bi-shield-check me-2"></i>
+
+                    QHSE
+
+                </h3>
+
+                <p>
+
+                    Gestion des étudiants de Licence 1, Licence 2 et Licence 3
+
+                </p>
+
+            </div>
 
 
-            <!-- <a href="{% url 'l3_qhse_etudiant_add' %}" class="btn btn-success">
+            <div class="col-md-5 text-md-end">
 
-                <i class="bi bi-person-plus"></i>
-                Ajouter
+                <!-- IMPORT EXCEL -->
 
-            </a> -->
-            <div class="d-flex gap-2">
+                <a href="{% url 'l3_qhse_etudiant_import' %}"
+                   class="btn btn-import me-1">
 
-                <!-- IMPORTER LES ÉTUDIANTS -->
-                <a href="{% url 'l3_qhse_etudiant_import' %}" class="btn btn-outline-light">
-                    <i class="bi bi-file-earmark-excel"></i>
-                    Importer
+                    <i class="bi bi-file-earmark-excel me-1"></i>
+
+                    Importer Excel
+
                 </a>
 
-                <!-- AJOUTER UN ÉTUDIANT -->
-                <a href="{% url 'l3_qhse_etudiant_add' %}" class="btn btn-success">
 
-                    <i class="bi bi-person-plus"></i>
-                    Ajouter
+                <!-- AJOUTER -->
+
+                <a href="{% url 'l3_qhse_etudiant_add' %}"
+                   class="btn btn-add">
+
+                    <i class="bi bi-person-plus-fill me-1"></i>
+
+                    Ajouter un étudiant
 
                 </a>
 
             </div>
 
+        </div>
+
+    </div>
+
+
+    <!-- ================= STATISTIQUES ================= -->
+
+    <div class="row g-3 mb-4">
+
+
+        <!-- TOTAL -->
+
+        <div class="col-md-3">
+
+            <div class="stat-card">
+
+                <div class="d-flex align-items-center">
+
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+
+                        <i class="bi bi-people-fill"></i>
+
+                    </div>
+
+                    <div class="ms-3">
+
+                        <div class="stat-title">
+
+                            Total étudiants
+
+                        </div>
+
+                        <div class="stat-number">
+
+                            {{ etudiants|length }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
 
         </div>
 
 
-        <div class="card-body">
+        <!-- L1 -->
+
+        <div class="col-md-3">
+
+            <div class="stat-card">
+
+                <div class="d-flex align-items-center">
+
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+
+                        <i class="bi bi-1-circle-fill"></i>
+
+                    </div>
+
+                    <div class="ms-3">
+
+                        <div class="stat-title">
+
+                            Licence 1
+
+                        </div>
+
+                        <div class="stat-number" id="totalL1">
+
+                            0
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
 
 
-            <table class="table table-hover align-middle">
+        <!-- L2 -->
+
+        <div class="col-md-3">
+
+            <div class="stat-card">
+
+                <div class="d-flex align-items-center">
+
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+
+                        <i class="bi bi-2-circle-fill"></i>
+
+                    </div>
+
+                    <div class="ms-3">
+
+                        <div class="stat-title">
+
+                            Licence 2
+
+                        </div>
+
+                        <div class="stat-number" id="totalL2">
+
+                            0
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
 
 
-                <thead class="table-dark">
+        <!-- L3 -->
+
+        <div class="col-md-3">
+
+            <div class="stat-card">
+
+                <div class="d-flex align-items-center">
+
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+
+                        <i class="bi bi-3-circle-fill"></i>
+
+                    </div>
+
+                    <div class="ms-3">
+
+                        <div class="stat-title">
+
+                            Licence 3
+
+                        </div>
+
+                        <div class="stat-number" id="totalL3">
+
+                            0
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= TABLE ================= -->
+
+    <div class="card main-card">
+
+
+        <!-- TABLE HEADER -->
+
+        <div class="table-header">
+
+            <div class="row align-items-center">
+
+                <div class="col-md-5">
+
+                    <h5>
+
+                        <i class="bi bi-people me-2"></i>
+
+                        Liste des étudiants
+
+                    </h5>
+
+                    <small class="text-muted">
+
+                        Tous les étudiants de QHSE
+
+                    </small>
+
+                </div>
+
+
+                <!-- RECHERCHE -->
+
+                <div class="col-md-4">
+
+                    <div class="search-box">
+
+                        <i class="bi bi-search"></i>
+
+                        <input
+                            type="text"
+                            id="searchStudent"
+                            class="form-control"
+                            placeholder="Rechercher matricule, nom ou prénom..."
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- FILTRE NIVEAU -->
+
+                <div class="col-md-3">
+
+                    <select
+                    id="filterNiveau"
+                    class="form-select filter-select"
+                >
+                    <option value="">Tous les niveaux</option>
+                
+                    <option value="L1" {% if niveau == "L1" %}selected{% endif %}>
+                        Licence 1
+                    </option>
+                
+                    <option value="L2" {% if niveau == "L2" %}selected{% endif %}>
+                        Licence 2
+                    </option>
+                
+                    <option value="L3" {% if niveau == "L3" %}selected{% endif %}>
+                        Licence 3
+                    </option>
+                </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TABLE -->
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle"
+                   id="studentsTable">
+
+                <thead>
 
                     <tr>
 
+                        <th>Étudiant</th>
+
                         <th>Matricule</th>
-                        <th>Nom</th>
-                        <th>Prénoms</th>
-                        <th>Email</th>
-                        <th>Actions</th>
+
+                        <th>Niveau</th>
+
+                        <th>Sexe</th>
+
+                        <th>Téléphone</th>
+
+                        <th>Statut</th>
+
+                        <th class="text-center">
+
+                            Actions
+
+                        </th>
 
                     </tr>
 
@@ -67,73 +631,388 @@
                 <tbody>
 
 
-                    {% for e in etudiants %}
+                {% for e in etudiants %}
 
+                    <tr
+                        data-niveau="{{ e.niveau }}"
+                        data-search="{{ e.nom }} {{ e.prenoms }} {{ e.matricule }}"
+                    >
 
-                    <tr>
-
-                        <td>{{e.matricule}}</td>
-
-                        <td>{{e.nom}}</td>
-
-                        <td>{{e.prenoms}}</td>
-
-                        <td>{{e.email}}</td>
-
+                        <!-- ETUDIANT -->
 
                         <td>
 
+                            <div class="d-flex align-items-center">
 
-                            <a href="{% url 'l3_qhse_etudiant_update' e.id %}" class="btn btn-warning btn-sm">
+                                <div class="student-avatar">
+
+                                    {{ e.nom|first|upper }}
+
+                                </div>
+
+                                <div>
+
+                                    <div class="student-name">
+
+                                        {{ e.nom }}
+
+                                    </div>
+
+                                    <div class="student-firstname">
+
+                                        {{ e.prenoms }}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- MATRICULE -->
+
+                        <td>
+
+                            <span class="matricule">
+
+                                {{ e.matricule }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- NIVEAU -->
+
+                        <td>
+
+                            {% if e.niveau == "L1" %}
+
+                                <span class="niveau-badge niveau-l1">
+
+                                    Licence 1
+
+                                </span>
+
+                            {% elif e.niveau == "L2" %}
+
+                                <span class="niveau-badge niveau-l2">
+
+                                    Licence 2
+
+                                </span>
+
+                            {% elif e.niveau == "L3" %}
+
+                                <span class="niveau-badge niveau-l3">
+
+                                    Licence 3
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+
+                                    {{ e.niveau }}
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- SEXE -->
+
+                        <td>
+
+                            {% if e.sexe == "M" %}
+
+                                <span class="sexe-m">
+
+                                    <i class="bi bi-gender-male me-1"></i>
+
+                                    Masculin
+
+                                </span>
+
+                            {% elif e.sexe == "F" %}
+
+                                <span class="sexe-f">
+
+                                    <i class="bi bi-gender-female me-1"></i>
+
+                                    Féminin
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+
+                                    -
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- TELEPHONE -->
+
+                        <td>
+
+                            {% if e.telephone %}
+
+                                <span class="text-muted">
+
+                                    <i class="bi bi-telephone me-1"></i>
+
+                                    {{ e.telephone }}
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="text-muted">
+
+                                    -
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- STATUT -->
+
+                        <td>
+
+                            {% if e.actif %}
+
+                                <span class="statut-actif">
+
+                                    <i class="bi bi-check-circle me-1"></i>
+
+                                    Actif
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="statut-inactif">
+
+                                    <i class="bi bi-dash-circle me-1"></i>
+
+                                    Inactif
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ACTIONS -->
+
+                        <td class="text-center">
+
+                            <a
+                                href="{% url 'l3_qhse_etudiant_update' e.id %}"
+                                class="action-btn btn btn-warning me-1"
+                                title="Modifier"
+                            >
 
                                 <i class="bi bi-pencil"></i>
 
                             </a>
 
 
+                            <a
+                                href="#"
+                                class="action-btn btn btn-info text-white me-1"
+                                title="Voir"
+                            >
 
-                            <a href="{% url 'l3_qhse_etudiant_delete' e.id %}" class="btn btn-danger btn-sm">
+                                <i class="bi bi-eye"></i>
+
+                            </a>
+
+
+                            <a
+                                href="{% url 'l3_qhse_etudiant_delete' e.id %}"
+                                class="action-btn btn btn-danger"
+                                onclick="return confirm('Voulez-vous supprimer cet étudiant ?')"
+                                title="Supprimer"
+                            >
 
                                 <i class="bi bi-trash"></i>
 
                             </a>
 
-
                         </td>
-
 
                     </tr>
 
 
-                    {% empty %}
+                {% empty %}
 
                     <tr>
 
-                        <td colspan="5" class="text-center">
+                        <td colspan="7">
 
-                            Aucun étudiant QHSE
+                            <div class="empty-state">
+
+                                <i class="bi bi-person-x"></i>
+
+                                <h5>
+
+                                    Aucun étudiant trouvé
+
+                                </h5>
+
+                                <p class="text-muted">
+
+                                    Aucun étudiant n'est actuellement
+                                    enregistré en QHSE.
+
+                                </p>
+
+                                <a
+                                    href="{% url 'l3_qhse_etudiant_add' %}"
+                                    class="btn btn-primary"
+                                >
+
+                                    <i class="bi bi-person-plus"></i>
+
+                                    Ajouter le premier étudiant
+
+                                </a>
+
+                            </div>
 
                         </td>
 
                     </tr>
 
-
-                    {% endfor %}
+                {% endfor %}
 
 
                 </tbody>
 
-
             </table>
-
 
         </div>
 
-
     </div>
-
 
 </div>
 
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    
+        const searchInput = document.getElementById("searchStudent");
+        const filterNiveau = document.getElementById("filterNiveau");
+    
+        const rows = document.querySelectorAll(
+            "#studentsTable tbody tr[data-niveau]"
+        );
+    
+        const totalL1 = document.getElementById("totalL1");
+        const totalL2 = document.getElementById("totalL2");
+        const totalL3 = document.getElementById("totalL3");
+    
+        function filterStudents() {
+    
+            const search = searchInput.value
+                .toLowerCase()
+                .trim();
+    
+            const niveau = filterNiveau.value;
+    
+            let l1 = 0;
+            let l2 = 0;
+            let l3 = 0;
+    
+            rows.forEach(function (row) {
+    
+                const rowNiveau = (row.dataset.niveau || "").trim();
+    
+                const text = (row.dataset.search || "")
+                    .toLowerCase()
+                    .trim();
+    
+                /*
+                 * Compteurs par niveau
+                 */
+                if (rowNiveau === "L1") {
+                    l1++;
+                }
+    
+                if (rowNiveau === "L2") {
+                    l2++;
+                }
+    
+                if (rowNiveau === "L3") {
+                    l3++;
+                }
+    
+                /*
+                 * Recherche
+                 */
+                const matchSearch =
+                    search === "" ||
+                    text.includes(search);
+    
+                /*
+                 * Filtre niveau
+                 */
+                const matchNiveau =
+                    niveau === "" ||
+                    rowNiveau === niveau;
+    
+                /*
+                 * Affichage
+                 */
+                if (matchSearch && matchNiveau) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+    
+            });
+    
+            /*
+             * Mise à jour des statistiques
+             */
+            totalL1.textContent = l1;
+            totalL2.textContent = l2;
+            totalL3.textContent = l3;
+        }
+    
+        /*
+         * Recherche
+         */
+        searchInput.addEventListener("input", filterStudents);
+    
+        /*
+         * Filtre niveau
+         */
+        filterNiveau.addEventListener("change", filterStudents);
+    
+        /*
+         * Initialisation
+         */
+        filterStudents();
+    
+    });
+    </script>
 
 {% endblock %}

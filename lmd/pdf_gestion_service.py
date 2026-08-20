@@ -252,11 +252,11 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     if etudiant.niveau in ("L1", "L2"):
         specialite = "Tronc Commun"
     else:
-        specialite = etudiant.filiere.libelle if etudiant.filiere else " SCIENCE DE GESTION"
+        specialite = etudiant.filiere.libelle if etudiant.filiere else " SCIENCES ECONOMIQUES & DE GESTION"
 
     cadre_universite = Table([[
         Paragraph(f"""
-            <b>DOMAINE :  SCIENCE DE GESTION</b><br/>
+            <b>DOMAINE :  SCIENCES ECONOMIQUES & DE GESTION</b><br/>
              <b></b><br/><br/>
              <b>SPECIALITE :</b> {specialite}<br/>
         """, SMALL)
@@ -574,10 +574,10 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     elif compensation_utilisee:
         decision_globale = (
             '<para align="center">'
-            '<font color="#B8860B"><b>Validée par compensation</b></font>'
+            '<font color="green"><b>compensée</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='#B8860B'><b>Validée par compensation</b></font>"
+        decision_globale_inline = "<font color='green'><b> compensation</b></font>"
     else:
         decision_globale = (
             '<para align="center">'

@@ -25,10 +25,10 @@ from .models import (
     NoteLMD,
     SessionAcademique
 )
+from .pdf_licence_qhse import generer_bulletin_qhse_pdf
 from .models import UE, ECUE, NoteLMD, GrandeUnite
-
 import pandas as pd
-
+from .pdf_licence_qhse import generer_bulletin_qhse_pdf
 def niveau_list(request):
     niveaux = Niveau.objects.all()
     return render(request, "lmd/niveaux/list.html", {"niveaux": niveaux})
@@ -6578,7 +6578,7 @@ def l3_qhse_etudiantsrrr(request):
         }
     )
 
-def l3_qhse_etudiants(request):
+def l3_qhse_etudiantseeeeeeee(request):
 
     filiere = get_filiere_qhse()
 
@@ -6603,7 +6603,36 @@ def l3_qhse_etudiants(request):
         }
     )
 
+def l3_qhse_etudiants(request):
 
+    filiere = get_filiere_qhse()
+
+    niveau = request.GET.get("niveau", "").strip()
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere
+    )
+
+    if niveau in ["L1", "L2", "L3"]:
+        etudiants = etudiants.filter(
+            niveau=niveau
+        )
+
+    etudiants = etudiants.order_by(
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+    return render(
+        request,
+        "lmd/l3_qhse/etudiants.html",
+        {
+            "etudiants": etudiants,
+            "filiere": filiere,
+            "niveau": niveau,
+        }
+    )
 def l3_qhse_etudiant_add(request):
 
     filiere = FiliereLMD.objects.get(
@@ -7467,41 +7496,8 @@ def master_programme_list(request):
         }
     )
     
-    
-def imprimer_bulletin_licence_qhse1(request, pk):
 
-    etudiant = get_object_or_404(
-        EtudiantLMD,
-        pk=pk
-    )
-
-    pdf_dir = os.path.join(
-        settings.MEDIA_ROOT,
-        "bulletins_licence_qhse"
-    )
-
-    os.makedirs(
-        pdf_dir,
-        exist_ok=True
-    )
-
-    fichier = os.path.join(
-        pdf_dir,
-        f"bulletin_{etudiant.matricule}.pdf"
-    )
-
-    generer_bulletin_licence_qhse_pdf(
-        etudiant,
-        fichier
-    )
-
-    return FileResponse(
-        open(fichier, "rb"),
-        content_type="application/pdf",
-        filename=f"Bulletin_{etudiant.matricule}.pdf"
-    )
-
-def imprimer_bulletin_licence_qhse(request, pk, semestre):
+def imprimer_bulletin_licence_qhseAAAA(request, pk, semestre):
 
     etudiant = get_object_or_404(
         EtudiantLMD,
@@ -7527,7 +7523,7 @@ def imprimer_bulletin_licence_qhse(request, pk, semestre):
     )
 
 
-    generer_bulletin_licence_qhse_pdf(
+    generer_bulletin_qhse_pdf(
         etudiant,
         fichier,
         semestre
@@ -7540,7 +7536,144 @@ def imprimer_bulletin_licence_qhse(request, pk, semestre):
         filename=f"Bulletin_{etudiant.matricule}_{semestre}.pdf"
     )
 
+def imprimer_bulletin_licence_qhseDS(request, pk, semestre):
 
+    print("====================================")
+    print("IMPRESSION QHSE")
+    print("PK :", pk)
+    print("SEMESTRE :", semestre)
+
+    try:
+
+        etudiant = get_object_or_404(
+            EtudiantLMD,
+            pk=pk
+        )
+
+        print("Étudiant :", etudiant)
+        print("Matricule :", etudiant.matricule)
+        print("Filière :", etudiant.filiere)
+        print("Niveau :", etudiant.niveau)
+
+        pdf_dir = os.path.join(
+            settings.MEDIA_ROOT,
+            "bulletins_licence_qhse"
+        )
+
+        os.makedirs(
+            pdf_dir,
+            exist_ok=True
+        )
+
+        fichier = os.path.join(
+            pdf_dir,
+            f"bulletin_{etudiant.matricule}_{semestre}.pdf"
+        )
+
+        print("Fichier :", fichier)
+
+        resultat = generer_bulletin_qhse_pdf(
+            etudiant,
+            fichier,
+            semestre
+        )
+
+        print("Résultat génération :", resultat)
+
+        print("Fichier existe :", os.path.exists(fichier))
+
+        if not os.path.exists(fichier):
+            raise Exception(
+                f"Le fichier PDF n'a pas été créé : {fichier}"
+            )
+
+        print("Taille :", os.path.getsize(fichier))
+
+        return FileResponse(
+            open(fichier, "rb"),
+            content_type="application/pdf",
+            filename=f"Bulletin_{etudiant.matricule}_{semestre}.pdf"
+        )
+
+    except Exception as ex:
+
+        print("====================================")
+        print("ERREUR PDF QHSE")
+        print(type(ex).__name__)
+        print(str(ex))
+        print("====================================")
+
+        raise
+
+def imprimer_bulletin_licence_qhse(request, pk, semestre):
+
+    print("====================================")
+    print("IMPRESSION QHSE")
+    print("PK :", pk)
+    print("SEMESTRE :", semestre)
+
+    try:
+
+        etudiant = get_object_or_404(
+            EtudiantLMD,
+            pk=pk
+        )
+
+        print("Étudiant :", etudiant)
+        print("Matricule :", etudiant.matricule)
+        print("Filière :", etudiant.filiere)
+        print("Niveau :", etudiant.niveau)
+
+        pdf_dir = os.path.join(
+            settings.MEDIA_ROOT,
+            "bulletins_licence_qhse"
+        )
+
+        os.makedirs(
+            pdf_dir,
+            exist_ok=True
+        )
+
+        fichier = os.path.join(
+            pdf_dir,
+            f"bulletin_{etudiant.matricule}_{semestre}.pdf"
+        )
+
+        print("Fichier :", fichier)
+
+        resultat = generer_bulletin_qhse_pdf(
+            etudiant,
+            semestre,
+            fichier
+        )
+
+        print("Résultat génération :", resultat)
+
+        print("Fichier existe :", os.path.exists(fichier))
+
+        if not os.path.exists(fichier):
+            raise Exception(
+                f"Le fichier PDF n'a pas été créé : {fichier}"
+            )
+
+        print("Taille :", os.path.getsize(fichier))
+
+        return FileResponse(
+            open(fichier, "rb"),
+            content_type="application/pdf",
+            filename=f"Bulletin_{etudiant.matricule}_{semestre}.pdf"
+        )
+
+    except Exception as ex:
+
+        print("====================================")
+        print("ERREUR PDF QHSE")
+        print(type(ex).__name__)
+        print(str(ex))
+        print("====================================")
+
+        raise
+    
 def l3_tc_ue_list(request):
 
     filiere = get_object_or_404(

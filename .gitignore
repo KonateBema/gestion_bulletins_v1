@@ -61,3 +61,9 @@ Desktop.ini
 .pytest_cache/
 .coverage
 htmlcov/
+# Fichiers de récupération de base
+backup_donnees.json
+db_recup_*.sqlite3
+db_restore.sqlite3
+verifier_db.py
+notepad

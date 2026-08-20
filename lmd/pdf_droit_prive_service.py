@@ -234,11 +234,11 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     if etudiant.niveau in ("L1", "L2"):
         specialite = "Tronc Commun"
     else:
-        specialite = etudiant.filiere.libelle if etudiant.filiere else " DROIT PRIVE"
+        specialite = etudiant.filiere.libelle if etudiant.filiere else " SCIENCES JURIDIQUES"
 
     cadre_universite = Table([[
         Paragraph(f"""
-            <b>DOMAINE :  DROIT PRIVE</b><br/>
+            <b>DOMAINE :  SCIENCES JURIDIQUES</b><br/>
              <b></b><br/><br/>
              <b>SPECIALITE :</b> {specialite}<br/>
         """, SMALL)
@@ -503,12 +503,12 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
     table = Table(data, colWidths=[
         1.3 * cm,   # Code
-        5.6 * cm,     # UE
-        5.6 * cm,     # ECUE
+        5.4 * cm,   # UE
+        5.4 * cm,   # ECUE
         1.3 * cm,   # Crédit ECUE
-        1.1 * cm,   # Crédit UE
+        1.2 * cm,   # Crédit UE
         1.2 * cm,   # Moy ECUE
-        1.2 * cm,   # Moy UE
+        1.3 * cm,   # Moy UE
         3.2 * cm,   # Décision
     ], rowHeights=[30] + [15] * (len(data) - 1))
 
