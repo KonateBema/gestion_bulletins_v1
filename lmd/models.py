@@ -145,7 +145,7 @@ class NoteLMD(models.Model):
 
 
     session = models.CharField(
-        max_length=1,
+        max_length=20,
         choices=SESSION_CHOICES,
         default="1"
     )
