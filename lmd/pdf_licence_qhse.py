@@ -1,22 +1,21 @@
 from reportlab.platypus import (
-    SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image,
+    HRFlowable, PageTemplate, Frame,
 )
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import A4
 from django.conf import settings
+from django.db.models import Prefetch
 import os
-from lmd.models import EtudiantLMD
-from .models import  UE, NoteLMD
-from reportlab.platypus import HRFlowable
-from reportlab.pdfgen import canvas
-from .models import SaisieNoteLMD
-# =========================================================
-# STYLES
-# =========================================================
+from .models import UE, ECUE, NoteLMD, SaisieNoteLMD
+
+
 def safe_date(date):
     return date.strftime("%d/%m/%Y") if date else "Non renseignée"
+
+
 styles = getSampleStyleSheet()
 
 TITLE = ParagraphStyle(
@@ -33,20 +32,23 @@ TITLE = ParagraphStyle(
 SMALL = ParagraphStyle(
     "SMALL",
     parent=styles["Normal"],
-    fontSize=9,
-    leading=11,
+    fontSize=6.4,
+    leading=10,
     fontName="Courier-Bold",
 )
+DECISION_SMALL = ParagraphStyle(
+    "DECISION_SMALL",
+    parent=SMALL,
+    fontSize=6.5,
+    leading=6,
+)
 
-
-# =========================================================
-# HELPERS
-# =========================================================
 
 def get_image(path, width, height, fallback):
     if path and os.path.exists(path):
         return Image(path, width=width, height=height)
     return Paragraph(fallback, SMALL)
+
 
 def add_footer(canvas, doc):
     canvas.saveState()
@@ -58,7 +60,7 @@ def add_footer(canvas, doc):
         "Arrêté n°487/MESRS/DGSE du 29/12/2015",
         "Siège Social : Cocody 2 Plateaux, Teme Tranche non loin du café de Versailles",
         "04 B.P ABJ 04, Côte d'Ivoire",
-        "Email : uicinfos@gmail.com | Tel : (+225) 27 22 52 28 84 - 07 78 63 74 00"
+        "Email : uicinfos@gmail.com | Tel : (+225) 27 22 52 28 84 - 07 78 63 74 00",
     ]
 
     y = 2.2 * cm  # position du footer
@@ -72,121 +74,161 @@ def add_footer(canvas, doc):
 
     canvas.restoreState()
 
-# =========================================================
-# GENERATION PDF
-# =========================================================
 
-def generer_bulletin_licence_qhse_pdf(etudiant, file_path, semestre):
+def decision_ecue_paragraph(moyenne, ue_validee):
+    """Retourne (Paragraph, couleur, acquise) pour la décision d'un ECUE.
 
-    
-    ues = (
-         UE.objects
-         .filter(
-              filiere=etudiant.filiere,
-              semestre=semestre
-       )
-       .select_related("grande_unite")
-       .prefetch_related("ecues")
-       .order_by(
-            "grande_unite__nom",
-            "code"
+    - moyenne >= 10                  -> "Validée"
+    - moyenne < 10 mais UE validée    -> "Validée par compensation"
+    - moyenne < 10 et UE non validée  -> "Non validée"
+    """
+    if moyenne >= 10:
+        return (
+            Paragraph("<font color='green'><b>Validée</b></font>", DECISION_SMALL),
+            colors.green,
+            True,
         )
-      )
-    
-    print("=" * 50)
-    print("ETUDIANT :", etudiant.nom)
-    print("FILIERE :", etudiant.filiere)
-    print("NB UE :", ues.count())
+    elif ue_validee:
+        return (
+            Paragraph("<font color='#B8860B'><b>Validée par compensation</b></font>", DECISION_SMALL),
+            colors.HexColor("#B8860B"),
+            True,
+        )
+    else:
+        return (
+            Paragraph("<font color='red'><b>Non validée</b></font>", DECISION_SMALL),
+            colors.red,
+            False,
+        )
 
-    # doc = SimpleDocTemplate(file_path, pagesize=A4)
-    doc = SimpleDocTemplate(
-    file_path,
-    pagesize=A4,
-    leftMargin=0.6 * cm,
-    rightMargin=0.6 * cm,
-    topMargin=0.6 * cm,
-    bottomMargin=2.8 * cm,   # laisser la place au footer
+
+def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
+    """Génère le bulletin de notes pour la filière Management QHSE.
+
+    NOTE IMPORTANTE : le nom et l'ordre des paramètres ont été alignés
+    sur les autres générateurs (droit privé, gestion, ...) —
+    `(etudiant, semestre, file_path)` — car `generer_bulletin_lmd_pdf`
+    appelle tous les générateurs avec cet ordre précis. L'ancienne
+    fonction `generer_bulletin_licence_qhse_pdf(etudiant, file_path,
+    semestre)` avait l'ordre inversé : si elle avait été appelée par ce
+    même dispatcher, `semestre` et `file_path` auraient été échangés
+    par erreur.
+    """
+
+    session_label = "1"
+    SESSIONS_NORMALES = ["1", "2", "3", "4"]
+
+    moyennes_ues = []
+
+    # Le semestre "effectif" doit être résolu AVANT de filtrer les UE,
+    # sinon on risque de filtrer les UE avec un semestre différent de
+    # celui utilisé plus bas pour chercher les notes (bug présent dans
+    # l'ancienne version : `semestre` était réécrit avec la valeur de
+    # `saisie` APRÈS avoir déjà servi à la requête UE).
+    saisie = SaisieNoteLMD.objects.filter(
+        filiere=etudiant.filiere,
+        niveau=etudiant.niveau,
+    ).first()
+    semestre_resolu = saisie.semestre if saisie else semestre
+    session = saisie.session if saisie else session_label
+
+    ues = (
+        UE.objects
+        .filter(
+            filiere=etudiant.filiere,
+            semestre=semestre_resolu,
+            # Filtre manquant dans l'ancienne version : sans lui, les
+            # UE de TOUS les niveaux (L1/L2/L3) de la filière étaient
+            # mélangées sur un même bulletin.
+            niveau=etudiant.niveau,
+        )
+        .select_related("grande_unite")
+        .prefetch_related(
+            Prefetch(
+                "ecues",
+                queryset=ECUE.objects.order_by("ordre"),
+            )
+        )
+        # Tri pédagogique par ordre plutôt qu'alphabétique sur le nom
+        # de la grande unité (l'ancien order_by("grande_unite__nom",
+        # "code") ne respectait pas l'ordre voulu du programme).
+        .order_by("grande_unite__ordre", "ordre")
     )
-    
-    from reportlab.platypus import PageTemplate, Frame
+
+    doc = SimpleDocTemplate(
+        file_path,
+        pagesize=A4,
+        leftMargin=0.6 * cm,
+        rightMargin=0.6 * cm,
+        topMargin=0.6 * cm,
+        bottomMargin=2.8 * cm,  # laisser la place au footer
+    )
 
     frame = Frame(
-         doc.leftMargin,
-         doc.bottomMargin,
-         doc.width,
-         doc.height,
-         id='normal'
-     )
-
-    # doc = SimpleDocTemplate(file_path, pagesize=A4)
+        doc.leftMargin,
+        doc.bottomMargin,
+        doc.width,
+        doc.height,
+        id='normal',
+    )
 
     doc.addPageTemplates([
-          PageTemplate(id='main', frames=frame, onPage=add_footer)
-        ])
-    elements = []
+        PageTemplate(id='main', frames=frame, onPage=add_footer)
+    ])
 
+    elements = []
 
     # =========================================================
     # HEADER REPUBLIQUE
     # =========================================================
-    # logo_header_path = os.path.join(settings.BASE_DIR, "core/static/logo.jpeg")
     logo_path = os.path.join(settings.BASE_DIR, "core/static/logo.jpeg")
-    logo = get_image(logo_path, 1.8* cm, 1.8 * cm, "LOGO")
+    logo = get_image(logo_path, 1.8 * cm, 1.8 * cm, "LOGO")
 
     header_table = Table([
-    [
-        Paragraph("""
-        <para align="center">
-       <b>
-       <font color="#002147" size="11">
-        MINISTÈRE DE L'ENSEIGNEMENT <br/>SUPÉRIEUR
-        ET DE LA <br/>RECHERCHE SCIENTIFIQUE
-        </font>
-        </b>
-        </para>
-        """, SMALL),
-         logo,
-        
-        Paragraph("""
-        <para align="center">
-        <b>RÉPUBLIQUE DE CÔTE D'IVOIRE</b><br/>
-        Union - Discipline - Travail
-        </para>
-        """, SMALL)
-      ]], colWidths=[7 * cm,2.5 * cm,  7 * cm])
+        [
+            Paragraph("""
+            <para align="center">
+            <b>
+            <font color="#002147" size="11">
+            MINISTÈRE DE L'ENSEIGNEMENT <br/>SUPÉRIEUR
+            ET DE LA <br/>RECHERCHE SCIENTIFIQUE
+            </font>
+            </b>
+            </para>
+            """, SMALL),
+            logo,
+            Paragraph("""
+            <para align="center">
+            <b>RÉPUBLIQUE DE CÔTE D'IVOIRE</b><br/>
+            Union - Discipline - Travail
+            </para>
+            """, SMALL)
+        ]
+    ], colWidths=[7 * cm, 2.5 * cm, 7 * cm])
 
     header_table.setStyle(TableStyle([
-    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-
-    ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-    ('ALIGN', (1, 0), (1, 0), 'CENTER'),
-    ('ALIGN', (2, 0), (2, 0), 'CENTER'),
-
-    ('LEFTPADDING', (0, 0), (-1, -1), 0),
-    ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-    ('TOPPADDING', (0, 0), (-1, -1), 0),
-    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
     ]))
-    
-    elements.append(header_table)
 
+    elements.append(header_table)
     elements.append(Spacer(1, 14))
-    saisie = SaisieNoteLMD.objects.filter(
-    filiere=etudiant.filiere,
-    niveau=etudiant.niveau
-   ).first()
-    # semestre = saisie.semestre if saisie else "-"     # ou la valeur provenant de ton modèle
-    semestre = saisie.semestre if saisie else semestre
-    session = saisie.session if saisie else "-"
-    # annee = etudiant.annee_academique
-    annee = "2025-2026"
+
+    # Remplace l'ancien "2025-2026" codé en dur.
+    annee = etudiant.annee_academique
 
     elements.append(Paragraph(f"""
         <para align="center">
         <b>
         <font color="#B30000">RELEVE DE NOTES</font>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        SEMESTRE {semestre} - SESSION {session}
+        SEMESTRE {semestre_resolu} - SESSION {session}
         &nbsp;&nbsp;&nbsp;&nbsp;
         ANNÉE SCOLAIRE : {annee}
         </b>
@@ -194,27 +236,27 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path, semestre):
        """, SMALL))
 
     elements.append(HRFlowable(
-         width="40%",
-         thickness=2,
-         color=colors.HexColor("#B30000"),
-         lineCap='round',
-         spaceBefore=3,
-         spaceAfter=10,
-         hAlign='CENTER'
-        ))
+        width="40%",
+        thickness=2,
+        color=colors.HexColor("#B30000"),
+        lineCap='round',
+        spaceBefore=3,
+        spaceAfter=10,
+        hAlign='CENTER',
+    ))
 
     # =========================================================
-    # LOGO
+    # CADRE UNIVERSITÉ / SPÉCIALITÉ
     # =========================================================
+    specialite = (
+        etudiant.filiere.libelle
+        if etudiant.filiere
+        else "Management de la Qualité, Hygiène, Sécurité et Environnement"
+    )
 
-    # =========================================================
-    # CADRE UNIVERSITE DOMAINE : SCIENCES ECONOMIQUE 
-    # =========================================================
-    # specialite = etudiant.filiere.nom if etudiant.filiere else "TRONC COMMUN"
-    specialite = etudiant.filiere.libelle if etudiant.filiere else " Management de la Qualité , Hygiene, Securité et Environnement"
     cadre_universite = Table([[
         Paragraph(f"""
-            <b>DOMAINE : <br/> Management de la Qualité , Hygiene, Securité et Environnement </b><br/>
+            <b>DOMAINE : <br/> Management de la Qualité, Hygiène, Sécurité et Environnement</b><br/>
              <b></b><br/><br/>
              <b>SPECIALITE :</b><br/> {specialite}<br/>
         """, SMALL)
@@ -225,355 +267,304 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path, semestre):
         ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
-        ("TOPPADDING", (0, 2), (-1, 2), 12),  # espace avant SPÉCIALITÉ
+        ("ROUNDEDCORNERS", [6, 6, 6, 6]),
+        ("TOPPADDING", (0, 2), (-1, 2), 12),
     ]))
 
     elements.append(Spacer(1, 10))
-    # =========================================================
-    # LOGO CENTER
-    # =========================================================
 
     cadre_etudiant = Table([
-        [
-        Paragraph("<b>Nom et Prénoms</b>", SMALL),
-        Paragraph(f"{etudiant.nom} {etudiant.prenoms}", SMALL)],
-        [
-        Paragraph("<b>Date de naissance</b>", SMALL),
-        Paragraph(
-            f"{safe_date(etudiant.date_naissance)}",
-            SMALL
-        )
-       ],
-
-        # lieu = etudiant.lieu_naissance or "-"
-
-        # Paragraph(f"{date_naissance} à {lieu}", SMALL)
-        [Paragraph("<b>Sexe</b>", SMALL),Paragraph(etudiant.get_sexe_display(), SMALL)],
-        [Paragraph("<b>Matricule</b>", SMALL), Paragraph(str(etudiant.matricule), SMALL)],
-        [Paragraph("<b>Statut</b>", SMALL),Paragraph(etudiant.statut, SMALL)],
-        # [Paragraph("<b>Filière</b>", SMALL), Paragraph(str(etudiant.filiere), SMALL)],
-        # [Paragraph("<b>Niveau</b>", SMALL), Paragraph(str(etudiant.niveau), SMALL)],
-        [Paragraph("<b>Niveau</b>", SMALL), 
+        [Paragraph("<b>Nom et Prénoms</b>", SMALL),
+         Paragraph(f"{etudiant.nom} {etudiant.prenoms}", SMALL)],
+        [Paragraph("<b>Date de naissance</b>", SMALL),
+         Paragraph(f"{safe_date(etudiant.date_naissance)}", SMALL)],
+        [Paragraph("<b>Sexe</b>", SMALL),
+         Paragraph(etudiant.get_sexe_display(), SMALL)],
+        [Paragraph("<b>Matricule</b>", SMALL),
+         Paragraph(str(etudiant.matricule), SMALL)],
+        [Paragraph("<b>Statut</b>", SMALL),
+         Paragraph(etudiant.statut, SMALL)],
+        [Paragraph("<b>Niveau</b>", SMALL),
          Paragraph(etudiant.get_niveau_display(), SMALL)],
     ], colWidths=[5 * cm, 3.5 * cm])
 
     cadre_etudiant.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
         ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
-        # ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
         ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("PADDING", (0, 0), (-1, -1), 6),
-        ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
+        ("ROUNDEDCORNERS", [6, 6, 6, 6]),
     ]))
-
-
-    # =========================================================
-    # HEADER GLOBAL
-    # =========================================================
 
     header_global = Table(
         [[cadre_universite, cadre_etudiant]],
         colWidths=[12 * cm, 8 * cm],
-        rowHeights=[3.5 * cm]
+        rowHeights=[3.5 * cm],
     )
-
-    # header_global.setStyle(TableStyle([
-    #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    # ]))
     header_global.setStyle(TableStyle([
-    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-    ("LEFTPADDING", (0, 0), (-1, -1), 0),
-    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
     ]))
-    
-    
 
     elements.append(header_global)
     elements.append(Spacer(1, 10))
-
-    TITLE_GREEN = ParagraphStyle(
-    "TITLE_GREEN",
-    parent=styles["Normal"],
-    fontSize=14,
-    leading=16,
-    alignment=1,
-    spaceAfter=10,
-    textColor=colors.green,
-    fontName="Helvetica-Bold"
-    )
     elements.append(Spacer(1, 10))
-    # elements.append(
-    # Paragraph("BULLETIN DE NOTES - 1er SEMESTRE", TITLE_GREEN)
-    # )
-    # =========================================================
-    # TABLE BULLETIN
-    # =========================================================
 
-    data = [["CODE","UE:UNITES D'ENSEIGNEMENTS","ECUE","CRÉDIT\nECUE","CRÉDIT\nUE","MOY\nECUE","MOY\nUE","DÉCISION"]]
-
-    somme_generale = 0
-    total_ue = 0
-    ue_validees = 0
-    ue_non_validees = 0
-    credits_total = 0
-    credits_obtenus = 0
-    somme_ponderee_ue = 0
-    total_credit_ue = 0
-    ecues_total = 0
-    ecues_validees = 0
-    row_index = 1  # 0 = header
+    # =========================================================
+    # TABLE BULLETIN (structure identique au bulletin Droit Privé)
+    # =========================================================
+    data = [["CODE", "UE:UNITES D'ENSEIGNEMENTS", "ECUE", "CRÉD\nECUE",
+             "CRÉD\nUE", "MOY\nECUE", "MOY\nUE", "DÉCISION"]]
     table_style = []
-    row_index_control = 0
-    index = 1  # juste après header du tableau
-    ecues_non_validees = 0
-    credits_ecue_total = 0
-    credits_ecue_acquis = 0
-     
-    def add_section(title, data, table_style):
-        row_index = len(data)
-        # row_index = len(data)
-        # data.append([
-        #    Paragraph(f'<para align="LEFT" color="red"><b>{title}</b></para>', SMALL),
-        # "", "",total_credit_ecue, total_credit_ue, total_moy_ecue, total_moy_ue , ""
-        # ])
 
-        table_style.append(("SPAN", (0, row_index), (2, row_index)))
-        table_style.append(("BACKGROUND", (0, row_index), (-1, row_index), colors.HexColor("#D9D9D9")))
-        table_style.append(("ALIGN", (0, row_index), (-1, row_index), "CENTER"))
-        table_style.append(("VALIGN", (0, row_index), (-1, row_index), "MIDDLE"))
-        table_style.append(("FONTNAME", (0, row_index), (-1, row_index), "Courier-Bold"))
-        table_style.append(("FONTSIZE", (0, row_index), (-1, row_index), 10))
-        table_style.append(("TOPPADDING", (0, row_index), (-1, row_index), 6))
-        table_style.append(("BOTTOMPADDING", (0, row_index), (-1, row_index), 6))
-        table_style.append(("TEXTCOLOR", (0, row_index), (-1, row_index), colors.green))
-        # premiere ligne /colonne
-         #  ligne /colonne 2 (FUSION EU)
-        table_style.append(("SPAN", (1, 1), (1, 2)))
+    stats = {
+        "ue_total": 0,
+        "ue_validees": 0,
+        "credits_total": 0,
+        "credits_obtenus": 0,
+        "ecues_total": 0,
+        "ecues_validees": 0,
+        "credits_ecue_total": 0,
+        "credits_ecue_obtenus": 0,
+    }
 
-        table_style.append(("SPAN", (1, 3), (1, 4)))
-        table_style.append(("SPAN", (1, 6), (1, 7)))
-        table_style.append(("SPAN", (1, 8), (1, 9)))
-        table_style.append(("SPAN", (1, 11), (1, 12)))
-   #  ligne /colonne 2 (FUSION CRÉDIT UE)
-        table_style.append(("SPAN", (4, 1), (4, 2)))
-        table_style.append(("SPAN", (6, 1), (6, 2)))
-     # lignes 3 et 4
-        table_style.append(("SPAN", (4, 3), (4, 4)))
-        table_style.append(("SPAN", (6, 3), (6, 4)))
-        # lignes 6 et 7
-        table_style.append(("SPAN", (4, 6), (4, 7)))
-        table_style.append(("SPAN", (6, 6), (6, 7)))
-         # lignes 8 et 9
-        table_style.append(("SPAN", (4, 8), (4, 9)))
-        table_style.append(("SPAN", (6, 8), (6, 9)))
-         # lignes 11 et 12
-        table_style.append(("SPAN", (4, 11), (4, 12)))
-        table_style.append(("SPAN", (6, 11), (6, 12)))
-         # lignes 13 et 14
-        table_style.append(("SPAN", (4, 13), (4, 14)))
-        table_style.append(("SPAN", (6, 13), (6, 14)))
-
-        
-
-        table_style.append(("SPAN", (4, 1), (4, 3)))
-        table_style.append(("SPAN", (6, 1), (6, 2)))
-        
-
-    compteur_ue = 0
     grande_unite_actuelle = None
-    for ue in ues: 
-        
-        if ue.grande_unite != grande_unite_actuelle:
-           grande_unite_actuelle = ue.grande_unite
-           data.append([
-               Paragraph(
-                   f"<b>{grande_unite_actuelle.nom}</b>",
-                    SMALL
-                    ),
-                "",
-                 "",
-                 "",
-                 "",
-                 "",
-                 "",
-                ""
-            ])
-           ligne = len(data)-1
-           
-           table_style.append(
-               ("SPAN",(0,ligne),(7,ligne))
-            )
-           
-           table_style.append(
-                 ("BACKGROUND",(0,ligne),(7,ligne),colors.HexColor("#D9D9D9"))
-             )
-           table_style.append(
-                  ("FONTNAME",(0,ligne),(7,ligne),"Helvetica-Bold")
-            )
-        # ecues = ue.ecues.all()
-        # ecues = ECUE.objects.filter(ue=ue)  # SAFE à 100%
-        ecues = ue.ecues.all()
-        print(len(data))
-        print(data[:3])
-        somme_ue = 0
-        count = 0
-        lignes = []
-        # credit_ue = getattr(ue, "credit", 6)
-        credit_ue = ue.credit
-        somme_ponderee = 0
-        credit_total_ue = 0
+    credits_ue_gu = 0
+    credits_ecue_gu = 0
+    ponderation_gu = 0
 
-        premiere_ligne = True
-        
+    def inserer_ligne_grande_unite(grande_unite, credits_ue, credits_ecue, ponderation):
+        """Ligne récapitulative de grande unité (identique au bulletin
+        Droit Privé). Remplace l'ancienne simple ligne "diviseur" qui
+        n'affichait que le nom de la grande unité sans aucun total."""
+        if credits_ue == 0:
+            return
+        moyenne_gu = round(ponderation / credits_ue, 2)
+        gu_validee = moyenne_gu >= 10
+        if gu_validee:
+            decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", SMALL)
+            couleur_gu = colors.green
+        else:
+            decision_gu = Paragraph("<font color='red'><b>Non validée</b></font>", SMALL)
+            couleur_gu = colors.red
+
+        code_gu = getattr(grande_unite, "code", grande_unite.nom)
+
+        data.append([
+            Paragraph(f"<b>{code_gu}</b>", SMALL),
+            Paragraph(f"<b>UE : {grande_unite.nom}</b>", SMALL),
+            "",
+            Paragraph(f"<b>{credits_ecue:.2f}</b>", SMALL),
+            Paragraph(f"<b>{credits_ue:.2f}</b>", SMALL),
+            "",
+            Paragraph(f"<b>{moyenne_gu:.2f}</b>", SMALL),
+            decision_gu,
+        ])
+        ligne = len(data) - 1
+        table_style.append(("BACKGROUND", (0, ligne), (7, ligne), colors.HexColor("#D9D9D9")))
+        table_style.append(("SPAN", (1, ligne), (2, ligne)))
+        table_style.append(("FONTNAME", (0, ligne), (7, ligne), "Helvetica-Bold"))
+        table_style.append(("ALIGN", (0, ligne), (-1, ligne), "CENTER"))
+        table_style.append(("TEXTCOLOR", (7, ligne), (7, ligne), couleur_gu))
+
+    for ue in ues:
+
+        ecues = ue.ecues.all()
+
+        if not ecues.exists():
+            continue
+
+        stats["ue_total"] += 1
+        stats["credits_total"] += ue.credit
+
+        if ue.grande_unite != grande_unite_actuelle:
+            if grande_unite_actuelle is not None:
+                inserer_ligne_grande_unite(
+                    grande_unite_actuelle, credits_ue_gu, credits_ecue_gu, ponderation_gu
+                )
+                credits_ue_gu = 0
+                credits_ecue_gu = 0
+                ponderation_gu = 0
+
+            grande_unite_actuelle = ue.grande_unite
+
+        ecue_data = []
         somme = 0
         coef = 0
+
         for ecue in ecues:
-            # ecues_total += 1
+            # Recherche alignée sur le bulletin Droit Privé : filtre
+            # explicite sur NoteLMD.semestre et sur les sessions
+            # normales (l'ancienne version passait par
+            # `ecue__ue__semestre` et ne filtrait pas du tout la
+            # session, risquant de récupérer une note de rattrapage
+            # au lieu de la session normale, au hasard de l'ordre
+            # renvoyé par la base).
             note = NoteLMD.objects.filter(
                 etudiant=etudiant,
                 ecue=ecue,
-                ecue__ue__semestre=semestre,
+                semestre__iexact=semestre_resolu,
+                session__in=SESSIONS_NORMALES,
             ).first()
-            row_index = len(data)
-            moyenne = note.moyenne if note else 0
+
+            moyenne = float(note.moyenne) if note and note.moyenne is not None else 0.0
+
+            # Moyenne d'UE pondérée par le COEFFICIENT de l'ECUE (et
+            # non par son crédit comme le faisait l'ancienne version
+            # via `somme_ponderee`/`credit_total_ue`) — c'est la
+            # méthode utilisée par les autres bulletins (Droit Privé,
+            # Gestion) ; les deux méthodes ne donnent le même résultat
+            # que si crédit == coefficient pour chaque ECUE.
             somme += moyenne * ecue.coefficient
             coef += ecue.coefficient
-            moyenne_ue = round(somme/coef,2) if coef else 0
-            moy_ecue = float(note.moyenne) if note and note.moyenne is not None else 0.0
-            # ✔ ECUE validéeCODE
-            credits_ecue_total += ecue.credit
-            ecues_total += 1
-            
-            if moy_ecue >= 10:
-                 ecues_validees += 1
-                 credits_ecue_acquis += ecue.credit
-            else:
-                  ecues_non_validees += 1  
-                 
-            credit_ecue = ecue.credit
-             # ✔ pondération correcte
-            somme_ponderee += credit_ecue * moy_ecue
-            credit_total_ue += credit_ecue
-            moy_ue = round(somme_ponderee / credit_total_ue, 2) if credit_total_ue else 0
-            
 
-            somme_ue += moy_ecue
-            count += 1
+            stats["ecues_total"] += 1
+            stats["credits_ecue_total"] += ecue.credit
+            credits_ecue_gu += ecue.credit
 
-            lignes.append([
-                ue.code if premiere_ligne else "",
-                ue.libelle if premiere_ligne else "",
-                ecue.libelle,
-                # getattr(ecue, "credit", 0),
-                ecue.credit,
-                credit_ue,
-                round(moy_ecue, 2),
-                "",
-                "",
-                
+            ecue_data.append((ecue, moyenne))
+
+        moyenne_ue = round(somme / coef, 2) if coef > 0 else 0
+        moyennes_ues.append(moyenne_ue)
+
+        credits_ue_gu += ue.credit
+        ponderation_gu += moyenne_ue * ue.credit
+
+        ue_validee = moyenne_ue >= 10
+        if ue_validee:
+            stats["ue_validees"] += 1
+            stats["credits_obtenus"] += ue.credit
+
+        # --- Décision PAR ECUE (Validée / Non validée / Validée par
+        # compensation), comme sur le bulletin Droit Privé — l'ancienne
+        # version n'avait qu'une seule décision au niveau UE, fusionnée
+        # sur toutes les lignes ECUE.
+        lignes_ue = []
+        premiere_ligne = True
+        for ecue, moyenne in ecue_data:
+            decision_ecue, couleur_ecue, ecue_acquise = decision_ecue_paragraph(moyenne, ue_validee)
+
+            if ecue_acquise:
+                stats["ecues_validees"] += 1
+                stats["credits_ecue_obtenus"] += ecue.credit
+
+            lignes_ue.append([
+                Paragraph(ue.code if premiere_ligne else "", SMALL),
+                Paragraph(ue.libelle if premiere_ligne else "", SMALL),
+                Paragraph(ecue.libelle, SMALL),
+                Paragraph(str(ecue.credit), SMALL),
+                Paragraph(str(ue.credit) if premiere_ligne else "", SMALL),
+                Paragraph(f"{moyenne:.2f}", SMALL),
+                Paragraph(f"{moyenne_ue:.2f}" if premiere_ligne else "", SMALL),
+                decision_ecue,
             ])
-
             premiere_ligne = False
-            # insert_index += 1   # 🔥 chaque ECUE ajoute une ligne
 
-        if count == 0:
-             continue
-            
-        # moy_ue = round(somme_ue / count, 2)
-        moy_ue = round(somme_ponderee / credit_total_ue,2) if credit_total_ue else 0
-        # decision = "VALIDÉE" if moy_ue >= 10 else "NON VALIDÉE"
-        decision = (
-            '<para align="center"><font color="green"><b>VALIDÉE</b></font></para>'
-            if moy_ue >= 10
-            else '<para align="center"><font color="red"><b>NON VALI</b></font></para>'
+        debut = len(data)
+        data.extend(lignes_ue)
+        fin = len(data) - 1
+
+        for col in [0, 1, 4, 6]:
+            table_style.append(("SPAN", (col, debut), (col, fin)))
+
+    if grande_unite_actuelle is not None:
+        inserer_ligne_grande_unite(
+            grande_unite_actuelle, credits_ue_gu, credits_ecue_gu, ponderation_gu
         )
 
-        credits_total += credit_ue
-
-        if moy_ue >= 10:
-            ue_validees += 1
-            credits_obtenus += credit_ue
-          
-        else:
-            ue_non_validees += 1
-
-        somme_generale += moy_ue
-        total_ue += 1
-
-        for r in lignes:
-            r[6] = moy_ue
-            # r[7] = decision
-            r[7] = Paragraph(decision, SMALL)
-            data.append(r)
-
-
-    moyenne_generale = round(somme_generale / total_ue, 2) if total_ue else 0
-
-    credits_restants = credits_total - credits_obtenus
-    table = Table(data, colWidths=[
-        1.4 * cm,
-        6 * cm,
-        6 * cm,
-        1.4 * cm,
-        1.4 * cm,
-        1.5 * cm,
-        1 * cm,
-        2.1 * cm
-    ],
-    rowHeights=[30] + [15] * (len(data) - 1)
+    moyenne_generale = (
+        round(sum(moyennes_ues) / len(moyennes_ues), 2)
+        if moyennes_ues
+        else 0
     )
+
+    # --- Ligne finale "TOTAL CREDITS ACQUIS" (TCA), absente de
+    # l'ancienne version.
+    data.append([
+        Paragraph("<b>TCA</b>", SMALL),
+        Paragraph("<b>TOTAL CREDITS ACQUIS</b>", SMALL),
+        "",
+        Paragraph(f"<b>{stats['credits_ecue_total']:.2f}</b>", SMALL),
+        Paragraph(f"<b>{stats['credits_total']:.2f}</b>", SMALL),
+        "",
+        Paragraph(f"<b>{moyenne_generale:.2f}</b>", SMALL),
+        "",
+    ])
+    ligne_tca = len(data) - 1
+    table_style.append(("SPAN", (1, ligne_tca), (2, ligne_tca)))
+    table_style.append(("FONTNAME", (0, ligne_tca), (7, ligne_tca), "Helvetica-Bold"))
+    table_style.append(("ALIGN", (0, ligne_tca), (-1, ligne_tca), "CENTER"))
+    table_style.append(("BACKGROUND", (0, ligne_tca), (-1, ligne_tca), colors.lightgrey))
+
+    table = Table(data, colWidths=[
+        1.4 * cm,   # Code
+        6 * cm,     # UE
+        6 * cm,     # ECUE
+        1.3 * cm,   # Crédit ECUE
+        1.3 * cm,   # Crédit UE
+        1.3 * cm,   # Moy ECUE
+        1.3 * cm,   # Moy UE
+        2 * cm,     # Décision (élargie pour "Validée par compensation")
+    ], rowHeights=[30] + [15] * (len(data) - 1))
 
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-        # ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("ALIGN", (1, 1), (-1, -1), "CENTER"),
-        # ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("PADDING", (0, 0), (-1, -1), 4),
-        ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
-      ]   + table_style))
+        ("ROUNDEDCORNERS", [6, 6, 6, 6]),
+    ] + table_style))
 
     elements.append(table)
     elements.append(Spacer(1, 10))
-    credits_ue_total = credits_total
-    credits_ue_acquis = credits_obtenus
+
+    # =========================================================
+    # Récapitulatif final
+    # =========================================================
+    credits_ue_total = stats["credits_total"]
+    credits_ue_acquis = stats["credits_obtenus"]
+    credits_ecue_total = stats["credits_ecue_total"]
+    credits_ecue_acquis = stats["credits_ecue_obtenus"]
+
     credits_ue_restants = credits_ue_total - credits_ue_acquis
     credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
-    
-    
-    # =========================================================
-    # RECAP TABLE (TA DEMANDE EXACTE)
-    # =========================================================
-    rang = "-"
 
-    
-    if credits_ue_restants == 0 and credits_ecue_restants == 0:
+    admis = credits_ue_restants == 0 and credits_ecue_restants == 0
+    if admis:
         decision_globale = (
-             '<para align="center">'
-              '<font color="green"><b>ADMIS</b></font>'
-             '</para>'
-          )
-    else:
-         decision_globale = (
-              '<para align="center">'
-              '<font color="red"><b>SESSION DE RATTRAPAGE</b></font>'
-               '</para>'
+            '<para align="center">'
+            '<font color="green"><b>ADMIS(E)</b></font>'
+            '</para>'
         )
-         
-         
+        decision_globale_inline = "<font color='green'><b>ADMIS(E)</b></font>"
+    else:
+        decision_globale = (
+            '<para align="center">'
+            '<font color="red"><b>SESSION DE RATTRAPAGE</b></font>'
+            '</para>'
+        )
+        decision_globale_inline = "<font color='red'><b>SESSION DE RATTRAPAGE</b></font>"
+
+    ecues_total = stats["ecues_total"]
+    ecues_validees = stats["ecues_validees"]
+    total_ue = stats["ue_total"]
+    ue_validees = stats["ue_validees"]
+    credits_total = stats["credits_total"]
+    credits_obtenus = stats["credits_obtenus"]
+    credits_restants = credits_total - credits_obtenus
 
     recap_final_table = Table([
         [
             Paragraph("<b>Récapitulatif</b>", SMALL),
             Paragraph("<b>Responsable</b>", SMALL),
-            Paragraph("<b>Année</b>", SMALL),
+            Paragraph("<b>Année de validation</b>", SMALL),
             Paragraph("<b>Décision</b>", SMALL),
         ],
         [
@@ -587,15 +578,13 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path, semestre):
                 Moyenne obtenue : {moyenne_generale}/20<br/>
                  </para>
                 """,
-                SMALL
+                SMALL,
             ),
-            # Paragraph("Dr.JERRY TAFOTIE", SMALL),
-            Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""",SMALL),
-            # Paragraph("2025 - 2026", SMALL),
-            Paragraph(f"ANNÉE SCOLAIRE : {annee}", SMALL),
+            Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""", SMALL),
+            Paragraph(f"{annee}", SMALL),
             Paragraph(decision_globale, SMALL),
         ]
-    ], colWidths=[8.5 * cm, 4 * cm, 4 * cm, 4 * cm], # ✅ IMPORTANT : 2 lignes = 2 hauteurs
+    ], colWidths=[7.5 * cm, 5 * cm, 4.5 * cm, 3 * cm],
        rowHeights=[0.8 * cm, 2.7 * cm])
 
     recap_final_table.setStyle(TableStyle([
@@ -603,27 +592,28 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path, semestre):
         ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D9D9D9")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        # ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTNAME", (0, 1), (-1, -1), "Courier"),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("ALIGN", (0, 0), (-1, 0), "CENTER"),
-        ("FONTSIZE", (0, 0), (-1, 0), 11),  # 🔥 plus grand pour header
-        ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
-        ("TOPPADDING", (0,0), (-1,-1), 6),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 6),
+        ("FONTSIZE", (0, 0), (-1, 0), 11),
+        ("ROUNDEDCORNERS", [6, 6, 6, 6]),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
     ]))
 
     elements.append(recap_final_table)
 
     # =========================================================
-    # SIGNATURE
+    # SIGNATURE / DECISION (la décision finale n'était affichée nulle
+    # part dans l'ancienne version, seulement calculée)
     # =========================================================
+    DECISION_STYLE = ParagraphStyle(
+        "DecisionStyle", parent=styles["Normal"], alignment=1, fontSize=12, leading=16,
+    )
 
     signature_table = Table([[
-        Paragraph("<b>RESPONSABLE</b><br/>", styles["Normal"]),
-        # Paragraph("<b>VISA</b><br/>", styles["Normal"]),
-        # Paragraph("<b>VISA</b><br/><br/>""M. N'GORAN CELESTIN",styles["Normal"]),
-        Paragraph("<b>VISA</b><br/><br/>""Dr.JERRY TAFOTIE<br/><br/>""",styles["Normal"]),
+        Paragraph(f"<b>DECISION</b><br/><br/>{decision_globale_inline}", DECISION_STYLE),
+        Paragraph("<b>VISA</b><br/><br/>Dr.JERRY TAFOTIE<br/><br/>", styles["Normal"]),
     ]], colWidths=[8 * cm, 8 * cm], rowHeights=[3 * cm])
 
     signature_table.setStyle(TableStyle([
@@ -634,13 +624,8 @@ def generer_bulletin_licence_qhse_pdf(etudiant, file_path, semestre):
     ]))
 
     elements.append(Spacer(1, 15))
-    
     elements.append(signature_table)
-    
-    # =========================================================
-    # BUILD
-    # =========================================================
-     
+
     doc.build(elements)
 
     return file_path

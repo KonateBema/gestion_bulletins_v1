@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <!-- ========================================================= -->
+    <!-- HEADER -->
+    <!-- ========================================================= -->
+
+    <div class="card shadow border-0 mb-4">
+
+        <div class="card-body d-flex justify-content-between align-items-center">
+
+            <div>
+
+                <h3 class="fw-bold text-success mb-1">
+
+                    {% if grande_unite %}
+
+                        <i class="bi bi-pencil-square me-1"></i>
+                        Modifier une grande unité
+
+                    {% else %}
+
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Nouvelle grande unité - QHSE
+
+                    {% endif %}
+
+                </h3>
+
+                <p class="text-muted mb-0">
+
+                    Regroupement des UE de la filière Management QHSE
+
+                </p>
+
+            </div>
+
+            <div>
+
+                <a
+                    href="{% url 'l3_qhse_grande_unite' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+                    class="btn btn-secondary"
+                >
+
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Retour
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- MESSAGES -->
+    <!-- ========================================================= -->
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div
+                class="alert
+                {% if message.tags == 'success' %}
+                    alert-success
+                {% elif message.tags == 'error' %}
+                    alert-danger
+                {% elif message.tags == 'warning' %}
+                    alert-warning
+                {% else %}
+                    alert-info
+                {% endif %}
+                alert-dismissible fade show shadow-sm"
+                role="alert"
+            >
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Fermer"
+                ></button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <!-- ========================================================= -->
+    <!-- FORMULAIRE -->
+    <!-- ========================================================= -->
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-9">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-success text-white py-3">
+
+                    <h5 class="mb-0 fw-bold">
+
+                        <i class="bi bi-diagram-3 me-2"></i>
+
+                        Informations de la grande unité QHSE
+
+                    </h5>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+
+                        <!-- ================================================= -->
+                        <!-- NIVEAU / SEMESTRE -->
+                        <!-- ================================================= -->
+
+                        <div class="row">
+
+                            <!-- NIVEAU -->
+
+                            <div class="col-md-6 mb-4">
+
+                                <label
+                                    for="id_niveau"
+                                    class="form-label fw-bold"
+                                >
+
+                                    <i class="bi bi-mortarboard me-1"></i>
+
+                                    Niveau
+
+                                </label>
+
+
+                                <select
+                                    name="niveau"
+                                    id="id_niveau"
+                                    class="form-select"
+                                    required
+                                >
+
+                                    <option value="">
+                                        -- Sélectionner le niveau --
+                                    </option>
+
+
+                                    <option
+                                        value="L1"
+                                        {% if niveau == "L1" or grande_unite.niveau == "L1" %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        Licence 1 (L1)
+
+                                    </option>
+
+
+                                    <option
+                                        value="L2"
+                                        {% if niveau == "L2" or grande_unite.niveau == "L2" %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        Licence 2 (L2)
+
+                                    </option>
+
+
+                                    <option
+                                        value="L3"
+                                        {% if niveau == "L3" or grande_unite.niveau == "L3" %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        Licence 3 (L3)
+
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- SEMESTRE -->
+
+                            <div class="col-md-6 mb-4">
+
+                                <label
+                                    for="id_semestre"
+                                    class="form-label fw-bold"
+                                >
+
+                                    <i class="bi bi-calendar3 me-1"></i>
+
+                                    Semestre
+
+                                </label>
+
+
+                                <select
+                                    name="semestre"
+                                    id="id_semestre"
+                                    class="form-select"
+                                    required
+                                >
+
+                                    <option value="">
+                                        -- Sélectionner le semestre --
+                                    </option>
+
+
+                                    <option
+                                        value="S1"
+                                        {% if semestre == "S1" or grande_unite.semestre == "S1" %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        Semestre 1
+
+                                    </option>
+
+
+                                    <option
+                                        value="S2"
+                                        {% if semestre == "S2" or grande_unite.semestre == "S2" %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        Semestre 2
+
+                                    </option>
+
+
+                                    <option
+                                        value="S3"
+                                        {% if semestre == "S3" or grande_unite.semestre == "S3" %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        Semestre 3
+
+                                    </option>
+
+
+                                    <option
+                                        value="S4"
+                                        {% if semestre == "S4" or grande_unite.semestre == "S4" %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        Semestre 4
+
+                                    </option>
+
+
+                                    <option
+                                        value="S5"
+                                        {% if semestre == "S5" or grande_unite.semestre == "S5" %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        Semestre 5
+
+                                    </option>
+
+
+                                    <option
+                                        value="S6"
+                                        {% if semestre == "S6" or grande_unite.semestre == "S6" %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        Semestre 6
+
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================================================= -->
+                        <!-- CODE / NOM / ORDRE -->
+                        <!-- ================================================= -->
+
+                        <div class="row">
+
+                            <!-- CODE -->
+
+                            <div class="col-md-4 mb-4">
+
+                                <label
+                                    for="id_code"
+                                    class="form-label fw-bold"
+                                >
+
+                                    <i class="bi bi-code-square me-1"></i>
+
+                                    Code
+
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    name="code"
+                                    id="id_code"
+                                    class="form-control"
+                                    value="{{ grande_unite.code|default:'' }}"
+                                    placeholder="Ex : UFO1"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <!-- NOM -->
+
+                            <div class="col-md-6 mb-4">
+
+                                <label
+                                    for="id_nom"
+                                    class="form-label fw-bold"
+                                >
+
+                                    <i class="bi bi-journal-text me-1"></i>
+
+                                    Nom
+
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    name="nom"
+                                    id="id_nom"
+                                    class="form-control"
+                                    value="{{ grande_unite.nom|default:'' }}"
+                                    placeholder="Ex : UNITES FONDAMENTALES"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <!-- ORDRE -->
+
+                            <div class="col-md-2 mb-4">
+
+                                <label
+                                    for="id_ordre"
+                                    class="form-label fw-bold"
+                                >
+
+                                    <i class="bi bi-sort-numeric-down me-1"></i>
+
+                                    Ordre
+
+                                </label>
+
+
+                                <input
+                                    type="number"
+                                    name="ordre"
+                                    id="id_ordre"
+                                    class="form-control"
+                                    value="{{ grande_unite.ordre|default:'1' }}"
+                                    min="1"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================================================= -->
+                        <!-- INFORMATION -->
+                        <!-- ================================================= -->
+
+                        <div class="alert alert-info border-0 shadow-sm">
+
+                            <i class="bi bi-info-circle me-1"></i>
+
+                            <strong>Astuce :</strong>
+
+                            Crée d'abord les grandes unités QHSE
+                            (UFO1, UCG2, USP3...) pour le niveau et le semestre
+                            concernés avant de rattacher les UE.
+
+                        </div>
+
+
+                        <hr class="my-4">
+
+
+                        <!-- ================================================= -->
+                        <!-- BOUTONS -->
+                        <!-- ================================================= -->
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <a
+                                href="{% url 'l3_qhse_grande_unite' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+                                class="btn btn-outline-secondary"
+                            >
+
+                                <i class="bi bi-arrow-left me-1"></i>
+
+                                Annuler
+
+                            </a>
+
+
+                            <button
+                                type="submit"
+                                class="btn btn-success px-4"
+                            >
+
+                                {% if grande_unite %}
+
+                                    <i class="bi bi-check-circle me-1"></i>
+
+                                    Enregistrer les modifications
+
+                                {% else %}
+
+                                    <i class="bi bi-save me-1"></i>
+
+                                    Enregistrer la grande unité
+
+                                {% endif %}
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- STYLE -->
+<!-- ========================================================= -->
+
+<style>
+
+    .form-select,
+    .form-control {
+        min-height: 45px;
+    }
+
+    .card {
+        border-radius: 14px;
+    }
+
+    .card-header {
+        border-radius: 14px 14px 0 0 !important;
+    }
+
+    .form-label {
+        color: #343a40;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+
+        border-color: #198754;
+
+        box-shadow:
+            0 0 0 0.2rem
+            rgba(25, 135, 84, 0.15);
+
+    }
+
+</style>
+
+{% endblock %}

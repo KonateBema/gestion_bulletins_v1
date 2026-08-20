@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <div class="card shadow border-0">
+
+        <!-- ============================= -->
+        <!-- HEADER -->
+        <!-- ============================= -->
+
+        <div class="card-header bg-success text-white">
+
+            <h4 class="mb-0">
+
+                <i class="bi bi-file-earmark-excel me-2"></i>
+
+                Importer les étudiants - Management QHSE
+
+            </h4>
+
+        </div>
+
+
+        <!-- ============================= -->
+        <!-- MESSAGES -->
+        <!-- ============================= -->
+
+        {% if messages %}
+
+            <div class="card-body pb-0">
+
+                {% for message in messages %}
+
+                    <div
+                        class="alert
+                        {% if message.tags == 'success' %}
+                            alert-success
+                        {% elif message.tags == 'error' %}
+                            alert-danger
+                        {% elif message.tags == 'warning' %}
+                            alert-warning
+                        {% else %}
+                            alert-info
+                        {% endif %}
+                        alert-dismissible fade show"
+                        role="alert"
+                    >
+
+                        {{ message }}
+
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Fermer"
+                        ></button>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- ============================= -->
+        <!-- TELECHARGEMENT MODELE -->
+        <!-- ============================= -->
+
+        <div class="card-body border-bottom">
+
+            <div class="alert alert-info mb-3">
+
+                <i class="bi bi-info-circle me-2"></i>
+
+                <strong>Important :</strong>
+
+                Utilisez le modèle Excel fourni afin de respecter
+                les colonnes attendues par le système.
+
+            </div>
+
+
+            <a
+                href="{% url 'l3_qhse_etudiant_modele_excel' %}"
+                class="btn btn-outline-success"
+            >
+
+                <i class="bi bi-download me-1"></i>
+
+                Télécharger le modèle Excel
+
+            </a>
+
+        </div>
+
+
+        <!-- ============================= -->
+        <!-- FORMULAIRE IMPORT -->
+        <!-- ============================= -->
+
+        <div class="card-body">
+
+            <form
+                method="post"
+                enctype="multipart/form-data"
+            >
+
+                {% csrf_token %}
+
+
+                <!-- FICHIER -->
+
+                <div class="mb-4">
+
+                    <label
+                        for="fichier"
+                        class="form-label fw-bold"
+                    >
+
+                        <i class="bi bi-file-earmark-excel me-1"></i>
+
+                        Fichier Excel (.xlsx)
+
+                    </label>
+
+
+                    <input
+                        type="file"
+                        name="fichier"
+                        id="fichier"
+                        class="form-control"
+                        accept=".xlsx"
+                        required
+                    >
+
+
+                    <div class="form-text">
+
+                        Sélectionnez uniquement un fichier
+                        Excel au format <strong>.xlsx</strong>.
+
+                    </div>
+
+                </div>
+
+
+                <!-- BOUTONS -->
+
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+
+                        <i class="bi bi-upload me-1"></i>
+
+                        Importer
+
+                    </button>
+
+
+                    <a
+                        href="{% url 'l3_qhse_etudiants' %}"
+                        class="btn btn-secondary"
+                    >
+
+                        <i class="bi bi-arrow-left me-1"></i>
+
+                        Retour
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- STYLE -->
+<!-- ============================= -->
+
+<style>
+
+    .card {
+        border-radius: 14px;
+    }
+
+    .card-header {
+        border-radius: 14px 14px 0 0 !important;
+    }
+
+    .form-control {
+        min-height: 45px;
+    }
+
+</style>
+
+{% endblock %}

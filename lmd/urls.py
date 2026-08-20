@@ -291,6 +291,8 @@ urlpatterns = [
   path("l3/qhse/bulletins/",views.l3_qhse_bulletins,name="l3_qhse_bulletins"),
   # path("l3/qhse/etudiants/",views.l3_qhse_etudiants,name="l3_qhse_etudiants"),
   path("l3/qhse/etudiants/add/",views.l3_qhse_etudiant_add,name="l3_qhse_etudiant_add"),
+  path('l3/qhse/etudiants/import/',views.l3_qhse_etudiant_import,name='l3_qhse_etudiant_import'),
+  path('l3/qhse/etudiants/modele-excel/',views.l3_qhse_etudiant_modele_excel,name='l3_qhse_etudiant_modele_excel'),
   path("l3/qhse/etudiants/<int:pk>/update/",views.l3_qhse_etudiant_update,name="l3_qhse_etudiant_update"),
   path("l3/qhse/etudiants/<int:pk>/delete/",views.l3_qhse_etudiant_delete,name="l3_qhse_etudiant_delete"),
   path("l3/qhse/ecue/add/<int:ue_id>/",views.l3_qhse_ecue_add,name="l3_qhse_ecue_add"),
@@ -486,6 +488,34 @@ path(
     views.l3_sciences_gestion_etudiants,
     name="l3_sciences_gestion_etudiants",
 ),
+ 
+ 
+ # ============================================================
+# QHSE - GRANDES UNITÉS
+# ============================================================
 
+path(
+    "l3/qhse/grandes-unites/",
+    views.l3_qhse_grande_unite,
+    name="l3_qhse_grande_unite",
+),
+
+path(
+    "l3/qhse/grandes-unites/add/",
+    views.l3_qhse_grande_unite_add,
+    name="l3_qhse_grande_unite_add",
+),
+
+path(
+    "l3/qhse/grandes-unites/<int:pk>/edit/",
+    views.l3_qhse_grande_unite_edit,
+    name="l3_qhse_grande_unite_edit",
+),
+
+path(
+    "l3/qhse/grandes-unites/<int:pk>/delete/",
+    views.l3_qhse_grande_unite_delete,
+    name="l3_qhse_grande_unite_delete",
+),
 
 ]

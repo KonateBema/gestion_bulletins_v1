@@ -41,6 +41,17 @@ SMALL = ParagraphStyle(
     fontName="Courier-Bold",
 )
 
+# Style dédié à la colonne DÉCISION du tableau : police plus petite
+# que SMALL pour que des libellés plus longs ("Validée par
+# compensation") tiennent sans déborder ni forcer un retour à la ligne
+# disgracieux dans une colonne étroite.
+DECISION_SMALL = ParagraphStyle(
+    "DECISION_SMALL",
+    parent=SMALL,
+    fontSize=6.5,
+    leading=6,
+)
+
 
 def get_image(path, width, height, fallback):
     if path and os.path.exists(path):
@@ -72,28 +83,32 @@ def add_footer(canvas, doc):
 
 
 def decision_ecue_paragraph(moyenne, ue_validee):
-    """Retourne (Paragraph, couleur, acquise) pour la décision d'un ECUE.
+    """Retourne (Paragraph, couleur, acquise, compensee) pour la
+    décision d'un ECUE.
 
     - moyenne >= 10                  -> "Validée"
-    - moyenne < 10 mais UE validée    -> "Validée par compensation"
+    - moyenne < 10 mais UE validée    -> "Validée/compensation"
     - moyenne < 10 et UE non validée  -> "Non validée"
     """
     if moyenne >= 10:
         return (
-            Paragraph("<font color='green'><b>Validée</b></font>", SMALL),
+            Paragraph("<font color='green'><b>Validée</b></font>", DECISION_SMALL),
             colors.green,
             True,
+            False,
         )
     elif ue_validee:
         return (
-            Paragraph("<font color='#B8860B'><b>Validée par compensation</b></font>", SMALL),
+            Paragraph("<font color='#B8860B'><b>Validée/compensation</b></font>", DECISION_SMALL),
             colors.HexColor("#B8860B"),
+            True,
             True,
         )
     else:
         return (
-            Paragraph("<font color='red'><b>Non validée</b></font>", SMALL),
+            Paragraph("<font color='red'><b>Non validée</b></font>", DECISION_SMALL),
             colors.red,
+            False,
             False,
         )
 
@@ -110,6 +125,11 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     SESSIONS_NORMALES = ["1", "2", "3", "4"]
 
     moyennes_ues = []  # une valeur par UE (moyenne pondérée des ECUE de cette UE)
+
+    # Indique si au moins une ECUE du bulletin a été validée grâce à
+    # la compensation (moyenne ECUE < 10 mais UE validée), pour
+    # déterminer la décision finale.
+    compensation_utilisee = False
 
     ues = (
         UE.objects
@@ -337,10 +357,10 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         moyenne_gu = round(ponderation / credits_ue, 2)
         gu_validee = moyenne_gu >= 10
         if gu_validee:
-            decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", SMALL)
+            decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", DECISION_SMALL)
             couleur_gu = colors.green
         else:
-            decision_gu = Paragraph("<font color='red'><b>Non valid</b></font>", SMALL)
+            decision_gu = Paragraph("<font color='red'><b>Non Validée</b></font>", DECISION_SMALL)
             couleur_gu = colors.red
 
         code_gu = getattr(grande_unite, "code", grande_unite.nom)
@@ -435,11 +455,14 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         lignes_ue = []
         premiere_ligne = True
         for ecue, moyenne in ecue_data:
-            decision_ecue, couleur_ecue, ecue_acquise = decision_ecue_paragraph(moyenne, ue_validee)
+            decision_ecue, couleur_ecue, ecue_acquise, ecue_compensee = decision_ecue_paragraph(moyenne, ue_validee)
 
             if ecue_acquise:
                 stats["ecues_validees"] += 1
                 stats["credits_ecue_obtenus"] += ecue.credit
+
+            if ecue_compensee:
+                compensation_utilisee = True
 
             lignes_ue.append([
                 Paragraph(ue.code if premiere_ligne else "", SMALL),
@@ -500,14 +523,14 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     table_style.append(("BACKGROUND", (0, ligne_tca), (-1, ligne_tca), colors.lightgrey))
 
     table = Table(data, colWidths=[
-        1.4 * cm,   # Code
-        6 * cm,     # UE
+        1.3 * cm,   # Code
+        5.1 * cm,     # UE
         6 * cm,     # ECUE
-        1.3 * cm,   # Crédit ECUE
+        1.2 * cm,   # Crédit ECUE
         1.2 * cm,   # Crédit UE
         1.2 * cm,   # Moy ECUE
         1.2 * cm,   # Moy UE
-        2 * cm,   # Décision
+        3.2 * cm,   # Décision
     ], rowHeights=[30] + [15] * (len(data) - 1))
 
     table.setStyle(TableStyle([
@@ -535,24 +558,33 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     credits_ue_restants = credits_ue_total - credits_ue_acquis
     credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
 
-    # Décision finale : ADMIS(E) uniquement si TOUS les crédits UE et TOUS
-    # les crédits ECUE sont acquis (les ECUE validées par compensation
-    # comptent comme acquises, cf. calcul de credits_ecue_obtenus plus haut).
+    # Décision finale sur le même vocabulaire à 3 états que les ECUE :
+    #   - des crédits UE/ECUE manquent            -> "Non validée"
+    #   - tous les crédits acquis, mais au moins
+    #     une ECUE compensée quelque part          -> "Validée par compensation"
+    #   - tous les crédits acquis, sans compensation -> "Validée"
     admis = credits_ue_restants == 0 and credits_ecue_restants == 0
-    if admis:
+    if not admis:
         decision_globale = (
             '<para align="center">'
-            '<font color="green"><b>ADMIS(E)</b></font>'
+            '<font color="red"><b>Non validée</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='green'><b>ADMIS(E)</b></font>"
+        decision_globale_inline = "<font color='red'><b>Non validée</b></font>"
+    elif compensation_utilisee:
+        decision_globale = (
+            '<para align="center">'
+            '<font color="#B8860B"><b>Validée par compensation</b></font>'
+            '</para>'
+        )
+        decision_globale_inline = "<font color='#B8860B'><b>Validée par compensation</b></font>"
     else:
         decision_globale = (
             '<para align="center">'
-            '<font color="red"><b>SESSION DE RATTRAPAGE</b></font>'
+            '<font color="green"><b>Validée complète</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='red'><b>SESSION DE RATTRAPAGE</b></font>"
+        decision_globale_inline = "<font color='green'><b>Validée complète</b></font>"
 
     ecues_total = stats["ecues_total"]
     ecues_validees = stats["ecues_validees"]
@@ -586,9 +618,9 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
             ),
             Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""", SMALL),
             Paragraph(f"{annee}", SMALL),
-            # Paragraph(decision_globale, SMALL),
+            # Paragraph(decision_globale, DECISION_SMALL),
         ]
-    ], colWidths=[7.5 * cm, 5 * cm, 4.5 * cm],
+    ], colWidths=[7 * cm, 4.5 * cm, 4 * cm],
        rowHeights=[0.8 * cm, 2.7 * cm])
 
     recap_final_table.setStyle(TableStyle([

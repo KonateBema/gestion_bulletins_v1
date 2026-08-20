@@ -27,7 +27,40 @@
 
 {% csrf_token %}
 
+<input type="hidden" name="session" value="{{ session }}">
 
+<div class="mb-3">
+    <label>Niveau</label>
+    <select name="niveau" class="form-control" required>
+        <option value="L1" {% if niveau == "L1" %}selected{% endif %}>L1</option>
+        <option value="L2" {% if niveau == "L2" %}selected{% endif %}>L2</option>
+        <option value="L3" {% if niveau == "L3" %}selected{% endif %}>L3</option>
+    </select>
+</div>
+
+<div class="mb-3">
+    <label>Semestre</label>
+    <select name="semestre" class="form-control" required>
+        <option value="S1" {% if semestre == "S1" %}selected{% endif %}>S1</option>
+        <option value="S2" {% if semestre == "S2" %}selected{% endif %}>S2</option>
+    </select>
+</div>
+
+<div class="mb-3">
+    <label>Grande unité</label>
+    <select name="grande_unite" class="form-control" required>
+        <option value="">-- Choisir une grande unité --</option>
+        {% for gu in grandes_unites %}
+            <option value="{{ gu.id }}">{{ gu.code }} - {{ gu.nom }}</option>
+        {% endfor %}
+    </select>
+    {% if not grandes_unites %}
+    <small class="text-danger">
+        Aucune grande unité pour ce niveau/semestre. Crée-la d'abord
+        avant d'ajouter une UE.
+    </small>
+    {% endif %}
+</div>
 
 <div class="mb-3">
 
@@ -75,6 +108,15 @@ name="credit"
 class="form-control"
 value="6">
 
+</div>
+
+<div class="mb-3">
+    <label>Ordre</label>
+    <input
+    type="number"
+    name="ordre"
+    class="form-control"
+    value="1">
 </div>
 
 

@@ -5,119 +5,132 @@
 <div class="container-fluid mt-4">
 
 
-<div class="card shadow border-0">
+    <div class="card shadow border-0">
 
 
-<div class="card-header bg-primary text-white d-flex justify-content-between">
+        <div class="card-header bg-primary text-white d-flex justify-content-between">
 
-<h4>
-🦺 Étudiants L3 QHSE
-</h4>
-
-
-<a href="{% url 'l3_qhse_etudiant_add' %}"
-class="btn btn-success">
-
-<i class="bi bi-person-plus"></i>
-Ajouter
-
-</a>
+            <h4>
+                🦺 Étudiants L3 QHSE 
+            </h4>
 
 
-</div>
+            <!-- <a href="{% url 'l3_qhse_etudiant_add' %}" class="btn btn-success">
+
+                <i class="bi bi-person-plus"></i>
+                Ajouter
+
+            </a> -->
+            <div class="d-flex gap-2">
+
+                <!-- IMPORTER LES ÉTUDIANTS -->
+                <a href="{% url 'l3_qhse_etudiant_import' %}" class="btn btn-outline-light">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    Importer
+                </a>
+
+                <!-- AJOUTER UN ÉTUDIANT -->
+                <a href="{% url 'l3_qhse_etudiant_add' %}" class="btn btn-success">
+
+                    <i class="bi bi-person-plus"></i>
+                    Ajouter
+
+                </a>
+
+            </div>
 
 
-<div class="card-body">
+        </div>
 
 
-<table class="table table-hover align-middle">
+        <div class="card-body">
 
 
-<thead class="table-dark">
-
-<tr>
-
-<th>Matricule</th>
-<th>Nom</th>
-<th>Prénoms</th>
-<th>Email</th>
-<th>Actions</th>
-
-</tr>
-
-</thead>
+            <table class="table table-hover align-middle">
 
 
-<tbody>
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>Matricule</th>
+                        <th>Nom</th>
+                        <th>Prénoms</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
 
 
-{% for e in etudiants %}
+                <tbody>
 
 
-<tr>
-
-<td>{{e.matricule}}</td>
-
-<td>{{e.nom}}</td>
-
-<td>{{e.prenoms}}</td>
-
-<td>{{e.email}}</td>
+                    {% for e in etudiants %}
 
 
-<td>
+                    <tr>
+
+                        <td>{{e.matricule}}</td>
+
+                        <td>{{e.nom}}</td>
+
+                        <td>{{e.prenoms}}</td>
+
+                        <td>{{e.email}}</td>
 
 
-<a href="{% url 'l3_qhse_etudiant_update' e.id %}"
-class="btn btn-warning btn-sm">
-
-<i class="bi bi-pencil"></i>
-
-</a>
+                        <td>
 
 
+                            <a href="{% url 'l3_qhse_etudiant_update' e.id %}" class="btn btn-warning btn-sm">
 
-<a href="{% url 'l3_qhse_etudiant_delete' e.id %}"
-class="btn btn-danger btn-sm">
+                                <i class="bi bi-pencil"></i>
 
-<i class="bi bi-trash"></i>
-
-</a>
+                            </a>
 
 
-</td>
+
+                            <a href="{% url 'l3_qhse_etudiant_delete' e.id %}" class="btn btn-danger btn-sm">
+
+                                <i class="bi bi-trash"></i>
+
+                            </a>
 
 
-</tr>
+                        </td>
 
 
-{% empty %}
-
-<tr>
-
-<td colspan="5"
-class="text-center">
-
-Aucun étudiant QHSE
-
-</td>
-
-</tr>
+                    </tr>
 
 
-{% endfor %}
+                    {% empty %}
+
+                    <tr>
+
+                        <td colspan="5" class="text-center">
+
+                            Aucun étudiant QHSE
+
+                        </td>
+
+                    </tr>
 
 
-</tbody>
+                    {% endfor %}
 
 
-</table>
+                </tbody>
 
 
-</div>
+            </table>
 
 
-</div>
+        </div>
+
+
+    </div>
 
 
 </div>

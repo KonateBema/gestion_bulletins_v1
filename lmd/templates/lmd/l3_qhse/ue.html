@@ -28,15 +28,37 @@
     </div>
 
     <div>
+        
 
-        <a href="{% url 'l3_qhse_ue_add' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+        <!-- <a href="{% url 'l3_qhse_ue_add' %}?niveau={{ niveau }}&semestre={{ semestre }}"
            class="btn btn-success">
 
             <i class="bi bi-plus-circle"></i>
 
             Ajouter une UE
 
-        </a>
+        </a> -->
+        <div class="d-flex gap-2">
+
+            <!-- GRANDES UNITÉS -->
+            <a href="{% url 'l3_qhse_grande_unite' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+               class="btn btn-outline-success">
+                <i class="bi bi-diagram-3"></i>
+                Grandes unités
+        
+            </a>
+        
+            <!-- AJOUTER UE -->
+            <a href="{% url 'l3_qhse_ue_add' %}?niveau={{ niveau }}&semestre={{ semestre }}"
+               class="btn btn-success">
+        
+                <i class="bi bi-plus-circle"></i>
+        
+                Ajouter une UE
+        
+            </a>
+        
+        </div>
 
     </div>
 

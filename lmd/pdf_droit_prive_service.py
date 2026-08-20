@@ -36,6 +36,12 @@ SMALL = ParagraphStyle(
     leading=10,
     fontName="Courier-Bold",
 )
+DECISION_SMALL = ParagraphStyle(
+    "DECISION_SMALL",
+    parent=SMALL,
+    fontSize=6.5,
+    leading=6,
+)
 
 
 def get_image(path, width, height, fallback):
@@ -76,19 +82,19 @@ def decision_ecue_paragraph(moyenne, ue_validee):
     """
     if moyenne >= 10:
         return (
-            Paragraph("<font color='green'><b>Validée</b></font>", SMALL),
+            Paragraph("<font color='green'><b>Validée</b></font>", DECISION_SMALL),
             colors.green,
             True,
         )
     elif ue_validee:
         return (
-            Paragraph("<font color='#B8860B'><b>Validée par compensation</b></font>", SMALL),
+            Paragraph("<font color='#B8860B'><b>Validée/compensation</b></font>", DECISION_SMALL),
             colors.HexColor("#B8860B"),
             True,
         )
     else:
         return (
-            Paragraph("<font color='red'><b>Non validée</b></font>", SMALL),
+            Paragraph("<font color='red'><b>Non validée</b></font>", DECISION_SMALL),
             colors.red,
             False,
         )
@@ -496,14 +502,14 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     table_style.append(("BACKGROUND", (0, ligne_tca), (-1, ligne_tca), colors.lightgrey))
 
     table = Table(data, colWidths=[
-        1.4 * cm,   # Code
-        6 * cm,     # UE
-        6 * cm,     # ECUE
+        1.3 * cm,   # Code
+        5.6 * cm,     # UE
+        5.6 * cm,     # ECUE
         1.3 * cm,   # Crédit ECUE
-        1.2 * cm,   # Crédit UE
+        1.1 * cm,   # Crédit UE
         1.2 * cm,   # Moy ECUE
         1.2 * cm,   # Moy UE
-        2 * cm,   # Décision
+        3.2 * cm,   # Décision
     ], rowHeights=[30] + [15] * (len(data) - 1))
 
     table.setStyle(TableStyle([
@@ -538,17 +544,17 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     if admis:
         decision_globale = (
             '<para align="center">'
-            '<font color="green"><b>ADMIS(E)</b></font>'
+            '<font color="green"><b>Validée complète</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='green'><b>ADMIS(E)</b></font>"
+        decision_globale_inline = "<font color='green'><b>Validée complète</b></font>"
     else:
         decision_globale = (
             '<para align="center">'
-            '<font color="red"><b>SESSION DE RATTRAPAGE</b></font>'
+            '<font color="red"><b>Non validée</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='red'><b>SESSION DE RATTRAPAGE</b></font>"
+        decision_globale_inline = "<font color='red'><b>Non validée</b></font>"
 
     ecues_total = stats["ecues_total"]
     ecues_validees = stats["ecues_validees"]

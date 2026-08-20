@@ -1630,30 +1630,7 @@ def bulletin_rattrapage_list(request):
         }
     )
 
-from django.shortcuts import render
 
-def l3_droit_dashboard(request):
-
-    filiere = FiliereLMD.objects.get(
-        libelle="Droit Privé"
-    )
-
-
-    ues = UE.objects.filter(
-        filiere=filiere
-    ).prefetch_related(
-        "ecues"
-    )
-
-
-    return render(
-        request,
-        "lmd/l3/droit/dashboard.html",
-        {
-            "filiere": filiere,
-            "ues": ues
-        }
-    )
 
 def l3_gestion_dashboard(request):
 
@@ -6578,13 +6555,13 @@ def l3_qhse_etudiants1(request):
         }
     )
 
-def l3_qhse_etudiants(request):
+def l3_qhse_etudiantsrrr(request):
 
     filiere = FiliereLMD.objects.get(code="QHSE-L3")
 
     etudiants = EtudiantLMD.objects.filter(
          filiere=filiere,
-        niveau="L3"
+          niveau="L3"
     )
 
     print("Nombre =", etudiants.count())
@@ -6600,6 +6577,32 @@ def l3_qhse_etudiants(request):
             "filiere": filiere,
         }
     )
+
+def l3_qhse_etudiants(request):
+
+    filiere = get_filiere_qhse()
+
+    # "niveau" vient maintenant d'un paramètre GET (ex: ?niveau=L2)
+    # plutôt que d'être codé en dur sur "L3" — vide = tous les niveaux.
+    niveau = request.GET.get("niveau", "")
+
+    etudiants = EtudiantLMD.objects.filter(filiere=filiere)
+
+    if niveau:
+        etudiants = etudiants.filter(niveau=niveau)
+
+    etudiants = etudiants.order_by("niveau", "nom", "prenoms")
+
+    return render(
+        request,
+        "lmd/l3_qhse/etudiants.html",
+        {
+            "etudiants": etudiants,
+            "filiere": filiere,
+            "niveau": niveau,
+        }
+    )
+
 
 def l3_qhse_etudiant_add(request):
 
@@ -6637,53 +6640,7 @@ def l3_qhse_etudiant_add(request):
             "filiere": filiere
         }
     )
-def l3_qhse_etudiant_addSS(request):
 
-    filiere = FiliereLMD.objects.get(
-        libelle="Management de la Qualité, Hygiène, Sécurité et Environnement"
-    )
-
-
-    if request.method=="POST":
-
-        form = QHSEEtudiantForm(request.POST)
-
-
-        if form.is_valid():
-
-            etudiant=form.save(commit=False)
-
-            etudiant.filiere=filiere
-            etudiant.niveau="L3"
-
-            etudiant.save()
-
-
-            messages.success(
-                request,
-                "Étudiant QHSE ajouté"
-            )
-
-
-            return redirect(
-                "l3_qhse_etudiants"
-            )
-
-
-    else:
-
-        form=QHSEEtudiantForm()
-
-
-
-    return render(
-        request,
-        "lmd/qhse/etudiant_form.html",
-        {
-            "form":form,
-            "titre":"Ajouter étudiant L3 QHSE"
-        }
-    )
 
 def l3_qhse_etudiant_update(request,pk):
 
@@ -7066,7 +7023,7 @@ def l3_qhse_ue_addBBBB(request):
         "lmd/l3_qhse/ue_add.html"
     )
 
-def l3_qhse_ue_add(request):
+def l3_qhse_ue_addrrr(request):
 
     semestre = request.GET.get("semestre", "S1")
 
@@ -7093,6 +7050,133 @@ def l3_qhse_ue_add(request):
         {
             "form": form,
             "semestre": semestre,
+        }
+    )
+
+
+def l3_qhse_ue_add(request):
+
+    # =========================================================
+    # FILIÈRE
+    # =========================================================
+
+    filiere = get_filiere_qhse()
+
+    # =========================================================
+    # RÉCUPÉRATION DES FILTRES
+    # =========================================================
+
+    niveau = request.GET.get("niveau", "")
+    semestre = request.GET.get("semestre", "S1")
+    session = request.GET.get("session", "1")
+
+    # =========================================================
+    # GRANDES UNITÉS
+    # =========================================================
+
+    grandes_unites = GrandeUnite.objects.filter(
+        filiere=filiere
+    )
+
+    if niveau:
+        grandes_unites = grandes_unites.filter(
+            niveau=niveau
+        )
+
+    if semestre:
+        grandes_unites = grandes_unites.filter(
+            semestre=semestre
+        )
+
+    grandes_unites = grandes_unites.order_by(
+        "ordre"
+    )
+
+    # =========================================================
+    # TRAITEMENT DU FORMULAIRE
+    # =========================================================
+
+    if request.method == "POST":
+
+        # -----------------------------------------------------
+        # RÉCUPÉRATION DES DONNÉES
+        # -----------------------------------------------------
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+        session = request.POST.get("session", "1")
+
+        code = request.POST.get("code")
+        libelle = request.POST.get("libelle")
+        credit = request.POST.get("credit")
+        ordre = request.POST.get("ordre") or 1
+
+        grande_unite_id = request.POST.get(
+            "grande_unite"
+        )
+
+        # -----------------------------------------------------
+        # VÉRIFICATION GRANDE UNITÉ
+        # -----------------------------------------------------
+
+        grande_unite = get_object_or_404(
+            GrandeUnite,
+            id=grande_unite_id,
+            filiere=filiere,
+            niveau=niveau,
+            semestre=semestre
+        )
+
+        # -----------------------------------------------------
+        # CRÉATION DE L'UE
+        # -----------------------------------------------------
+
+        UE.objects.create(
+            code=code,
+            libelle=libelle,
+            credit=credit,
+            ordre=ordre,
+            niveau=niveau,
+            semestre=semestre,
+            session=session,
+            filiere=filiere,
+            grande_unite=grande_unite,
+        )
+
+        # -----------------------------------------------------
+        # MESSAGE
+        # -----------------------------------------------------
+
+        messages.success(
+            request,
+            "UE QHSE ajoutée avec succès."
+        )
+
+        # -----------------------------------------------------
+        # REDIRECTION
+        # -----------------------------------------------------
+
+        return redirect(
+            f"{reverse('l3_qhse_ue')}"
+            f"?niveau={niveau}"
+            f"&semestre={semestre}"
+            f"&session={session}"
+        )
+
+    # =========================================================
+    # AFFICHAGE DU FORMULAIRE
+    # =========================================================
+
+    return render(
+        request,
+        "lmd/l3_qhse/ue_add.html",
+        {
+            "titre": "Nouvelle UE - Management QHSE",
+            "filiere": filiere,
+            "niveau": niveau,
+            "semestre": semestre,
+            "session": session,
+            "grandes_unites": grandes_unites,
         }
     )
 
@@ -7165,6 +7249,7 @@ def master_uePAS(request, id):
             "ues": ues,
         }
     )
+
 def master_ue(request, id):
 
     programme = get_object_or_404(
@@ -9675,3 +9760,511 @@ def sciences_gestion_etudiant_import(request):
         request,
             "lmd/l3/gestion/etudiant_import.html"
     )
+
+def l3_droit_dashboard(request):
+    """
+    Tableau de bord Droit Privé
+    Tous les niveaux : L1, L2 et L3
+    """
+
+    total_etudiants = Etudiant.objects.filter(
+        filiere__nom__iexact="Droit Privé"
+    ).count()
+
+    total_ue = UE.objects.filter(
+        filiere__nom__iexact="Droit Privé"
+    ).count()
+
+    total_notes = NoteLMD.objects.filter(
+        etudiant__filiere__nom__iexact="Droit Privé"
+    ).count()
+
+    total_bulletins = total_etudiants
+
+    context = {
+        "total_etudiants": total_etudiants,
+        "total_ue": total_ue,
+        "total_notes": total_notes,
+        "total_bulletins": total_bulletins,
+    }
+
+    return render(
+        request,
+        "lmd/l3/droit/dashboard.html",
+        context
+    )
+
+
+def get_filiere_qhse():
+    """Récupère la filière QHSE de façon fiable.
+
+    Centralise la correction du bug répété dans plusieurs vues :
+    - le libellé exact en base n'est ni "Management QHSE" ni
+      "Qualité, Hygiène, Sécurité" seuls, mais "Management de la
+      Qualité, Hygiène, Sécurité et Environnement" ;
+    - il existe actuellement DEUX lignes FiliereLMD avec ce même
+      libellé (doublon en base à nettoyer). `get_object_or_404`
+      planterait avec une erreur 500 (MultipleObjectsReturned) tant
+      que ce doublon existe, donc on utilise filter().first().
+
+    TODO : une fois le doublon nettoyé en base (voir discussion),
+    cette fonction pourra revenir à un simple
+    get_object_or_404(FiliereLMD, libelle=...).
+    """
+    filiere = (
+        FiliereLMD.objects
+        .filter(libelle__icontains="Qualité, Hygiène, Sécurité")
+        .order_by("id")
+        .first()
+    )
+    if filiere is None:
+        raise Http404("Filière QHSE introuvable")
+    return filiere
+
+def l3_qhse_grande_unite(request):
+
+    filiere = get_filiere_qhse()
+
+    niveau = request.GET.get("niveau")
+    semestre = request.GET.get("semestre")
+
+    grandes_unites = GrandeUnite.objects.filter(
+        filiere=filiere
+    )
+
+    if niveau:
+        grandes_unites = grandes_unites.filter(
+            niveau=niveau
+        )
+
+    if semestre:
+        grandes_unites = grandes_unites.filter(
+            semestre=semestre
+        )
+
+    return render(
+        request,
+        "lmd/l3_qhse/grande_unite_list.html",
+        {
+            "filiere": filiere,
+            "grandes_unites": grandes_unites,
+            "niveau": niveau,
+            "semestre": semestre,
+        }
+    )
+
+
+def l3_qhse_grande_unite_add(request):
+
+    filiere = get_filiere_qhse()
+
+    if request.method == "POST":
+        nom = request.POST.get("nom")
+        code = request.POST.get("code")
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+
+        GrandeUnite.objects.create(
+            nom=nom,
+            code=code,
+            ordre=request.POST.get("ordre") or 1,
+            filiere=filiere,
+            niveau=niveau,
+            semestre=semestre,
+        )
+
+        messages.success(
+            request,
+            "Grande unité QHSE ajoutée avec succès."
+        )
+
+        return redirect(
+            f"{reverse('l3_qhse_grande_unite')}"
+            f"?niveau={niveau}&semestre={semestre}"
+        )
+
+    return render(
+        request,
+        "lmd/l3_qhse/grande_unite_form.html",
+        {
+            "titre": "Ajouter une grande unité - Management QHSE",
+            "filiere": filiere,
+            "niveau": request.GET.get("niveau"),
+            "semestre": request.GET.get("semestre"),
+        }
+    )
+
+
+def l3_qhse_grande_unite_edit(request, pk):
+
+    filiere = get_filiere_qhse()
+
+    grande_unite = get_object_or_404(
+        GrandeUnite,
+        pk=pk,
+        filiere=filiere
+    )
+
+    if request.method == "POST":
+
+        niveau = request.POST.get("niveau")
+        semestre = request.POST.get("semestre")
+
+        grande_unite.code = request.POST.get("code")
+        grande_unite.nom = request.POST.get("nom")
+        grande_unite.ordre = request.POST.get("ordre") or 1
+        grande_unite.niveau = niveau
+        grande_unite.semestre = semestre
+        grande_unite.save()
+
+        messages.success(
+            request,
+            "Grande unité QHSE modifiée avec succès."
+        )
+
+        return redirect(
+            f"{reverse('l3_qhse_grande_unite')}?niveau={niveau}&semestre={semestre}"
+        )
+
+    return render(
+        request,
+        "lmd/l3_qhse/grande_unite_form.html",
+        {
+            "titre": "Modifier une grande unité - Management QHSE",
+            "filiere": filiere,
+            "grande_unite": grande_unite,
+            "niveau": request.GET.get("niveau"),
+            "semestre": request.GET.get("semestre"),
+        }
+    )
+
+
+def l3_qhse_grande_unite_delete(request, pk):
+
+    filiere = get_filiere_qhse()
+
+    grande_unite = get_object_or_404(
+        GrandeUnite,
+        pk=pk,
+        filiere=filiere
+    )
+
+    niveau = request.GET.get("niveau")
+    semestre = request.GET.get("semestre")
+
+    if grande_unite.ues.exists():
+        messages.error(
+            request,
+            "Impossible de supprimer : des UE sont encore rattachées à cette grande unité."
+        )
+    else:
+        grande_unite.delete()
+        messages.success(
+            request,
+            "Grande unité QHSE supprimée avec succès."
+        )
+
+    return redirect(
+        f"{reverse('l3_qhse_grande_unite')}?niveau={niveau}&semestre={semestre}"
+    )
+
+
+def l3_qhse_etudiant_import(request):
+
+    filiere = get_filiere_qhse()
+
+    colonnes_attendues = [
+        "Matricule",
+        "Nom",
+        "Prénoms",
+        "Lieu naissance",
+        "Date naissance",
+        "Email",
+        "Annee academique",
+        "Niveau",
+        "Sexe",
+        "Téléphone",
+    ]
+
+    if request.method == "POST":
+
+        fichier = request.FILES.get("fichier")
+
+        if not fichier:
+            messages.error(
+                request,
+                "❌ Aucun fichier sélectionné."
+            )
+
+            return redirect(
+                "l3_qhse_etudiants"
+            )
+
+        # Vérification extension
+        if not fichier.name.lower().endswith(".xlsx"):
+
+            messages.error(
+                request,
+                "❌ Format incorrect. Veuillez importer un fichier Excel (.xlsx)."
+            )
+
+            return redirect(
+                "l3_qhse_etudiants"
+            )
+
+        try:
+
+            workbook = load_workbook(
+                fichier
+            )
+
+            sheet = workbook.active
+
+        except Exception:
+
+            messages.error(
+                request,
+                "❌ Impossible de lire le fichier Excel."
+            )
+
+            return redirect(
+                "l3_qhse_etudiants"
+            )
+
+        # Vérification des entêtes
+        headers = [
+            str(cell.value).strip()
+            for cell in sheet[1]
+            if cell.value is not None
+        ]
+
+        if headers != colonnes_attendues:
+
+            messages.error(
+                request,
+                "❌ Format du fichier incorrect. "
+                "Veuillez télécharger et utiliser le modèle Excel fourni."
+            )
+
+            return redirect(
+                "l3_qhse_etudiants"
+            )
+
+        total = 0
+        doublons = 0
+        erreurs = 0
+
+        for index, row in enumerate(
+            sheet.iter_rows(
+                min_row=2,
+                values_only=True
+            ),
+            start=2
+        ):
+
+            # Supprimer les cellules vides à la fin
+            row = list(row)
+
+            while row and row[-1] is None:
+                row.pop()
+
+            # Ignorer les lignes complètement vides
+            if not row:
+                continue
+
+            # Vérifier le nombre de colonnes
+            if len(row) != 10:
+
+                messages.warning(
+                    request,
+                    f"⚠️ Ligne {index} ignorée : "
+                    f"{len(row)} colonnes trouvées au lieu de 10."
+                )
+
+                erreurs += 1
+                continue
+
+            (
+                matricule,
+                nom,
+                prenoms,
+                lieu_naissance,
+                date_naissance,
+                email,
+                annee_academique,
+                niveau,
+                sexe,
+                telephone
+            ) = row
+
+            # Champs obligatoires
+            if not matricule or not nom or not prenoms:
+
+                messages.warning(
+                    request,
+                    f"⚠️ Ligne {index} ignorée : "
+                    "Matricule, nom ou prénom manquant."
+                )
+
+                erreurs += 1
+                continue
+
+            # Vérification doublon matricule
+            if EtudiantLMD.objects.filter(
+                matricule=matricule
+            ).exists():
+
+                doublons += 1
+                continue
+
+            # Conversion de la date Excel
+            date_naissance = convertir_date(
+                date_naissance
+            )
+
+            # Création de l'étudiant QHSE
+            EtudiantLMD.objects.create(
+
+                matricule=matricule,
+
+                nom=nom,
+
+                prenoms=prenoms,
+
+                lieu_naissance=lieu_naissance,
+
+                date_naissance=date_naissance,
+
+                email=email,
+
+                annee_academique=annee_academique,
+
+                niveau=niveau,
+
+                sexe=sexe,
+
+                telephone=telephone,
+
+                filiere=filiere
+            )
+
+            total += 1
+
+        # Messages de résultat
+        messages.success(
+            request,
+            f"✅ {total} étudiant(s) QHSE importé(s) avec succès."
+        )
+
+        if doublons:
+
+            messages.warning(
+                request,
+                f"⚠️ {doublons} étudiant(s) déjà existant(s) ignoré(s)."
+            )
+
+        if erreurs:
+
+            messages.warning(
+                request,
+                f"⚠️ {erreurs} ligne(s) non importée(s)."
+            )
+
+        return redirect(
+            "l3_qhse_etudiants"
+        )
+
+    return render(
+        request,
+        "lmd/l3_qhse/import_etudiants.html"
+    )
+
+
+
+
+def l3_qhse_etudiant_modele_excel(request):
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Etudiants QHSE"
+
+    # ==============================
+    # EN-TÊTES
+    # ==============================
+
+    colonnes = [
+        "Matricule",
+        "Nom",
+        "Prénoms",
+        "Lieu naissance",
+        "Date naissance",
+        "Email",
+        "Annee academique",
+        "Niveau",
+        "Sexe",
+        "Téléphone",
+    ]
+
+    sheet.append(colonnes)
+
+    # ==============================
+    # LARGEUR DES COLONNES
+    # ==============================
+
+    largeurs = {
+        "A": 18,
+        "B": 25,
+        "C": 30,
+        "D": 25,
+        "E": 18,
+        "F": 35,
+        "G": 20,
+        "H": 12,
+        "I": 12,
+        "J": 20,
+    }
+
+    for colonne, largeur in largeurs.items():
+        sheet.column_dimensions[colonne].width = largeur
+
+    # ==============================
+    # STYLE DES EN-TÊTES
+    # ==============================
+
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+    for cell in sheet[1]:
+
+        cell.font = Font(
+            bold=True,
+            color="FFFFFF"
+        )
+
+        cell.fill = PatternFill(
+            fill_type="solid",
+            fgColor="198754"
+        )
+
+        cell.alignment = Alignment(
+            horizontal="center",
+            vertical="center"
+        )
+
+    # ==============================
+    # RÉPONSE EXCEL
+    # ==============================
+
+    response = HttpResponse(
+        content_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        )
+    )
+
+    response["Content-Disposition"] = (
+        'attachment; filename="modele_etudiants_qhse.xlsx"'
+    )
+
+    workbook.save(response)
+
+    return response
