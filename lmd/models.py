@@ -294,7 +294,7 @@ class EtudiantLMD(models.Model):
     ]
 
     statut = models.CharField(
-        max_length=2,
+        max_length=20,
         choices=STATUTS,
         default="NF"
     )
