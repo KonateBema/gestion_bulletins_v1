@@ -77,10 +77,11 @@ def add_footer(canvas, doc):
 
 
 def decision_ecue_paragraph(moyenne, ue_validee):
-    """Retourne (Paragraph, couleur, acquise) pour la décision d'un ECUE.
+    """Retourne (Paragraph, couleur, acquise, compensee) pour la
+    décision d'un ECUE.
 
     - moyenne >= 10                  -> "Validée"
-    - moyenne < 10 mais UE validée    -> "Validée par compensation"
+    - moyenne < 10 mais UE validée    -> "Compensée"
     - moyenne < 10 et UE non validée  -> "Non validée"
     """
     if moyenne >= 10:
@@ -88,17 +89,20 @@ def decision_ecue_paragraph(moyenne, ue_validee):
             Paragraph("<font color='green'><b>Validée</b></font>", DECISION_SMALL),
             colors.green,
             True,
+            False,
         )
     elif ue_validee:
         return (
-            Paragraph("<font color='#B8860B'><b>Validée par compensation</b></font>", DECISION_SMALL),
+            Paragraph("<font color='#B8860B'><b>Compensée</b></font>", DECISION_SMALL),
             colors.HexColor("#B8860B"),
+            True,
             True,
         )
     else:
         return (
             Paragraph("<font color='red'><b>Non validée</b></font>", DECISION_SMALL),
             colors.red,
+            False,
             False,
         )
 
@@ -120,6 +124,11 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
     SESSIONS_NORMALES = ["1", "2", "3", "4"]
 
     moyennes_ues = []
+
+    # Indique si au moins une ECUE du bulletin a été validée grâce à
+    # la compensation (moyenne ECUE < 10 mais UE validée), pour
+    # déterminer la décision finale.
+    compensation_utilisee = False
 
     # Le semestre "effectif" doit être résolu AVANT de filtrer les UE,
     # sinon on risque de filtrer les UE avec un semestre différent de
@@ -347,10 +356,10 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
         moyenne_gu = round(ponderation / credits_ue, 2)
         gu_validee = moyenne_gu >= 10
         if gu_validee:
-            decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", SMALL)
+            decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", DECISION_SMALL)
             couleur_gu = colors.green
         else:
-            decision_gu = Paragraph("<font color='red'><b>Non validée</b></font>", SMALL)
+            decision_gu = Paragraph("<font color='red'><b>Non validée</b></font>", DECISION_SMALL)
             couleur_gu = colors.red
 
         code_gu = getattr(grande_unite, "code", grande_unite.nom)
@@ -440,18 +449,21 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
             stats["ue_validees"] += 1
             stats["credits_obtenus"] += ue.credit
 
-        # --- Décision PAR ECUE (Validée / Non validée / Validée par
-        # compensation), comme sur le bulletin Droit Privé — l'ancienne
-        # version n'avait qu'une seule décision au niveau UE, fusionnée
-        # sur toutes les lignes ECUE.
+        # --- Décision PAR ECUE (Validée / Compensée / Non validée),
+        # comme sur le bulletin Droit Privé — l'ancienne version
+        # n'avait qu'une seule décision au niveau UE, fusionnée sur
+        # toutes les lignes ECUE.
         lignes_ue = []
         premiere_ligne = True
         for ecue, moyenne in ecue_data:
-            decision_ecue, couleur_ecue, ecue_acquise = decision_ecue_paragraph(moyenne, ue_validee)
+            decision_ecue, couleur_ecue, ecue_acquise, ecue_compensee = decision_ecue_paragraph(moyenne, ue_validee)
 
             if ecue_acquise:
                 stats["ecues_validees"] += 1
                 stats["credits_ecue_obtenus"] += ecue.credit
+
+            if ecue_compensee:
+                compensation_utilisee = True
 
             lignes_ue.append([
                 Paragraph(ue.code if premiere_ligne else "", SMALL),
@@ -509,7 +521,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
         1.3 * cm,   # Crédit UE
         1.3 * cm,   # Moy ECUE
         1.3 * cm,   # Moy UE
-        2 * cm,     # Décision (élargie pour "Validée par compensation")
+        2 * cm,     # Décision
     ], rowHeights=[30] + [15] * (len(data) - 1))
 
     table.setStyle(TableStyle([
@@ -537,21 +549,34 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
     credits_ue_restants = credits_ue_total - credits_ue_acquis
     credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
 
+    # Décision finale :
+    #   - des crédits UE/ECUE manquent               -> "Non validée"
+    #   - tous les crédits acquis, mais au moins
+    #     une ECUE compensée quelque part             -> "Validée par compensation"
+    #   - tous les UE ET tous les ECUE validés
+    #     directement, sans aucune compensation       -> "Validée complète"
     admis = credits_ue_restants == 0 and credits_ecue_restants == 0
-    if admis:
+    if not admis:
         decision_globale = (
             '<para align="center">'
-            '<font color="green"><b>ADMIS(E)</b></font>'
+            '<font color="red"><b>Non validée</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='green'><b>ADMIS(E)</b></font>"
+        decision_globale_inline = "<font color='red'><b>Non validée</b></font>"
+    elif compensation_utilisee:
+        decision_globale = (
+            '<para align="center">'
+            '<font color="#B8860B"><b>Validée par compensation</b></font>'
+            '</para>'
+        )
+        decision_globale_inline = "<font color='#B8860B'><b>Validée par compensation</b></font>"
     else:
         decision_globale = (
             '<para align="center">'
-            '<font color="red"><b>SESSION DE RATTRAPAGE</b></font>'
+            '<font color="green"><b>Validée complète</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='red'><b>SESSION DE RATTRAPAGE</b></font>"
+        decision_globale_inline = "<font color='green'><b>Validée complète</b></font>"
 
     ecues_total = stats["ecues_total"]
     ecues_validees = stats["ecues_validees"]
@@ -583,7 +608,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
             ),
             Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""", SMALL),
             Paragraph(f"{annee}", SMALL),
-            Paragraph(decision_globale, SMALL),
+            Paragraph(decision_globale, DECISION_SMALL),
         ]
     ], colWidths=[7.5 * cm, 5 * cm, 4.5 * cm, 3 * cm],
        rowHeights=[0.8 * cm, 2.7 * cm])
@@ -605,8 +630,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
     elements.append(recap_final_table)
 
     # =========================================================
-    # SIGNATURE / DECISION (la décision finale n'était affichée nulle
-    # part dans l'ancienne version, seulement calculée)
+    # SIGNATURE / DECISION
     # =========================================================
     DECISION_STYLE = ParagraphStyle(
         "DecisionStyle", parent=styles["Normal"], alignment=1, fontSize=12, leading=16,

@@ -87,7 +87,7 @@ def decision_ecue_paragraph(moyenne, ue_validee):
     décision d'un ECUE.
 
     - moyenne >= 10                  -> "Validée"
-    - moyenne < 10 mais UE validée    -> "Validée/compensation"
+    - moyenne < 10 mais UE validée    -> "Compensée"
     - moyenne < 10 et UE non validée  -> "Non validée"
     """
     if moyenne >= 10:
@@ -99,7 +99,7 @@ def decision_ecue_paragraph(moyenne, ue_validee):
         )
     elif ue_validee:
         return (
-            Paragraph("<font color='#B8860B'><b>Validée/compensation</b></font>", DECISION_SMALL),
+            Paragraph("<font color='#B8860B'><b>Compensée</b></font>", DECISION_SMALL),
             colors.HexColor("#B8860B"),
             True,
             True,
@@ -360,7 +360,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
             decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", DECISION_SMALL)
             couleur_gu = colors.green
         else:
-            decision_gu = Paragraph("<font color='red'><b>Non Validée</b></font>", DECISION_SMALL)
+            decision_gu = Paragraph("<font color='red'><b>Non validée</b></font>", DECISION_SMALL)
             couleur_gu = colors.red
 
         code_gu = getattr(grande_unite, "code", grande_unite.nom)
@@ -450,7 +450,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         # --- 2) On construit les lignes du tableau, une décision PAR ECUE ---
         # Règle de décision par ECUE :
         #   - moyenne ECUE >= 10                        -> "Validée"
-        #   - moyenne ECUE < 10 mais moyenne UE >= 10    -> "Validée par compensation"
+        #   - moyenne ECUE < 10 mais moyenne UE >= 10    -> "Compensée"
         #   - moyenne ECUE < 10 et moyenne UE < 10       -> "Non validée"
         lignes_ue = []
         premiere_ligne = True
@@ -558,11 +558,12 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     credits_ue_restants = credits_ue_total - credits_ue_acquis
     credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
 
-    # Décision finale sur le même vocabulaire à 3 états que les ECUE :
-    #   - des crédits UE/ECUE manquent            -> "Non validée"
+    # Décision finale :
+    #   - des crédits UE/ECUE manquent               -> "Non validée"
     #   - tous les crédits acquis, mais au moins
-    #     une ECUE compensée quelque part          -> "Validée par compensation"
-    #   - tous les crédits acquis, sans compensation -> "Validée"
+    #     une ECUE compensée quelque part             -> "Validée par compensation"
+    #   - tous les UE ET tous les ECUE validés
+    #     directement, sans aucune compensation       -> "Validée complète"
     admis = credits_ue_restants == 0 and credits_ecue_restants == 0
     if not admis:
         decision_globale = (
@@ -574,10 +575,10 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     elif compensation_utilisee:
         decision_globale = (
             '<para align="center">'
-            '<font color="green"><b>compensée</b></font>'
+            '<font color="#B8860B"><b>Validée par compensation</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='green'><b> compensation</b></font>"
+        decision_globale_inline = "<font color='#B8860B'><b>Validée par compensation</b></font>"
     else:
         decision_globale = (
             '<para align="center">'
@@ -601,7 +602,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
             Paragraph("<b>Récapitulatif</b>", SMALL),
             Paragraph("<b>Responsable</b>", SMALL),
             Paragraph("<b>Année de validation</b>", SMALL),
-            # Paragraph("<b>Décision</b>", SMALL),
+            Paragraph("<b>Décision</b>", SMALL),
         ],
         [
             Paragraph(
@@ -618,9 +619,9 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
             ),
             Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""", SMALL),
             Paragraph(f"{annee}", SMALL),
-            # Paragraph(decision_globale, DECISION_SMALL),
+            Paragraph(decision_globale, DECISION_SMALL),
         ]
-    ], colWidths=[7 * cm, 4.5 * cm, 4 * cm],
+    ], colWidths=[7 * cm, 4.5 * cm, 4 * cm, 3 * cm],
        rowHeights=[0.8 * cm, 2.7 * cm])
 
     recap_final_table.setStyle(TableStyle([
