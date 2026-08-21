@@ -36,10 +36,11 @@ SMALL = ParagraphStyle(
     leading=10,
     fontName="Courier-Bold",
 )
+# decision
 DECISION_SMALL = ParagraphStyle(
     "DECISION_SMALL",
     parent=SMALL,
-    fontSize=6.5,
+    fontSize=6.5, 
     leading=6,
 )
 
