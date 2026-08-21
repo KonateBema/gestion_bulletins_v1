@@ -375,14 +375,26 @@
             </a>
 
 
-            <a href="{% url 'l3_qhse_ue_delete' ue.id %}"
-               class="btn btn-danger btn-sm"
-               title="Supprimer l'UE"
-               onclick="return confirm('Voulez-vous supprimer cette UE ?');">
-
+            <form
+            method="POST"
+            action="{% url 'l3_qhse_ue_delete' ue.id %}"
+            style="display: inline;"
+            onsubmit="return confirm('Voulez-vous supprimer cette UE ?');"
+        >
+        
+            {% csrf_token %}
+        
+            <button
+                type="submit"
+                class="btn btn-danger btn-sm"
+                title="Supprimer l'UE"
+            >
+        
                 <i class="bi bi-trash"></i>
-
-            </a>
+        
+            </button>
+        
+        </form>
 
         </div>
 
@@ -478,14 +490,26 @@
                     </a>
 
 
-                    <a href="{% url 'l3_qhse_ecue_delete' ecue.id %}"
-                       class="btn btn-danger btn-sm"
-                       title="Supprimer"
-                       onclick="return confirm('Voulez-vous supprimer cet ECUE ?');">
-
+                    <form
+                    method="POST"
+                    action="{% url 'l3_qhse_ecue_delete' ecue.id %}"
+                    style="display: inline;"
+                    onsubmit="return confirm('Voulez-vous supprimer cet ECUE ?');"
+                >
+                
+                    {% csrf_token %}
+                
+                    <button
+                        type="submit"
+                        class="btn btn-danger btn-sm"
+                        title="Supprimer"
+                    >
+                
                         <i class="bi bi-trash"></i>
-
-                    </a>
+                
+                    </button>
+                
+                </form>
 
                 </td>
 

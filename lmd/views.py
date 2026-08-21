@@ -6603,7 +6603,7 @@ def l3_qhse_etudiantseeeeeeee(request):
         }
     )
 
-def l3_qhse_etudiants(request):
+def l3_qhse_etudiantsAAA(request):
 
     filiere = get_filiere_qhse()
 
@@ -6633,6 +6633,7 @@ def l3_qhse_etudiants(request):
             "niveau": niveau,
         }
     )
+
 def l3_qhse_etudiant_add(request):
 
     filiere = FiliereLMD.objects.get(
@@ -6670,7 +6671,78 @@ def l3_qhse_etudiant_add(request):
         }
     )
 
+def l3_qhse_etudiants(request):
 
+    filiere = get_filiere_qhse()
+
+    niveau = request.GET.get("niveau", "").strip()
+
+    etudiants = EtudiantLMD.objects.filter(
+        filiere=filiere
+    )
+
+    if niveau in ["L1", "L2", "L3"]:
+        etudiants = etudiants.filter(
+            niveau=niveau
+        )
+
+    etudiants = etudiants.order_by(
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+    # =========================
+    # STATISTIQUES
+    # =========================
+
+    total_etudiants = etudiants.count()
+
+    total_l1 = etudiants.filter(
+        niveau="L1"
+    ).count()
+
+    total_l2 = etudiants.filter(
+        niveau="L2"
+    ).count()
+
+    total_l3 = etudiants.filter(
+        niveau="L3"
+    ).count()
+
+    # =========================
+    # PAGINATION
+    # =========================
+
+    paginator = Paginator(
+        etudiants,
+        10
+    )
+
+    page_number = request.GET.get("page")
+
+    page_obj = paginator.get_page(
+        page_number
+    )
+
+    return render(
+        request,
+        "lmd/l3_qhse/etudiants.html",
+        {
+            "etudiants": page_obj,
+            "page_obj": page_obj,
+            "paginator": paginator,
+
+            "filiere": filiere,
+            "niveau": niveau,
+
+            "total_etudiants": total_etudiants,
+            "total_l1": total_l1,
+            "total_l2": total_l2,
+            "total_l3": total_l3,
+        }
+    )
+    
 def l3_qhse_etudiant_update(request,pk):
 
     etudiant=get_object_or_404(
@@ -6882,42 +6954,91 @@ def l3_qhse_notes(request):
 
 def l3_qhse_bulletins(request):
 
-    filiere = FiliereLMD.objects.get(
-        code="QHSE-L3"
-    )
+    filiere = get_filiere_qhse()
 
+    # =========================
+    # RECHERCHE
+    # =========================
+
+    recherche = request.GET.get("q", "").strip()
+
+    niveau = request.GET.get("niveau", "").strip()
 
     etudiants = EtudiantLMD.objects.filter(
-        filiere=filiere,
-        niveau="L3"
+        filiere=filiere
     ).select_related(
         "filiere"
     )
 
+    # =========================
+    # RECHERCHE MATRICULE / NOM / PRÉNOMS
+    # =========================
 
-    print("Filière :", filiere)
-    print("Nombre étudiants :", etudiants.count())
+    if recherche:
 
-
-    for e in etudiants:
-        print(
-            e.id,
-            e.matricule,
-            e.nom,
-            e.prenoms
+        etudiants = etudiants.filter(
+            Q(matricule__icontains=recherche) |
+            Q(nom__icontains=recherche) |
+            Q(prenoms__icontains=recherche)
         )
 
+    # =========================
+    # FILTRE NIVEAU
+    # =========================
+
+    if niveau in ["L1", "L2", "L3"]:
+
+        etudiants = etudiants.filter(
+            niveau=niveau
+        )
+
+    # =========================
+    # TRI
+    # =========================
+
+    etudiants = etudiants.order_by(
+        "niveau",
+        "nom",
+        "prenoms"
+    )
+
+    # =========================
+    # PAGINATION
+    # =========================
+
+    paginator = Paginator(
+        etudiants,
+        10
+    )
+
+    page_number = request.GET.get("page")
+
+    page_obj = paginator.get_page(
+        page_number
+    )
+
+    # =========================
+    # STATISTIQUES
+    # =========================
+
+    total_etudiants = etudiants.count()
 
     return render(
         request,
         "lmd/l3_qhse/bulletins.html",
         {
-            "etudiants": etudiants,
-            "filiere": filiere
+            "etudiants": page_obj,
+            "page_obj": page_obj,
+            "paginator": paginator,
+
+            "filiere": filiere,
+
+            "recherche": recherche,
+            "niveau": niveau,
+
+            "total_etudiants": total_etudiants,
         }
     )
-
-
 
 def l3_qhse_ecue_add(request, ue_id):
 

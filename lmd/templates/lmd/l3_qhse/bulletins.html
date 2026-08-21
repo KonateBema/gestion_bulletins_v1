@@ -1,62 +1,122 @@
 {% extends "base.html" %}
 
-
 {% block content %}
+
+<style>
+
+    .search-container {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 15px;
+        border: 1px solid #e9ecef;
+    }
+
+    .search-input {
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+
+    .search-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .12);
+    }
+
+    .filter-select {
+        border-radius: 10px;
+        min-width: 160px;
+    }
+
+    .pagination-container {
+        padding: 18px 20px;
+        border-top: 1px solid #eee;
+        background: #fff;
+    }
+
+    .pagination {
+        margin-bottom: 0;
+    }
+
+    .pagination .page-link {
+        min-width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        margin: 0 2px;
+        font-weight: 600;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+    }
+
+    .pagination-info {
+        color: #6c757d;
+        font-size: 14px;
+    }
+
+</style>
 
 
 <div class="container-fluid py-4">
 
-    <!-- HEADER -->
+
+    <!-- =========================
+         HEADER
+         ========================= -->
 
     <div class="card shadow-sm border-0 rounded-4 mb-4">
 
-        <div class="card-body d-flex justify-content-between align-items-center">
+        <div class="card-body">
 
-            <div>
-                <h3 class="fw-bold text-primary mb-1">
+            <div class="d-flex justify-content-between align-items-center">
 
-                    <i class="bi bi-file-earmark-pdf-fill me-2"></i>
+                <div>
 
-                    Bulletins L3 QHSE
+                    <h3 class="fw-bold text-primary mb-1">
 
-                    <!-- <h2>Total : {{ etudiants.count }}</h2>
+                        <i class="bi bi-file-earmark-pdf-fill me-2"></i>
 
-                    {% for e in etudiants %}
-                    <p>cls
-                        {{ e.id }} -
-                        {{ e.matricule }} -
-                        {{ e.nom }} {{ e.prenoms }}
+                        Bulletins QHSE
+
+                    </h3>
+
+                    <p class="text-muted mb-0">
+
+                        Licence Professionnelle -
+                        Management de la Qualité,
+                        Hygiène, Sécurité et Environnement
+
                     </p>
-                    {% endfor %} -->
 
-                    <hr>
+                </div>
 
+                <span class="badge bg-primary rounded-pill px-4 py-2">
 
+                    🦺 {{ total_etudiants }} étudiants
 
-
-                </h3>
-                <p class="text-muted mb-0">
-                    Licence Professionnelle - Management de la Qualité,
-                    Hygiène, Sécurité et Environnement
-
-                </p>
+                </span>
 
             </div>
-
-            <span class="badge bg-primary rounded-pill px-4 py-2">
-
-                🦺 {{ etudiants|length }} étudiants
-
-
-            </span>
 
         </div>
 
     </div>
 
-    <!-- TABLE -->
+
+    <!-- =========================
+         TABLE
+         ========================= -->
 
     <div class="card shadow-sm border-0 rounded-4">
+
+
+        <!-- =========================
+             HEADER TABLE
+             ========================= -->
 
         <div class="card-header bg-dark text-white rounded-top-4">
 
@@ -70,16 +130,209 @@
 
                 </h5>
 
-                <input type="text" id="search" class="form-control form-control-sm" style="width:250px;"
-                    placeholder="🔍 Rechercher...">
             </div>
+
         </div>
+
+
+        <!-- =========================
+             RECHERCHE / FILTRE
+             ========================= -->
+
+        <div class="card-body border-bottom">
+
+            <form
+                method="GET"
+                action=""
+                class="search-container"
+            >
+
+                <div class="row g-3 align-items-end">
+
+
+                    <!-- RECHERCHE -->
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+
+                            <i class="bi bi-search me-1"></i>
+
+                            Rechercher un étudiant
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ recherche }}"
+                            class="form-control search-input"
+                            placeholder="Matricule, nom ou prénom..."
+                        >
+
+                    </div>
+
+
+                    <!-- NIVEAU -->
+
+                    <div class="col-md-3">
+
+                        <label class="form-label fw-semibold">
+
+                            <i class="bi bi-mortarboard me-1"></i>
+
+                            Niveau
+
+                        </label>
+
+                        <select
+                            name="niveau"
+                            class="form-select filter-select"
+                        >
+
+                            <option value="">
+
+                                Tous les niveaux
+
+                            </option>
+
+                            <option
+                                value="L1"
+                                {% if niveau == "L1" %}selected{% endif %}
+                            >
+
+                                Licence 1
+
+                            </option>
+
+                            <option
+                                value="L2"
+                                {% if niveau == "L2" %}selected{% endif %}
+                            >
+
+                                Licence 2
+
+                            </option>
+
+                            <option
+                                value="L3"
+                                {% if niveau == "L3" %}selected{% endif %}
+                            >
+
+                                Licence 3
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- BOUTONS -->
+
+                    <div class="col-md-3">
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary flex-fill"
+                            >
+
+                                <i class="bi bi-search me-1"></i>
+
+                                Rechercher
+
+                            </button>
+
+
+                            <a
+                                href="{% url 'l3_qhse_bulletins' %}"
+                                class="btn btn-outline-secondary"
+                                title="Réinitialiser"
+                            >
+
+                                <i class="bi bi-arrow-counterclockwise"></i>
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+        <!-- =========================
+             INFORMATIONS RECHERCHE
+             ========================= -->
+
+        {% if recherche or niveau %}
+
+        <div class="px-4 py-3 bg-light border-bottom">
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                <span class="text-muted">
+
+                    Résultat :
+
+                </span>
+
+
+                {% if recherche %}
+
+                    <span class="badge bg-primary">
+
+                        Recherche :
+                        "{{ recherche }}"
+
+                    </span>
+
+                {% endif %}
+
+
+                {% if niveau %}
+
+                    <span class="badge bg-success">
+
+                        Niveau :
+                        {{ niveau }}
+
+                    </span>
+
+                {% endif %}
+
+
+                <span class="text-muted">
+
+                    — {{ total_etudiants }} étudiant(s)
+
+                </span>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- =========================
+             TABLE
+             ========================= -->
 
         <div class="card-body p-0">
 
             <div class="table-responsive">
 
-                <table class="table table-hover align-middle mb-0" id="tableBulletins">
+                <table
+                    class="table table-hover align-middle mb-0"
+                    id="tableBulletins"
+                >
 
                     <thead class="table-light">
 
@@ -96,6 +349,7 @@
                                 Nom
 
                             </th>
+
                             <th>
 
                                 Prénoms
@@ -105,7 +359,9 @@
                             <th>
 
                                 Niveau
+
                             </th>
+
                             <th>
 
                                 Filière
@@ -115,222 +371,368 @@
                             <th class="text-center">
 
                                 Action
+
                             </th>
+
                         </tr>
 
                     </thead>
 
+
                     <tbody>
 
-                        {% for e in etudiants %}
 
-                        <tr>
+                    {% for e in etudiants %}
 
-                            <td class="ps-4">
-
-
-                                <span class="fw-bold text-primary">
+                    <tr>
 
 
-                                    {{ e.matricule }}
+                        <!-- MATRICULE -->
+
+                        <td class="ps-4">
+
+                            <span class="fw-bold text-primary">
+
+                                {{ e.matricule }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- NOM -->
+
+                        <td>
+
+                            {{ e.nom }}
+
+                        </td>
+
+
+                        <!-- PRÉNOMS -->
+
+                        <td>
+
+                            {{ e.prenoms }}
+
+                        </td>
+
+
+                        <!-- NIVEAU -->
+
+                        <td>
+
+                            {% if e.niveau == "L1" %}
+
+                                <span class="badge bg-primary rounded-pill">
+
+                                    Licence 1
 
                                 </span>
 
-                            </td>
+                            {% elif e.niveau == "L2" %}
 
-                            <td>
+                                <span class="badge bg-warning text-dark rounded-pill">
 
+                                    Licence 2
 
-                                {{ e.nom }}
+                                </span>
 
-
-                            </td>
-
-                            <td>
-
-
-                                {{ e.prenoms }}
-
-
-                            </td>
-
-
-
-
-
-                            <td>
-
+                            {% elif e.niveau == "L3" %}
 
                                 <span class="badge bg-success rounded-pill">
 
+                                    Licence 3
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary rounded-pill">
 
                                     {{ e.niveau }}
 
-
                                 </span>
 
+                            {% endif %}
 
-                            </td>
-
-
-
+                        </td>
 
 
+                        <!-- FILIÈRE -->
 
-                            <td>
+                        <td>
 
+                            <span class="badge bg-info text-dark rounded-pill">
 
-                                <span class="badge bg-info text-dark rounded-pill">
+                                {{ e.filiere.libelle }}
 
+                            </span>
 
-                                    {{ e.filiere.libelle }}
-
-
-                                </span>
-
-
-                            </td>
-                            <td class="text-center">
-
-                                <td class="text-center">
-
-                                    <a href="{% url 'imprimer_bulletin_licence_qhse' e.id 'S1' %}"
-                                       target="_blank"
-                                       class="btn btn-sm btn-primary rounded-pill px-3">
-                                
-                                        <i class="bi bi-file-earmark-pdf"></i>
-                                        S1
-                                
-                                    </a>
-                                
-                                    <a href="{% url 'imprimer_bulletin_licence_qhse' e.id 'S2' %}"
-                                       target="_blank"
-                                       class="btn btn-sm btn-danger rounded-pill px-3">
-                                
-                                        <i class="bi bi-file-earmark-pdf"></i>
-                                        S2
-                                
-                                    </a>
-                                
-                                </td>
-
-                            </td>
+                        </td>
 
 
+                        <!-- ACTIONS -->
+
+                        <td class="text-center">
+
+                            <a
+                                href="{% url 'imprimer_bulletin_licence_qhse' e.id 'S1' %}"
+                                target="_blank"
+                                class="btn btn-sm btn-primary rounded-pill px-3 me-1"
+                            >
+
+                                <i class="bi bi-file-earmark-pdf"></i>
+
+                                S1
+
+                            </a>
 
 
+                            <a
+                                href="{% url 'imprimer_bulletin_licence_qhse' e.id 'S2' %}"
+                                target="_blank"
+                                class="btn btn-sm btn-danger rounded-pill px-3"
+                            >
+
+                                <i class="bi bi-file-earmark-pdf"></i>
+
+                                S2
+
+                            </a>
+
+                        </td>
 
 
-                        </tr>
+                    </tr>
 
 
+                    {% empty %}
 
 
+                    <tr>
 
-                        {% empty %}
+                        <td
+                            colspan="6"
+                            class="text-center py-5"
+                        >
 
+                            <i class="bi bi-file-earmark-x fs-1 text-muted"></i>
 
+                            <p class="text-muted mt-2 mb-3">
 
-                        <tr>
+                                Aucun étudiant ne correspond
+                                à votre recherche.
 
-
-                            <td colspan="6" class="text-center py-5">
-
-
-
-                                <i class="bi bi-file-earmark-x fs-1 text-muted"></i>
-
-
-
-                                <p class="text-muted mt-2">
+                            </p>
 
 
-                                    Aucun bulletin disponible
+                            <a
+                                href="{% url 'l3_qhse_bulletins' %}"
+                                class="btn btn-outline-primary"
+                            >
+
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>
+
+                                Afficher tous les étudiants
+
+                            </a>
+
+                        </td>
+
+                    </tr>
 
 
-                                </p>
-
-
-
-                            </td>
-
-
-
-                        </tr>
-
-
-
-                        {% endfor %}
-
-
-
+                    {% endfor %}
 
 
                     </tbody>
 
-
-
                 </table>
 
-
-
-
             </div>
-
 
         </div>
 
 
+        <!-- =========================
+             PAGINATION
+             ========================= -->
+
+        {% if page_obj.has_other_pages %}
+
+        <div class="pagination-container">
+
+            <div class="row align-items-center">
+
+
+                <!-- INFORMATIONS -->
+
+                <div class="col-md-6">
+
+                    <div class="pagination-info">
+
+                        Affichage de
+
+                        <strong>
+                            {{ page_obj.start_index }}
+                        </strong>
+
+                        à
+
+                        <strong>
+                            {{ page_obj.end_index }}
+                        </strong>
+
+                        sur
+
+                        <strong>
+                            {{ page_obj.paginator.count }}
+                        </strong>
+
+                        étudiants
+
+                    </div>
+
+                </div>
+
+
+                <!-- PAGINATION -->
+
+                <div class="col-md-6">
+
+                    <nav aria-label="Pagination">
+
+                        <ul class="pagination justify-content-md-end">
+
+
+                            <!-- PREMIÈRE PAGE -->
+
+                            {% if page_obj.has_previous %}
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="?page=1{% if recherche %}&q={{ recherche|urlencode }}{% endif %}{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                    title="Première page"
+                                >
+
+                                    <i class="bi bi-chevron-double-left"></i>
+
+                                </a>
+
+                            </li>
+
+
+                            <!-- PRÉCÉDENTE -->
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="?page={{ page_obj.previous_page_number }}{% if recherche %}&q={{ recherche|urlencode }}{% endif %}{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                    title="Page précédente"
+                                >
+
+                                    <i class="bi bi-chevron-left"></i>
+
+                                </a>
+
+                            </li>
+
+                            {% endif %}
+
+
+                            <!-- NUMÉROS -->
+
+                            {% for num in page_obj.paginator.page_range %}
+
+                                {% if num == page_obj.number %}
+
+                                    <li class="page-item active">
+
+                                        <span class="page-link">
+
+                                            {{ num }}
+
+                                        </span>
+
+                                    </li>
+
+                                {% elif num > page_obj.number|add:"-2" and num < page_obj.number|add:"2" %}
+
+                                    <li class="page-item">
+
+                                        <a
+                                            class="page-link"
+                                            href="?page={{ num }}{% if recherche %}&q={{ recherche|urlencode }}{% endif %}{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                        >
+
+                                            {{ num }}
+
+                                        </a>
+
+                                    </li>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+
+                            <!-- SUIVANTE -->
+
+                            {% if page_obj.has_next %}
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}{% if recherche %}&q={{ recherche|urlencode }}{% endif %}{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                    title="Page suivante"
+                                >
+
+                                    <i class="bi bi-chevron-right"></i>
+
+                                </a>
+
+                            </li>
+
+
+                            <!-- DERNIÈRE -->
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages }}{% if recherche %}&q={{ recherche|urlencode }}{% endif %}{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                    title="Dernière page"
+                                >
+
+                                    <i class="bi bi-chevron-double-right"></i>
+
+                                </a>
+
+                            </li>
+
+                            {% endif %}
+
+
+                        </ul>
+
+                    </nav>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
     </div>
 
-
-
-
 </div>
-
-
-
-
-
-
-
-<script>
-
-
-    document
-        .getElementById("search")
-        .addEventListener("keyup", function () {
-
-
-            let valeur = this.value.toLowerCase();
-
-
-
-            document
-                .querySelectorAll("#tableBulletins tbody tr")
-                .forEach(function (row) {
-
-
-
-                    row.style.display =
-                        row.innerText
-                            .toLowerCase()
-                            .includes(valeur)
-                            ? ""
-                            : "none";
-
-
-
-                });
-
-
-
-        });
-
-
-
-</script>
-
-
 
 {% endblock %}

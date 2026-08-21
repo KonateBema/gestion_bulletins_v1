@@ -530,7 +530,7 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
         1.2 * cm,   # Crédit UE
         1.2 * cm,   # Moy ECUE
         1.2 * cm,   # Moy UE
-        3.2 * cm,   # Décision
+        2.6 * cm,   # Décision
     ], rowHeights=[30] + [15] * (len(data) - 1))
 
     table.setStyle(TableStyle([

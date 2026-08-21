@@ -3,7 +3,6 @@
 {% block content %}
 
 <style>
-
     .gestion-header {
         background: linear-gradient(135deg, #0d6efd, #6610f2);
         color: white;
@@ -119,6 +118,7 @@
         top: 50%;
         transform: translateY(-50%);
         color: #6c757d;
+        z-index: 2;
     }
 
     .search-box input {
@@ -274,6 +274,49 @@
         margin-bottom: 15px;
     }
 
+    /* =========================
+       PAGINATION
+       ========================= */
+
+    .pagination-container {
+        padding: 18px 22px;
+        border-top: 1px solid #eee;
+        background: #fff;
+    }
+
+    .pagination {
+        margin-bottom: 0;
+    }
+
+    .pagination .page-link {
+        border-radius: 8px;
+        margin: 0 3px;
+        min-width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        border: 1px solid #dee2e6;
+        color: #0d6efd;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+    }
+
+    .pagination .page-link:hover {
+        background-color: #e7f1ff;
+        border-color: #0d6efd;
+    }
+
+    .pagination-info {
+        color: #6c757d;
+        font-size: 14px;
+    }
+
     @media (max-width: 768px) {
 
         .gestion-header {
@@ -294,16 +337,21 @@
             border-radius: 0;
         }
 
+        .pagination-container {
+            text-align: center;
+        }
+
+        .pagination-info {
+            margin-bottom: 15px;
+        }
+
     }
 
 </style>
 
-
 <div class="container-fluid px-3 px-md-4 mt-4">
 
-
     <!-- ================= HEADER ================= -->
-
     <div class="gestion-header">
 
         <div class="row align-items-center">
@@ -326,13 +374,12 @@
 
             </div>
 
-
             <div class="col-md-5 text-md-end">
 
-                <!-- IMPORT EXCEL -->
-
-                <a href="{% url 'l3_qhse_etudiant_import' %}"
-                   class="btn btn-import me-1">
+                <a
+                    href="{% url 'l3_qhse_etudiant_import' %}"
+                    class="btn btn-import me-1"
+                >
 
                     <i class="bi bi-file-earmark-excel me-1"></i>
 
@@ -341,10 +388,10 @@
                 </a>
 
 
-                <!-- AJOUTER -->
-
-                <a href="{% url 'l3_qhse_etudiant_add' %}"
-                   class="btn btn-add">
+                <a
+                    href="{% url 'l3_qhse_etudiant_add' %}"
+                    class="btn btn-add"
+                >
 
                     <i class="bi bi-person-plus-fill me-1"></i>
 
@@ -358,14 +405,10 @@
 
     </div>
 
-
     <!-- ================= STATISTIQUES ================= -->
 
     <div class="row g-3 mb-4">
-
-
         <!-- TOTAL -->
-
         <div class="col-md-3">
 
             <div class="stat-card">
@@ -385,21 +428,14 @@
                             Total étudiants
 
                         </div>
-
                         <div class="stat-number">
 
-                            {{ etudiants|length }}
-
+                            {{ total_etudiants }}
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
         </div>
-
 
         <!-- L1 -->
 
@@ -423,9 +459,9 @@
 
                         </div>
 
-                        <div class="stat-number" id="totalL1">
+                        <div class="stat-number">
 
-                            0
+                            {{ total_l1 }}
 
                         </div>
 
@@ -436,8 +472,6 @@
             </div>
 
         </div>
-
-
         <!-- L2 -->
 
         <div class="col-md-3">
@@ -460,9 +494,9 @@
 
                         </div>
 
-                        <div class="stat-number" id="totalL2">
+                        <div class="stat-number">
 
-                            0
+                            {{ total_l2 }}
 
                         </div>
 
@@ -473,8 +507,6 @@
             </div>
 
         </div>
-
-
         <!-- L3 -->
 
         <div class="col-md-3">
@@ -497,9 +529,9 @@
 
                         </div>
 
-                        <div class="stat-number" id="totalL3">
+                        <div class="stat-number">
 
-                            0
+                            {{ total_l3 }}
 
                         </div>
 
@@ -512,13 +544,9 @@
         </div>
 
     </div>
-
-
     <!-- ================= TABLE ================= -->
 
     <div class="card main-card">
-
-
         <!-- TABLE HEADER -->
 
         <div class="table-header">
@@ -542,8 +570,6 @@
                     </small>
 
                 </div>
-
-
                 <!-- RECHERCHE -->
 
                 <div class="col-md-4">
@@ -562,49 +588,58 @@
                     </div>
 
                 </div>
-
-
                 <!-- FILTRE NIVEAU -->
 
                 <div class="col-md-3">
 
                     <select
-                    id="filterNiveau"
-                    class="form-select filter-select"
-                >
-                    <option value="">Tous les niveaux</option>
-                
-                    <option value="L1" {% if niveau == "L1" %}selected{% endif %}>
-                        Licence 1
-                    </option>
-                
-                    <option value="L2" {% if niveau == "L2" %}selected{% endif %}>
-                        Licence 2
-                    </option>
-                
-                    <option value="L3" {% if niveau == "L3" %}selected{% endif %}>
-                        Licence 3
-                    </option>
-                </select>
+                        id="filterNiveau"
+                        class="form-select filter-select"
+                    >
+
+                        <option value="">
+                            Tous les niveaux
+                        </option>
+
+                        <option
+                            value="L1"
+                            {% if niveau == "L1" %}selected{% endif %}
+                        >
+                            Licence 1
+                        </option>
+
+                        <option
+                            value="L2"
+                            {% if niveau == "L2" %}selected{% endif %}
+                        >
+                            Licence 2
+                        </option>
+
+                        <option
+                            value="L3"
+                            {% if niveau == "L3" %}selected{% endif %}
+                        >
+                            Licence 3
+                        </option>
+
+                    </select>
 
                 </div>
 
             </div>
 
         </div>
-
-
-        <!-- TABLE -->
+        <!-- ================= TABLE ================= -->
 
         <div class="table-responsive">
 
-            <table class="table table-hover align-middle"
-                   id="studentsTable">
+            <table
+                class="table table-hover align-middle"
+                id="studentsTable"
+            >
 
                 <thead>
-
                     <tr>
-
                         <th>Étudiant</th>
 
                         <th>Matricule</th>
@@ -618,18 +653,13 @@
                         <th>Statut</th>
 
                         <th class="text-center">
-
                             Actions
-
                         </th>
 
                     </tr>
-
                 </thead>
 
-
                 <tbody>
-
 
                 {% for e in etudiants %}
 
@@ -670,11 +700,8 @@
 
                         </td>
 
-
                         <!-- MATRICULE -->
-
                         <td>
-
                             <span class="matricule">
 
                                 {{ e.matricule }}
@@ -682,12 +709,9 @@
                             </span>
 
                         </td>
-
-
                         <!-- NIVEAU -->
 
                         <td>
-
                             {% if e.niveau == "L1" %}
 
                                 <span class="niveau-badge niveau-l1">
@@ -723,7 +747,6 @@
                             {% endif %}
 
                         </td>
-
 
                         <!-- SEXE -->
 
@@ -761,7 +784,6 @@
 
                         </td>
 
-
                         <!-- TELEPHONE -->
 
                         <td>
@@ -788,7 +810,6 @@
 
                         </td>
 
-
                         <!-- STATUT -->
 
                         <td>
@@ -808,20 +829,15 @@
                                 <span class="statut-inactif">
 
                                     <i class="bi bi-dash-circle me-1"></i>
-
                                     Inactif
-
                                 </span>
 
                             {% endif %}
 
                         </td>
-
-
                         <!-- ACTIONS -->
 
                         <td class="text-center">
-
                             <a
                                 href="{% url 'l3_qhse_etudiant_update' e.id %}"
                                 class="action-btn btn btn-warning me-1"
@@ -831,8 +847,6 @@
                                 <i class="bi bi-pencil"></i>
 
                             </a>
-
-
                             <a
                                 href="#"
                                 class="action-btn btn btn-info text-white me-1"
@@ -842,8 +856,6 @@
                                 <i class="bi bi-eye"></i>
 
                             </a>
-
-
                             <a
                                 href="{% url 'l3_qhse_etudiant_delete' e.id %}"
                                 class="action-btn btn btn-danger"
@@ -859,7 +871,6 @@
 
                     </tr>
 
-
                 {% empty %}
 
                     <tr>
@@ -871,9 +882,7 @@
                                 <i class="bi bi-person-x"></i>
 
                                 <h5>
-
                                     Aucun étudiant trouvé
-
                                 </h5>
 
                                 <p class="text-muted">
@@ -902,117 +911,269 @@
 
                 {% endfor %}
 
-
                 </tbody>
 
             </table>
 
         </div>
 
+        <!-- ================= PAGINATION ================= -->
+
+        {% if page_obj.has_other_pages %}
+
+        <div class="pagination-container">
+
+            <div class="row align-items-center">
+
+                <!-- INFORMATIONS -->
+
+                <div class="col-md-6">
+
+                    <div class="pagination-info">
+
+                        Affichage de
+                        <strong>
+                            {{ page_obj.start_index }}
+                        </strong>
+
+                        à
+
+                        <strong>
+                            {{ page_obj.end_index }}
+                        </strong>
+
+                        sur
+
+                        <strong>
+                            {{ page_obj.paginator.count }}
+                        </strong>
+
+                        étudiants
+
+                    </div>
+
+                </div>
+                <!-- PAGINATION -->
+
+                <div class="col-md-6">
+
+                    <nav aria-label="Pagination">
+
+                        <ul class="pagination justify-content-md-end">
+
+                            <!-- PREMIÈRE PAGE -->
+
+                            {% if page_obj.has_previous %}
+
+                                <li class="page-item">
+
+                                    <a
+                                        class="page-link"
+                                        href="?page=1{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                        title="Première page"
+                                    >
+
+                                        <i class="bi bi-chevron-double-left"></i>
+
+                                    </a>
+
+                                </li>
+
+                                <!-- PRÉCÉDENTE -->
+
+                                <li class="page-item">
+
+                                    <a
+                                        class="page-link"
+                                        href="?page={{ page_obj.previous_page_number }}{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                        title="Page précédente"
+                                    >
+
+                                        <i class="bi bi-chevron-left"></i>
+
+                                    </a>
+
+                                </li>
+
+                            {% endif %}
+
+                            <!-- NUMÉROS DE PAGES -->
+
+                            {% for num in page_obj.paginator.page_range %}
+
+                                {% if num == page_obj.number %}
+
+                                    <li class="page-item active">
+
+                                        <span class="page-link">
+
+                                            {{ num }}
+
+                                        </span>
+
+                                    </li>
+
+                                {% elif num > page_obj.number|add:"-2" and num < page_obj.number|add:"2" %}
+
+                                    <li class="page-item">
+
+                                        <a
+                                            class="page-link"
+                                            href="?page={{ num }}{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                        >
+
+                                            {{ num }}
+
+                                        </a>
+
+                                    </li>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                            <!-- SUIVANTE -->
+
+                            {% if page_obj.has_next %}
+
+                                <li class="page-item">
+
+                                    <a
+                                        class="page-link"
+                                        href="?page={{ page_obj.next_page_number }}{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                        title="Page suivante"
+                                    >
+
+                                        <i class="bi bi-chevron-right"></i>
+
+                                    </a>
+
+                                </li>
+
+                                <!-- DERNIÈRE PAGE -->
+
+                                <li class="page-item">
+
+                                    <a
+                                        class="page-link"
+                                        href="?page={{ page_obj.paginator.num_pages }}{% if niveau %}&niveau={{ niveau }}{% endif %}"
+                                        title="Dernière page"
+                                    >
+                                        <i class="bi bi-chevron-double-right"></i>
+
+                                    </a>
+
+                                </li>
+
+                            {% endif %}
+
+                        </ul>
+
+                    </nav>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
     </div>
 
 </div>
 
-
 <!-- ================= JAVASCRIPT ================= -->
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-    
-        const searchInput = document.getElementById("searchStudent");
-        const filterNiveau = document.getElementById("filterNiveau");
-    
-        const rows = document.querySelectorAll(
+
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput =
+        document.getElementById("searchStudent");
+    const filterNiveau =
+        document.getElementById("filterNiveau");
+    const rows =
+        document.querySelectorAll(
             "#studentsTable tbody tr[data-niveau]"
         );
-    
-        const totalL1 = document.getElementById("totalL1");
-        const totalL2 = document.getElementById("totalL2");
-        const totalL3 = document.getElementById("totalL3");
-    
-        function filterStudents() {
-    
-            const search = searchInput.value
+
+    function filterStudents() {
+        const search =
+            searchInput.value
                 .toLowerCase()
                 .trim();
-    
-            const niveau = filterNiveau.value;
-    
-            let l1 = 0;
-            let l2 = 0;
-            let l3 = 0;
-    
-            rows.forEach(function (row) {
-    
-                const rowNiveau = (row.dataset.niveau || "").trim();
-    
-                const text = (row.dataset.search || "")
+
+        const niveau =
+            filterNiveau.value;
+
+        rows.forEach(function (row) {
+
+            const rowNiveau =
+                (row.dataset.niveau || "")
+                    .trim();
+
+            const text =
+                (row.dataset.search || "")
                     .toLowerCase()
                     .trim();
-    
-                /*
-                 * Compteurs par niveau
-                 */
-                if (rowNiveau === "L1") {
-                    l1++;
-                }
-    
-                if (rowNiveau === "L2") {
-                    l2++;
-                }
-    
-                if (rowNiveau === "L3") {
-                    l3++;
-                }
-    
-                /*
-                 * Recherche
-                 */
-                const matchSearch =
-                    search === "" ||
-                    text.includes(search);
-    
-                /*
-                 * Filtre niveau
-                 */
-                const matchNiveau =
-                    niveau === "" ||
-                    rowNiveau === niveau;
-    
-                /*
-                 * Affichage
-                 */
-                if (matchSearch && matchNiveau) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-    
-            });
-    
-            /*
-             * Mise à jour des statistiques
-             */
-            totalL1.textContent = l1;
-            totalL2.textContent = l2;
-            totalL3.textContent = l3;
-        }
-    
-        /*
-         * Recherche
-         */
-        searchInput.addEventListener("input", filterStudents);
-    
-        /*
-         * Filtre niveau
-         */
-        filterNiveau.addEventListener("change", filterStudents);
-    
-        /*
-         * Initialisation
-         */
-        filterStudents();
-    
-    });
-    </script>
 
+            const matchSearch =
+                search === "" ||
+                text.includes(search);
+
+            const matchNiveau =
+                niveau === "" ||
+                rowNiveau === niveau;
+
+            if (
+                matchSearch &&
+                matchNiveau
+            ) {
+
+                row.style.display = "";
+
+            } else {
+
+                row.style.display = "none";
+
+            }
+        });
+
+    }
+    searchInput.addEventListener(
+        "input",
+        filterStudents
+    );
+    filterNiveau.addEventListener(
+        "change",
+        function () {
+            const niveau =
+                filterNiveau.value;
+            let url =
+                new URL(
+                    window.location.href
+                );
+            url.searchParams.delete("page");
+
+            if (niveau) {
+
+                url.searchParams.set(
+                    "niveau",
+                    niveau
+                );
+
+            } else {
+
+                url.searchParams.delete(
+                    "niveau"
+                );
+
+            }
+            window.location.href =
+                url.toString();
+
+        }
+    );
+});
+</script>
 {% endblock %}
