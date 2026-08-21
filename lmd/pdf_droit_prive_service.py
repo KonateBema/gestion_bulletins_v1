@@ -596,7 +596,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
             Paragraph("<b>Récapitulatif</b>", SMALL),
             Paragraph("<b>Responsable</b>", SMALL),
             Paragraph("<b>Année de validation</b>", SMALL),
-            Paragraph("<b>Décision</b>", SMALL),
+            # Paragraph("<b>Décision</b>", SMALL),
         ],
         [
             Paragraph(
@@ -613,9 +613,9 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
             ),
             Paragraph("""Dr.JERRY TAFOTIE<br/><br/>""", SMALL),
             Paragraph(f"{annee}", SMALL),
-            Paragraph(decision_globale, DECISION_SMALL),
+            # Paragraph(decision_globale, DECISION_SMALL),
         ]
-    ], colWidths=[7 * cm, 4.5 * cm, 4 * cm, 3 * cm],
+    ], colWidths=[7 * cm, 4.5 * cm, 4 * cm],
        rowHeights=[0.8 * cm, 2.7 * cm])
 
     recap_final_table.setStyle(TableStyle([
