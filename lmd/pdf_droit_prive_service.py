@@ -108,6 +108,84 @@ def decision_ecue_paragraph(moyenne, ue_validee):
         )
 
 
+# ---------------------------------------------------------------------
+# Moyenne générale "réutilisable" (sans rendu PDF), utilisée pour le
+# calcul du rang de l'étudiant parmi ses camarades.
+# ---------------------------------------------------------------------
+SESSIONS_NORMALES = ["1", "2", "3", "4"]
+
+
+def calculer_moyenne_generale_etudiant(etudiant, semestre):
+    """Recalcule la moyenne générale d'un étudiant pour un semestre donné,
+    en suivant exactement la même méthode que le bulletin (moyenne ECUE
+    pondérée par les coefficients au sein de chaque UE, puis moyenne simple
+    des moyennes d'UE).
+
+    Ne fait aucun rendu : sert uniquement de brique de calcul, notamment
+    pour comparer les étudiants entre eux et déterminer un rang.
+    """
+    ues = (
+        UE.objects
+        .filter(filiere=etudiant.filiere, semestre=semestre, niveau=etudiant.niveau)
+        .prefetch_related(Prefetch("ecues", queryset=ECUE.objects.order_by("ordre")))
+        .order_by("ordre")
+    )
+
+    moyennes_ues = []
+
+    for ue in ues:
+        ecues = ue.ecues.all()
+        if not ecues.exists():
+            continue
+
+        somme = 0
+        coef = 0
+        for ecue in ecues:
+            note = NoteLMD.objects.filter(
+                etudiant=etudiant,
+                ecue=ecue,
+                semestre__iexact=semestre,
+                session__in=SESSIONS_NORMALES,
+            ).first()
+            moyenne = float(note.moyenne) if note and note.moyenne is not None else 0.0
+            somme += moyenne * ecue.coefficient
+            coef += ecue.coefficient
+
+        moyenne_ue = round(somme / coef, 2) if coef > 0 else 0
+        moyennes_ues.append(moyenne_ue)
+
+    return round(sum(moyennes_ues) / len(moyennes_ues), 2) if moyennes_ues else 0
+
+
+def calculer_rang_etudiant(etudiant, semestre, moyenne_etudiant):
+    """Calcule le rang de `etudiant` parmi les étudiants de la même filière,
+    du même niveau et de la même année académique, pour ce semestre.
+
+    Classement "façon compétition" : les ex-aequo ont le même rang et le
+    rang suivant saute (1, 2, 2, 4, ...).
+
+    Retourne (rang, effectif_de_la_classe).
+
+    """
+    from .models import EtudiantLMD
+
+    camarades = EtudiantLMD.objects.filter(
+        filiere=etudiant.filiere,
+        niveau=etudiant.niveau,
+        annee_academique=etudiant.annee_academique,
+    ).exclude(pk=etudiant.pk)
+
+    moyennes_autres = [
+        calculer_moyenne_generale_etudiant(camarade, semestre)
+        for camarade in camarades
+    ]
+
+    effectif = len(moyennes_autres) + 1
+    rang = 1 + sum(1 for m in moyennes_autres if m > moyenne_etudiant)
+
+    return rang, effectif
+
+
 def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
     # Libellé affiché en haut du bulletin.
@@ -253,7 +331,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         Paragraph(f"""
             <b>DOMAINE :  SCIENCES JURIDIQUE</b><br/>
              <b></b><br/><br/>
-             <b>SPECIALITE :</b> {specialite}<br/>
+             <b>SPECIALITE :</b> {specialite.upper()}<br/>
         """, SMALL)
     ]], colWidths=[8 * cm], rowHeights=[3.2* cm])
 
@@ -338,7 +416,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     # total "crédits UE" sont deux sommes DIFFÉRENTES (elles ne
     # coïncident pas forcément), il faut donc les accumuler séparément.
     credits_ue_gu = 0     # somme des ue.credit de la grande unité en cours
-    credits_ecue_gu = 0   # somme des ecue.credit de la grande unité en cours
+    credits_ecue_gu = 0   # somme des crédits ECUE *obtenus* de la grande unité en cours
     ponderation_gu = 0    # somme(moyenne_ue * credit_ue), pour la moyenne pondérée
 
     def inserer_ligne_grande_unite(grande_unite, credits_ue, credits_ecue, ponderation):
@@ -420,13 +498,10 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
             coef += ecue.coefficient
 
             stats["ecues_total"] += 1
-            stats["credits_ecue_total"] += ecue.credit
-            credits_ecue_gu += ecue.credit
-            # NOTE : la validation de l'ECUE (et donc le décompte des
-            # crédits/ECUE validés) dépend de la moyenne de l'UE, qui
-            # n'est connue qu'une fois toutes les notes de l'UE lues.
-            # Le décompte se fait donc plus bas, une fois `moyenne_ue`
-            # et `ue_validee` calculés.
+            # NOTE : le décompte des crédits ECUE (obtenus/affichés) se
+            # fait plus bas, une fois la décision de chaque ECUE connue
+            # (elle dépend de la moyenne de l'UE, qui n'est calculée
+            # qu'une fois toutes les notes de l'UE lues).
 
             ecue_data.append((ecue, moyenne))
 
@@ -447,14 +522,22 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         #   - moyenne ECUE >= 10                        -> "Validée"
         #   - moyenne ECUE < 10 mais moyenne UE >= 10    -> "Compensée"
         #   - moyenne ECUE < 10 et moyenne UE < 10       -> "Non validée"
+        # Règle de crédit ECUE affiché :
+        #   - "Validée" ou "Compensée" -> crédit plein (ecue.credit)
+        #   - "Non validée"            -> crédit remis à 0
         lignes_ue = []
         premiere_ligne = True
         for ecue, moyenne in ecue_data:
             decision_ecue, couleur_ecue, ecue_acquise, ecue_compensee = decision_ecue_paragraph(moyenne, ue_validee)
 
+            credit_ecue_affiche = ecue.credit if ecue_acquise else 0
+
             if ecue_acquise:
                 stats["ecues_validees"] += 1
-                stats["credits_ecue_obtenus"] += ecue.credit
+
+            stats["credits_ecue_obtenus"] += credit_ecue_affiche
+            stats["credits_ecue_total"] += credit_ecue_affiche
+            credits_ecue_gu += credit_ecue_affiche
 
             if ecue_compensee:
                 compensation_utilisee = True
@@ -463,8 +546,8 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
                 Paragraph(ue.code if premiere_ligne else "", SMALL),
                 Paragraph(ue.libelle if premiere_ligne else "", SMALL),
                 Paragraph(ecue.libelle, SMALL),
-                Paragraph(str(ecue.credit), SMALL),
-                Paragraph(str(ue.credit) if premiere_ligne else "", SMALL),
+                Paragraph(f"{credit_ecue_affiche:.2f}", SMALL),
+                Paragraph(f"{ue.credit:.2f}" if premiere_ligne else "", SMALL),
                 Paragraph(f"{moyenne:.2f}", SMALL),
                 Paragraph(f"{moyenne_ue:.2f}" if premiere_ligne else "", SMALL),
                 decision_ecue,
@@ -497,10 +580,15 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         else 0
     )
 
+    # Rang de l'étudiant parmi ses camarades (même filière/niveau/année),
+    # à afficher dans le récapitulatif final.
+    rang_etudiant, effectif_classe = calculer_rang_etudiant(etudiant, semestre, moyenne_generale)
+
     # --- Ligne finale "TOTAL CREDITS ACQUIS" (TCA) ---
     # Comme pour les grandes unités, CRÉD ECUE et CRÉD UE sont deux
     # totaux distincts : la somme de tous les crédits ECUE d'un côté,
-    # la somme de tous les crédits UE de l'autre.
+    # la somme de tous les crédits UE de l'autre. Le total CRÉD ECUE ne
+    # comptabilise désormais que les crédits ECUE effectivement obtenus.
     data.append([
         Paragraph("<b>TCA</b>", SMALL),
         Paragraph("<b>TOTAL CREDITS ACQUIS</b>", SMALL),
@@ -562,24 +650,24 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     if not admis:
         decision_globale = (
             '<para align="center">'
-            '<font color="red"><b>Non validée</b></font>'
+            '<font color="red"><b>NON VALIDÉE</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='red'><b>Non validée</b></font>"
+        decision_globale_inline = "<font color='red'><b>NON VALIDÉE</b></font>"
     elif compensation_utilisee:
         decision_globale = (
             '<para align="center">'
-            '<font color="#B8860B"><b>Validée par compensation</b></font>'
+            '<font color="#B8860B"><b> VALIDÉE PAR COMPENSATION</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='#B8860B'><b>Validée par compensation</b></font>"
+        decision_globale_inline = "<font color='#B8860B'><b>VALIDÉE PAR COMPENSATION</b></font>"
     else:
         decision_globale = (
             '<para align="center">'
-            '<font color="green"><b>Validée complète</b></font>'
+            '<font color="green"><b>VALIDÉE AU COMPLET</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='green'><b>Validée complète</b></font>"
+        decision_globale_inline = "<font color='green'><b>VALIDÉE AU COMPLET</b></font>"
 
     ecues_total = stats["ecues_total"]
     ecues_validees = stats["ecues_validees"]
@@ -607,6 +695,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
                 Total crédits acquis : {credits_obtenus}/{credits_total}<br/>
                 Total Crédits restants : {credits_restants}/{credits_total}<br/>
                 Moyenne obtenue : {moyenne_generale}/20<br/>
+                Rang : {rang_etudiant}e / {effectif_classe}<br/>
                  </para>
                 """,
                 SMALL,

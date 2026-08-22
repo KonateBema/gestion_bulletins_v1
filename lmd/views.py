@@ -7142,68 +7142,6 @@ def l3_qhse_ecue_delete(request, pk):
     )
 
 
-def l3_qhse_ue_addBBBB(request):
-
-    filiere = FiliereLMD.objects.get(
-        libelle="Management de la Qualité, Hygiène, Sécurité et Environnement"
-    )
-
-
-    if request.method == "POST":
-
-        UE.objects.create(
-
-            code=request.POST.get("code"),
-
-            libelle=request.POST.get("libelle"),
-
-            credit=request.POST.get("credit"),
-
-            filiere=filiere
-        )
-
-
-        return redirect(
-            "l3_qhse_ue"
-        )
-
-
-    return render(
-        request,
-        "lmd/l3_qhse/ue_add.html"
-    )
-
-def l3_qhse_ue_addrrr(request):
-
-    semestre = request.GET.get("semestre", "S1")
-
-    if request.method == "POST":
-        form = UEForm(request.POST)
-
-        if form.is_valid():
-            ue = form.save(commit=False)
-
-            ue.semestre = semestre
-
-            ue.save()
-
-            return redirect(f"/lmd/qhse/ues/?semestre={semestre}")
-
-    else:
-        form = UEForm(initial={
-            "semestre": semestre
-        })
-
-    return render(
-        request,
-        "lmd/l3_qhse/ue_add.html",
-        {
-            "form": form,
-            "semestre": semestre,
-        }
-    )
-
-
 def l3_qhse_ue_add(request):
 
     # =========================================================

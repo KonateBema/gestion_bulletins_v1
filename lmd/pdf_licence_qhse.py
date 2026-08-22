@@ -107,6 +107,90 @@ def decision_ecue_paragraph(moyenne, ue_validee):
         )
 
 
+# ---------------------------------------------------------------------
+# Moyenne générale "réutilisable" (sans rendu PDF), utilisée pour le
+# calcul du rang de l'étudiant parmi ses camarades.
+# ---------------------------------------------------------------------
+SESSIONS_NORMALES_RANG = ["1", "2", "3", "4"]
+
+
+def calculer_moyenne_generale_etudiant(etudiant, semestre):
+    """Recalcule la moyenne générale d'un étudiant pour un semestre donné,
+    en suivant exactement la même méthode que le bulletin QHSE (moyenne
+    ECUE pondérée par les coefficients au sein de chaque UE, puis moyenne
+    simple des moyennes d'UE), y compris la résolution du semestre
+    effectif via SaisieNoteLMD comme le fait `generer_bulletin_qhse_pdf`.
+
+    Ne fait aucun rendu : sert uniquement de brique de calcul, notamment
+    pour comparer les étudiants entre eux et déterminer un rang.
+    """
+    saisie = SaisieNoteLMD.objects.filter(
+        filiere=etudiant.filiere,
+        niveau=etudiant.niveau,
+    ).first()
+    semestre_resolu = saisie.semestre if saisie else semestre
+
+    ues = (
+        UE.objects
+        .filter(filiere=etudiant.filiere, semestre=semestre_resolu, niveau=etudiant.niveau)
+        .prefetch_related(Prefetch("ecues", queryset=ECUE.objects.order_by("ordre")))
+        .order_by("grande_unite__ordre", "ordre")
+    )
+
+    moyennes_ues = []
+
+    for ue in ues:
+        ecues = ue.ecues.all()
+        if not ecues.exists():
+            continue
+
+        somme = 0
+        coef = 0
+        for ecue in ecues:
+            note = NoteLMD.objects.filter(
+                etudiant=etudiant,
+                ecue=ecue,
+                semestre__iexact=semestre_resolu,
+                session__in=SESSIONS_NORMALES_RANG,
+            ).first()
+            moyenne = float(note.moyenne) if note and note.moyenne is not None else 0.0
+            somme += moyenne * ecue.coefficient
+            coef += ecue.coefficient
+
+        moyenne_ue = round(somme / coef, 2) if coef > 0 else 0
+        moyennes_ues.append(moyenne_ue)
+
+    return round(sum(moyennes_ues) / len(moyennes_ues), 2) if moyennes_ues else 0
+
+
+def calculer_rang_etudiant(etudiant, semestre, moyenne_etudiant):
+    """Calcule le rang de `etudiant` parmi les étudiants de la même filière,
+    du même niveau et de la même année académique, pour ce semestre.
+
+    Classement "façon compétition" : les ex-aequo ont le même rang et le
+    rang suivant saute (1, 2, 2, 4, ...).
+
+    Retourne (rang, effectif_de_la_classe).
+    """
+    from .models import EtudiantLMD
+
+    camarades = EtudiantLMD.objects.filter(
+        filiere=etudiant.filiere,
+        niveau=etudiant.niveau,
+        annee_academique=etudiant.annee_academique,
+    ).exclude(pk=etudiant.pk)
+
+    moyennes_autres = [
+        calculer_moyenne_generale_etudiant(camarade, semestre)
+        for camarade in camarades
+    ]
+
+    effectif = len(moyennes_autres) + 1
+    rang = 1 + sum(1 for m in moyennes_autres if m > moyenne_etudiant)
+
+    return rang, effectif
+
+
 def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
     """Génère le bulletin de notes pour la filière Management QHSE.
 
@@ -268,7 +352,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
         Paragraph(f"""
             <b>DOMAINE : <br/> Management de la Qualité, Hygiène, Sécurité et Environnement</b><br/>
              <b></b><br/><br/>
-             <b>SPECIALITE :</b><br/> {specialite}<br/>
+             <b>SPECIALITE :</b> {specialite.upper()}<br/>
         """, SMALL)
     ]], colWidths=[8 * cm], rowHeights=[3.7 * cm])
 
@@ -344,7 +428,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
 
     grande_unite_actuelle = None
     credits_ue_gu = 0
-    credits_ecue_gu = 0
+    credits_ecue_gu = 0   # somme des crédits ECUE *obtenus* de la grande unité en cours
     ponderation_gu = 0
 
     def inserer_ligne_grande_unite(grande_unite, credits_ue, credits_ecue, ponderation):
@@ -433,8 +517,10 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
             coef += ecue.coefficient
 
             stats["ecues_total"] += 1
-            stats["credits_ecue_total"] += ecue.credit
-            credits_ecue_gu += ecue.credit
+            # NOTE : le décompte des crédits ECUE (obtenus/affichés) se
+            # fait plus bas, une fois la décision de chaque ECUE connue
+            # (elle dépend de la moyenne de l'UE, qui n'est calculée
+            # qu'une fois toutes les notes de l'UE lues).
 
             ecue_data.append((ecue, moyenne))
 
@@ -453,14 +539,22 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
         # comme sur le bulletin Droit Privé — l'ancienne version
         # n'avait qu'une seule décision au niveau UE, fusionnée sur
         # toutes les lignes ECUE.
+        # Règle de crédit ECUE affiché :
+        #   - "Validée" ou "Compensée" -> crédit plein (ecue.credit)
+        #   - "Non validée"            -> crédit remis à 0
         lignes_ue = []
         premiere_ligne = True
         for ecue, moyenne in ecue_data:
             decision_ecue, couleur_ecue, ecue_acquise, ecue_compensee = decision_ecue_paragraph(moyenne, ue_validee)
 
+            credit_ecue_affiche = ecue.credit if ecue_acquise else 0
+
             if ecue_acquise:
                 stats["ecues_validees"] += 1
-                stats["credits_ecue_obtenus"] += ecue.credit
+
+            stats["credits_ecue_obtenus"] += credit_ecue_affiche
+            stats["credits_ecue_total"] += credit_ecue_affiche
+            credits_ecue_gu += credit_ecue_affiche
 
             if ecue_compensee:
                 compensation_utilisee = True
@@ -469,8 +563,8 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
                 Paragraph(ue.code if premiere_ligne else "", SMALL),
                 Paragraph(ue.libelle if premiere_ligne else "", SMALL),
                 Paragraph(ecue.libelle, SMALL),
-                Paragraph(str(ecue.credit), SMALL),
-                Paragraph(str(ue.credit) if premiere_ligne else "", SMALL),
+                Paragraph(f"{credit_ecue_affiche:.2f}", SMALL),
+                Paragraph(f"{ue.credit:.2f}" if premiere_ligne else "", SMALL),
                 Paragraph(f"{moyenne:.2f}", SMALL),
                 Paragraph(f"{moyenne_ue:.2f}" if premiere_ligne else "", SMALL),
                 decision_ecue,
@@ -495,8 +589,13 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
         else 0
     )
 
+    # Rang de l'étudiant parmi ses camarades (même filière/niveau/année),
+    # à afficher dans le récapitulatif final.
+    rang_etudiant, effectif_classe = calculer_rang_etudiant(etudiant, semestre_resolu, moyenne_generale)
+
     # --- Ligne finale "TOTAL CREDITS ACQUIS" (TCA), absente de
-    # l'ancienne version.
+    # l'ancienne version. Le total CRÉD ECUE ne comptabilise désormais
+    # que les crédits ECUE effectivement obtenus.
     data.append([
         Paragraph("<b>TCA</b>", SMALL),
         Paragraph("<b>TOTAL CREDITS ACQUIS</b>", SMALL),
@@ -559,24 +658,24 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
     if not admis:
         decision_globale = (
             '<para align="center">'
-            '<font color="red"><b>Non validée</b></font>'
+            '<font color="red"><b>NON VALIDÉE</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='red'><b>Non validée</b></font>"
+        decision_globale_inline = "<font color='red'><b>NON VALIDÉE</b></font>"
     elif compensation_utilisee:
         decision_globale = (
             '<para align="center">'
-            '<font color="#B8860B"><b>Validée par compensation</b></font>'
+            '<font color="#B8860B"><b>VALIDÉE PAR COMPENSATION</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='#B8860B'><b>Validée par compensation</b></font>"
+        decision_globale_inline = "<font color='#B8860B'><b>VALIDÉE PAR COMPENSATION</b></font>"
     else:
         decision_globale = (
             '<para align="center">'
-            '<font color="green"><b>Validée complète</b></font>'
+            '<font color="green"><b>VALIDÉ AU COMPLET</b></font>'
             '</para>'
         )
-        decision_globale_inline = "<font color='green'><b>Validée complète</b></font>"
+        decision_globale_inline = "<font color='green'><b>VALIDÉ AU COMPLET</b></font>"
 
     ecues_total = stats["ecues_total"]
     ecues_validees = stats["ecues_validees"]
@@ -602,6 +701,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
                 Total crédits acquis : {credits_obtenus}/{credits_total}<br/>
                 Total Crédits restants : {credits_restants}/{credits_total}<br/>
                 Moyenne obtenue : {moyenne_generale}/20<br/>
+                Rang : {rang_etudiant}e / {effectif_classe}<br/>
                  </para>
                 """,
                 SMALL,
