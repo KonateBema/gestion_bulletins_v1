@@ -13,8 +13,10 @@ from .models import SaisieNoteLMD
 from django.db.models import Prefetch
 from reportlab.platypus import PageTemplate, Frame
 
+
 def safe_date(date):
     return date.strftime("%d/%m/%Y") if date else "Non renseignée"
+
 
 styles = getSampleStyleSheet()
 
@@ -26,7 +28,8 @@ TITLE = ParagraphStyle(
     alignment=1,
     spaceAfter=10,
     textColor=colors.HexColor("#1a1a1a"),
-    fontName="Courier-Bold",
+    # fontName="Courier-Bold",
+    fontName="Helvetica-Bold",
 )
 
 SMALL = ParagraphStyle(
@@ -34,7 +37,8 @@ SMALL = ParagraphStyle(
     parent=styles["Normal"],
     fontSize=6.4,
     leading=10,
-    fontName="Courier-Bold",
+    # fontName="Courier-Bold",
+    fontName="Helvetica-Bold",
 )
 
 # Style dédié à la colonne DÉCISION du tableau : même traitement que
@@ -158,14 +162,13 @@ def calculer_moyenne_generale_etudiant(etudiant, semestre):
 
 
 def calculer_rang_etudiant(etudiant, semestre, moyenne_etudiant):
-    """Calcule le rang de `etudiant` parmi les étudiants de la même filière,
+    """Calcule le rang de l'étudiant parmi les étudiants de la même filière,
     du même niveau et de la même année académique, pour ce semestre.
 
     Classement "façon compétition" : les ex-aequo ont le même rang et le
     rang suivant saute (1, 2, 2, 4, ...).
 
     Retourne (rang, effectif_de_la_classe).
-
     """
     from .models import EtudiantLMD
 
@@ -229,7 +232,6 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         topMargin=0.6 * cm,
         bottomMargin=2.8 * cm,  # laisser la place au footer
     )
-
 
     frame = Frame(
         doc.leftMargin,
@@ -331,7 +333,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         Paragraph(f"""
             <b>DOMAINE :  SCIENCES JURIDIQUE</b><br/>
              <b></b><br/><br/>
-             <b>SPECIALITE :</b> {specialite.upper()}<br/>
+             <b>SPECIALITE :</b> {specialite}<br/>
         """, SMALL)
     ]], colWidths=[8 * cm], rowHeights=[3.2* cm])
 
@@ -370,7 +372,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         ("BOX", (0, 0), (-1, -1), -2, colors.black),
         ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
 
-        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("PADDING", (0, 0), (-1, -1), 6),
@@ -407,6 +409,12 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         "ecues_validees": 0,
         "credits_ecue_total": 0,
         "credits_ecue_obtenus": 0,
+        # Compteurs au niveau des GRANDES UNITÉS (UFO1, UCG2, ...),
+        # incrémentés dans inserer_ligne_grande_unite ci-dessous.
+        # C'est ce niveau, et non celui des UE "techniques", qui doit
+        # servir pour "Total UE validées" dans le récapitulatif final.
+        "gu_total": 0,
+        "gu_validees": 0,
     }
 
     grande_unite_actuelle = None
@@ -424,11 +432,17 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         UCG2, USP3, ...) juste après les UE qui la composent, dans le
         style du bulletin papier : code, libellé, total crédits ECUE,
         total crédits UE, moyenne pondérée et décision. `data`/
-        `table_style` sont capturés par closure."""
+        `table_style`/`stats` sont capturés par closure."""
         if credits_ue == 0:
             return
         moyenne_gu = round(ponderation / credits_ue, 2)
         gu_validee = moyenne_gu >= 10
+
+        # Comptage "Total UE validées" au niveau grande unité.
+        stats["gu_total"] += 1
+        if gu_validee:
+            stats["gu_validees"] += 1
+
         if gu_validee:
             decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", DECISION_SMALL)
             couleur_gu = colors.green
@@ -607,19 +621,19 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
     table = Table(data, colWidths=[
         1.3 * cm,   # Code
-        5.1 * cm,   # UE
-        6 * cm,     # ECUE
+        5.1 * cm,     # UE
+        6   * cm,     # ECUE
         1.2 * cm,   # Crédit ECUE
         1.2 * cm,   # Crédit UE
         1.2 * cm,   # Moy ECUE
         1.2 * cm,   # Moy UE
-        2.4* cm,   # Décision
+        2.4 * cm,   # Décision
     ], rowHeights=[30] + [15] * (len(data) - 1))
 
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("ALIGN", (1, 1), (-1, -1), "CENTER"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -642,10 +656,10 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
     credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
 
     # Décision finale sur le même vocabulaire à 3 états que les ECUE :
-    #   - des crédits UE/ECUE manquent            -> "Non validée"
+    #   - des crédits UE/ECUE manquent               -> "Non validée"
     #   - tous les crédits acquis, mais au moins
-    #     une ECUE compensée quelque part          -> "Validée par compensation"
-    #   - tous les crédits acquis, sans compensation -> "Validée complète"
+    #     une ECUE compensée quelque part             -> "Validée par compensation"
+    #   - tous les crédits acquis, sans compensation  -> "Validée complète"
     admis = credits_ue_restants == 0 and credits_ecue_restants == 0
     if not admis:
         decision_globale = (
@@ -671,8 +685,11 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
     ecues_total = stats["ecues_total"]
     ecues_validees = stats["ecues_validees"]
-    total_ue = stats["ue_total"]
-    ue_validees = stats["ue_validees"]
+    # "Total UE validées" est désormais basé sur les GRANDES UNITÉS
+    # (celles affichées sur les lignes récapitulatives, ex: UFO1, UCG2),
+    # et non plus sur les UE techniques qui portent les ECUE.
+    gu_total = stats["gu_total"]
+    gu_validees = stats["gu_validees"]
     credits_total = stats["credits_total"]
     credits_obtenus = stats["credits_obtenus"]
     credits_restants = credits_total - credits_obtenus
@@ -691,7 +708,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
                 f"""
                 <para color="#1F4E79">
                 Total ECUE validés : {ecues_validees}/{ecues_total}<br/>
-                Total UE validées : {ue_validees}/{total_ue}<br/>
+                Total UE validées : {gu_validees}/{gu_total}<br/>
                 Total crédits acquis : {credits_obtenus}/{credits_total}<br/>
                 Total Crédits restants : {credits_restants}/{credits_total}<br/>
                 Moyenne obtenue : {moyenne_generale}/20<br/>
@@ -712,7 +729,7 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
         ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D9D9D9")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("ALIGN", (0, 0), (-1, 0), "CENTER"),
         ("FONTSIZE", (0, 0), (-1, 0), 11),
@@ -749,25 +766,63 @@ def generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path):
 
 # lmd/services.py
 
-def generer_bulletin_lmd_pdf(etudiant, semestre, file_path):
+def generer_bulletin_lmd_pdf(
+    etudiant,
+    semestre,
+    file_path
+):
 
     filiere = etudiant.filiere.libelle
 
     if filiere == "Droit Privé":
-        from .pdf_droit_prive_service import generer_bulletin_droit_prive_pdf
-        return generer_bulletin_droit_prive_pdf(etudiant, semestre, file_path)
+
+        from .pdf_droit_prive_service import (
+            generer_bulletin_droit_prive_pdf
+        )
+
+        return generer_bulletin_droit_prive_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
 
     elif filiere == "Gestion et Droit":
-        from .pdf_gestion_droit_service import generer_bulletin_gestion_droit_pdf
-        return generer_bulletin_gestion_droit_pdf(etudiant, semestre, file_path)
+
+        from .pdf_gestion_droit_service import (
+            generer_bulletin_gestion_droit_pdf
+        )
+
+        return generer_bulletin_gestion_droit_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
 
     elif filiere == "Sciences de Gestion":
-        from .pdf_sciences_gestion_service import generer_bulletin_sciences_gestion_pdf
-        return generer_bulletin_sciences_gestion_pdf(etudiant, semestre, file_path)
+
+        from .pdf_sciences_gestion_service import (
+            generer_bulletin_sciences_gestion_pdf
+        )
+
+        return generer_bulletin_sciences_gestion_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
 
     elif filiere == "Management QHSE":
-        from .pdf_qhse_service import generer_bulletin_qhse_pdf
-        return generer_bulletin_qhse_pdf(etudiant, semestre, file_path)
+
+        from .pdf_qhse_service import (
+            generer_bulletin_qhse_pdf
+        )
+
+        return generer_bulletin_qhse_pdf(
+            etudiant,
+            semestre,
+            file_path
+        )
 
     else:
-        raise ValueError(f"Aucun générateur PDF pour la filière {filiere}")
+        raise ValueError(
+            f"Aucun générateur PDF pour la filière {filiere}"
+        )

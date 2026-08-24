@@ -26,7 +26,8 @@ TITLE = ParagraphStyle(
     alignment=1,
     spaceAfter=10,
     textColor=colors.HexColor("#1a1a1a"),
-    fontName="Courier-Bold",
+    # fontName="Courier-Bold",
+    fontName="Helvetica-Bold",
 )
 
 SMALL = ParagraphStyle(
@@ -34,7 +35,8 @@ SMALL = ParagraphStyle(
     parent=styles["Normal"],
     fontSize=6.4,
     leading=10,
-    fontName="Courier-Bold",
+    # fontName="Courier-Bold",
+    fontName="Helvetica-Bold",
 )
 # decision
 DECISION_SMALL = ParagraphStyle(
@@ -385,7 +387,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
     cadre_etudiant.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
         ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
-        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("PADDING", (0, 0), (-1, -1), 6),
@@ -424,6 +426,12 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
         "ecues_validees": 0,
         "credits_ecue_total": 0,
         "credits_ecue_obtenus": 0,
+        # Compteurs au niveau des GRANDES UNITÉS (UFO1, UCG2, ...),
+        # incrémentés dans inserer_ligne_grande_unite ci-dessous.
+        # C'est ce niveau, et non celui des UE "techniques", qui doit
+        # servir pour "Total UE validées" dans le récapitulatif final.
+        "gu_total": 0,
+        "gu_validees": 0,
     }
 
     grande_unite_actuelle = None
@@ -434,11 +442,18 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
     def inserer_ligne_grande_unite(grande_unite, credits_ue, credits_ecue, ponderation):
         """Ligne récapitulative de grande unité (identique au bulletin
         Droit Privé). Remplace l'ancienne simple ligne "diviseur" qui
-        n'affichait que le nom de la grande unité sans aucun total."""
+        n'affichait que le nom de la grande unité sans aucun total.
+        `data`/`table_style`/`stats` sont capturés par closure."""
         if credits_ue == 0:
             return
         moyenne_gu = round(ponderation / credits_ue, 2)
         gu_validee = moyenne_gu >= 10
+
+        # Comptage "Total UE validées" au niveau grande unité.
+        stats["gu_total"] += 1
+        if gu_validee:
+            stats["gu_validees"] += 1
+
         if gu_validee:
             decision_gu = Paragraph("<font color='green'><b>Validée</b></font>", DECISION_SMALL)
             couleur_gu = colors.green
@@ -626,7 +641,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("ALIGN", (1, 1), (-1, -1), "CENTER"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -679,8 +694,11 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
 
     ecues_total = stats["ecues_total"]
     ecues_validees = stats["ecues_validees"]
-    total_ue = stats["ue_total"]
-    ue_validees = stats["ue_validees"]
+    # "Total UE validées" est désormais basé sur les GRANDES UNITÉS
+    # (celles affichées sur les lignes récapitulatives, ex: UFO1, UCG2),
+    # et non plus sur les UE techniques qui portent les ECUE.
+    gu_total = stats["gu_total"]
+    gu_validees = stats["gu_validees"]
     credits_total = stats["credits_total"]
     credits_obtenus = stats["credits_obtenus"]
     credits_restants = credits_total - credits_obtenus
@@ -697,7 +715,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
                 f"""
                 <para color="#1F4E79">
                 Total ECUE validés : {ecues_validees}/{ecues_total}<br/>
-                Total UE validées : {ue_validees}/{total_ue}<br/>
+                Total UE validées : {gu_validees}/{gu_total}<br/>
                 Total crédits acquis : {credits_obtenus}/{credits_total}<br/>
                 Total Crédits restants : {credits_restants}/{credits_total}<br/>
                 Moyenne obtenue : {moyenne_generale}/20<br/>
@@ -718,7 +736,7 @@ def generer_bulletin_qhse_pdf(etudiant, semestre, file_path):
         ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D9D9D9")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTNAME", (0, 1), (-1, -1), "Courier"),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("ALIGN", (0, 0), (-1, 0), "CENTER"),
         ("FONTSIZE", (0, 0), (-1, 0), 11),
