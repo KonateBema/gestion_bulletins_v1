@@ -555,7 +555,13 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
                 stats["ecues_validees"] += 1
 
             stats["credits_ecue_obtenus"] += credit_ecue_affiche
-            stats["credits_ecue_total"] += credit_ecue_affiche
+            # CORRECTIF : le total "crédits ECUE" doit compter le crédit
+            # MAXIMUM possible (ecue.credit), pas seulement ce qui a été
+            # obtenu. Avant, "credits_ecue_total" recevait la même valeur
+            # que "credits_ecue_obtenus", ce qui rendait le total
+            # toujours égal à l'obtenu (0 restant en permanence), et
+            # donc le test de validation totalement inefficace.
+            stats["credits_ecue_total"] += ecue.credit
             credits_ecue_gu += credit_ecue_affiche
 
             if ecue_compensee:
@@ -606,13 +612,15 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     # --- Ligne finale "TOTAL CREDITS ACQUIS" (TCA) ---
     # Comme pour les grandes unités, CRÉD ECUE et CRÉD UE sont deux
     # totaux distincts : la somme de tous les crédits ECUE d'un côté,
-    # la somme de tous les crédits UE de l'autre. Le total CRÉD ECUE ne
-    # comptabilise désormais que les crédits ECUE effectivement obtenus.
+    # la somme de tous les crédits UE de l'autre. Le total CRÉD ECUE
+    # affiché ici représente désormais les crédits ECUE effectivement
+    # obtenus (voir correctif ci-dessus pour la distinction avec le
+    # maximum possible).
     data.append([
         Paragraph("<b>TCA</b>", SMALL),
         Paragraph("<b>TOTAL CREDITS ACQUIS</b>", SMALL),
         "",
-        Paragraph(f"<b>{stats['credits_ecue_total']:.2f}</b>", SMALL),
+        Paragraph(f"<b>{stats['credits_ecue_obtenus']:.2f}</b>", SMALL),
         Paragraph(f"<b>{stats['credits_total']:.2f}</b>", SMALL),
         "",
         Paragraph(f"<b>{moyenne_generale:.2f}</b>", SMALL),
@@ -660,14 +668,35 @@ def generer_bulletin_gestion_pdf(etudiant, semestre, file_path):
     credits_ue_restants = credits_ue_total - credits_ue_acquis
     credits_ecue_restants = credits_ecue_total - credits_ecue_acquis
 
+    # CORRECTIF PRINCIPAL : s'il n'y a aucune UE (ou aucune ECUE) trouvée
+    # pour ce semestre (pas encore de notes saisies, etc.), tous les
+    # totaux valent 0 et "0 restant == 0" était auparavant interprété à
+    # tort comme "tout est acquis" -> le bulletin affichait "VALIDÉE"
+    # alors qu'il n'y avait simplement AUCUNE donnée. On bloque ce
+    # faux positif explicitement.
+    donnees_presentes = stats["ue_total"] > 0 and stats["ecues_total"] > 0
+
     # Décision finale :
-    #   - des crédits UE/ECUE manquent               -> "Non validée"
+    #   - aucune donnée pour ce semestre               -> "Aucune note saisie"
+    #   - des crédits UE/ECUE manquent                 -> "Non validée"
     #   - tous les crédits acquis, mais au moins
-    #     une ECUE compensée quelque part             -> "Validée par compensation"
+    #     une ECUE compensée quelque part               -> "Validée par compensation"
     #   - tous les UE ET tous les ECUE validés
-    #     directement, sans aucune compensation       -> "Validée complète"
-    admis = credits_ue_restants == 0 and credits_ecue_restants == 0
-    if not admis:
+    #     directement, sans aucune compensation         -> "Validée complète"
+    admis = (
+        donnees_presentes
+        and credits_ue_restants == 0
+        and credits_ecue_restants == 0
+    )
+
+    if not donnees_presentes:
+        decision_globale = (
+            '<para align="center">'
+            '<font color="red"><b>AUCUNE NOTE SAISIE</b></font>'
+            '</para>'
+        )
+        decision_globale_inline = "<font color='red'><b>AUCUNE NOTE SAISIE</b></font>"
+    elif not admis:
         decision_globale = (
             '<para align="center">'
             '<font color="red"><b>NON VALIDÉE</b></font>'

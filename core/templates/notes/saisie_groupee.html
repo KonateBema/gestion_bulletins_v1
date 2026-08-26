@@ -134,21 +134,18 @@ Saisie groupée des notes BTS
                         <i class="bi bi-calendar3 text-primary"></i>
                         Semestre
                     </label>
-                    <select name="semestre"
-                            class="form-select form-select-lg">
-                        <option value="1"
-                            {% if request.GET.semestre == "1" or not request.GET.semestre %}
+                    <select name="semestre" class="form-select form-select-lg">
+                        <option value="S1"
+                            {% if request.GET.semestre == "S1" or not request.GET.semestre %}
                                 selected
                             {% endif %}>
                             Semestre 1
                         </option>
-                        <option value="2"
-                            {% if request.GET.semestre == "2" %}
+                        <option value="S2"
+                            {% if request.GET.semestre == "S2" %}
                                 selected
                             {% endif %}>
-
                             Semestre 2
-
                         </option>
                     </select>
 

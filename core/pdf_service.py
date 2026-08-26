@@ -102,23 +102,34 @@ def draw_footer(canvas, doc):
 
     width, height = A4
 
-    # Ligne de séparation
-    canvas.setStrokeColor(colors.grey)
-    canvas.setLineWidth(0.5)
+    # ---------------------------------------------------------
+    # Ligne de séparation : plus épaisse et colorée pour qu'elle
+    # marque clairement la limite entre le contenu et le footer.
+    # ---------------------------------------------------------
+    canvas.setStrokeColor(colors.HexColor("#b30000"))
+    canvas.setLineWidth(1)
     canvas.line(
-        doc.leftMargin, 1.45 * cm,
-        width - doc.rightMargin, 1.45 * cm,
+        doc.leftMargin, 2.15 * cm,
+        width - doc.rightMargin, 2.15 * cm,
     )
 
-    canvas.setFont("Helvetica-Bold", 7)
-    canvas.setFillColor(colors.grey)
-    canvas.drawCentredString(width / 2, 1.15 * cm, "UNIVERSITÉ INTERNATIONALE DE COCODY")
+    # Nom de l'université : en gras, plus grand, bien lisible.
+    canvas.setFont("Helvetica-Bold", 8.5)
+    canvas.setFillColor(colors.HexColor("#1a1a1a"))
+    canvas.drawCentredString(width / 2, 1.82 * cm, "UNIVERSITÉ INTERNATIONALE DE COCODY")
 
-    canvas.setFont("Helvetica", 7)
+    # Arrêté et siège social : lisibles, en gris foncé (pas trop pâle).
+    canvas.setFont("Helvetica", 7.5)
+    canvas.setFillColor(colors.HexColor("#333333"))
+    canvas.drawCentredString(width / 2, 1.5 * cm, "Arrêté n°487/MESRS/DGSE du 29/12/2015")
     canvas.drawCentredString(
-        width / 2, 0.85 * cm,
-        "Cocody 2 Plateaux - Abidjan Côte d'Ivoire / Tel : (+225) 07 78 63 74 00 | Email : uicinfos@gmail.com",
+        width / 2, 1.18 * cm,
+        "Siège Social : Cocody 2 Plateaux, Teme Tranche non loin du café de Versailles",
     )
+
+    # Horodatage d'édition, discret, tout en bas.
+    canvas.setFont("Helvetica", 6)
+    canvas.setFillColor(colors.grey)
     canvas.drawCentredString(
         width / 2, 0.55 * cm,
         f"édité le {datetime.now().strftime('%d/%m/%Y à %H:%M')}",
@@ -151,7 +162,11 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
        leftMargin=0.8 * cm,
        rightMargin=0.8 * cm,
        topMargin=0.7 * cm,
-       bottomMargin=1.9 * cm   # laisse la place au footer fixe dessiné par draw_footer
+       # Marge basse agrandie : le footer comporte désormais 3 lignes de
+       # texte + une ligne de séparation + l'horodatage, il lui faut
+       # donc un peu plus de place que les 1.9cm précédents pour ne pas
+       # être écrasé ou chevaucher le contenu de la page.
+       bottomMargin=2.5 * cm
     )
 
     elements = []

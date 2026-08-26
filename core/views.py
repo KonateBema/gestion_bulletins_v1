@@ -1408,6 +1408,8 @@ def saisie_note_groupee(request):
         "notes/saisie_groupee.html",
         context
     )
+
+
 import unicodedata
     
 
