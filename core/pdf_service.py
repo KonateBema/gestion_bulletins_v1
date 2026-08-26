@@ -124,7 +124,7 @@ def draw_footer(canvas, doc):
     canvas.drawCentredString(width / 2, 1.5 * cm, "Arrêté n°487/MESRS/DGSE du 29/12/2015")
     canvas.drawCentredString(
         width / 2, 1.18 * cm,
-        "Siège Social : Cocody 2 Plateaux, Teme Tranche non loin du café de Versailles",
+        "Siège Social : Cocody 2 Plateaux, 7eme Tranche non loin du café de Versailles",
     )
 
     # Horodatage d'édition, discret, tout en bas.
