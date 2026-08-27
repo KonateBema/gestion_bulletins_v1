@@ -1,7 +1,45 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    /* Pagination responsive */
 
+.pagination {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.pagination .page-link {
+    min-width: 40px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0.375rem 0.65rem;
+}
+
+
+/* Mobile */
+
+@media (max-width: 576px) {
+
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .pagination .page-link {
+        min-width: 36px;
+        height: 36px;
+
+        font-size: 13px;
+        padding: 0.25rem 0.5rem;
+    }
+
+}
+</style>
 <div class="container-fluid mt-4">
 
 
@@ -392,99 +430,114 @@
 
     <!-- PAGINATION -->
 
+<!-- PAGINATION RESPONSIVE -->
 
-    {% if page_obj %}
+{% if page_obj.paginator.num_pages > 1 %}
 
+<nav class="mt-4" aria-label="Pagination">
 
-    <nav class="mt-4">
+    <ul class="pagination justify-content-center flex-wrap gap-1">
 
-
-        <ul class="pagination justify-content-center">
-
-
-
+        <!-- PRÉCÉDENT -->
         {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ page_obj.previous_page_number }}&etudiant={{ request.GET.etudiant }}&matiere={{ request.GET.matiere }}&semestre={{ request.GET.semestre }}">
+                    <i class="bi bi-chevron-left"></i>
+                    <span class="d-none d-sm-inline">Précédent</span>
+                </a>
+            </li>
+        {% endif %}
 
 
-        <li class="page-item">
+        <!-- PREMIÈRE PAGE -->
+        {% if page_obj.number > 3 %}
 
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page=1&etudiant={{ request.GET.etudiant }}&matiere={{ request.GET.matiere }}&semestre={{ request.GET.semestre }}">
+                    1
+                </a>
+            </li>
 
-            <a class="page-link"
-               href="?page={{ page_obj.previous_page_number }}&etudiant={{ request.GET.etudiant }}&matiere={{ request.GET.matiere }}&semestre={{ request.GET.semestre }}">
-
-
-                Précédent
-
-
-            </a>
-
-
-        </li>
-
+            {% if page_obj.number > 4 %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            {% endif %}
 
         {% endif %}
 
 
-
-
-
+        <!-- PAGES AUTOUR DE LA PAGE COURANTE -->
 
         {% for num in page_obj.paginator.page_range %}
 
+            {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
 
-        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
 
+                    <a class="page-link"
+                       href="?page={{ num }}&etudiant={{ request.GET.etudiant }}&matiere={{ request.GET.matiere }}&semestre={{ request.GET.semestre }}">
 
-            <a class="page-link"
-               href="?page={{ num }}&etudiant={{ request.GET.etudiant }}&matiere={{ request.GET.matiere }}&semestre={{ request.GET.semestre }}">
+                        {{ num }}
 
+                    </a>
 
-                {{ num }}
+                </li>
 
-
-            </a>
-
-
-        </li>
-
+            {% endif %}
 
         {% endfor %}
 
 
+        <!-- DERNIÈRE PAGE -->
 
+        {% if page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
 
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-3" %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            {% endif %}
 
+            <li class="page-item">
 
-        {% if page_obj.has_next %}
+                <a class="page-link"
+                   href="?page={{ page_obj.paginator.num_pages }}&etudiant={{ request.GET.etudiant }}&matiere={{ request.GET.matiere }}&semestre={{ request.GET.semestre }}">
 
+                    {{ page_obj.paginator.num_pages }}
 
-        <li class="page-item">
+                </a>
 
-
-            <a class="page-link"
-               href="?page={{ page_obj.next_page_number }}&etudiant={{ request.GET.etudiant }}&matiere={{ request.GET.matiere }}&semestre={{ request.GET.semestre }}">
-
-
-                Suivant
-
-
-            </a>
-
-
-        </li>
-
+            </li>
 
         {% endif %}
 
 
+        <!-- SUIVANT -->
 
-        </ul>
+        {% if page_obj.has_next %}
 
+            <li class="page-item">
 
-    </nav>
+                <a class="page-link"
+                   href="?page={{ page_obj.next_page_number }}&etudiant={{ request.GET.etudiant }}&matiere={{ request.GET.matiere }}&semestre={{ request.GET.semestre }}">
 
+                    <span class="d-none d-sm-inline">Suivant</span>
+                    <i class="bi bi-chevron-right"></i>
 
-    {% endif %}
+                </a>
+
+            </li>
+
+        {% endif %}
+
+    </ul>
+
+</nav>
+
+{% endif %}
 
 
 
