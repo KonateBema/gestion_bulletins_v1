@@ -100,19 +100,6 @@ def generate_qr_image(etudiant, size=2.2 * cm):
         else ""
     )
 
-    contenu_qr = (
-        f"Nom & Prénom: {etudiant.nom} {etudiant.prenoms}\n"
-        f"Matricule: {etudiant.matricule}\n"
-        f"IP: {getattr(etudiant, 'identifiant_permanent', '') or ''}\n"
-        f"Date de naissance: {date_naissance}\n"
-        f"Lieu de naissance: {getattr(etudiant, 'lieu_naissance', '') or ''}\n"
-        f"Sexe: {getattr(etudiant, 'sexe', '') or ''}\n"
-        f"Classe: {getattr(etudiant.classe, 'nom', '') if getattr(etudiant, 'classe', None) else ''}\n"
-        f"Filière: {getattr(etudiant.filiere_bts, 'nom', '') if getattr(etudiant, 'filiere_bts', None) else ''}"
-    )
-
-    
-
     buffer = io.BytesIO()
     
     buffer.seek(0)
@@ -244,8 +231,8 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
            """, style_universite)
         ]],
         # colWidths=[0.5 * cm, 7.5 * cm],
-        colWidths=[1.9 * cm, 6.2 * cm],
-        rowHeights=[3.6 * cm]   # hauteur alignée avec le cadre étudiant (8 lignes x 0.45cm)
+        colWidths=[1.7 * cm, 6.5 * cm],
+        rowHeights=[3.2 * cm]   # hauteur fixe  # hauteur alignée avec le cadre étudiant (8 lignes x 0.45cm)
     )
     
 
@@ -298,7 +285,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
        [
         ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
         ["Matricule", etudiant.matricule],
-        ["Identifiant permanent",getattr(etudiant, "identifiant_permanent", "") or "-"],
         ["Date et lieu de naiss", date_lieu],
         ["Sexe", getattr(etudiant, "sexe", "")],
         ["Classe", nom_classe],
@@ -306,7 +292,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         ["Redoublant", "NON"],
       ],
     colWidths=[3.2 * cm, 7 * cm],
-    rowHeights=[0.45*cm]*8   # hauteur de chaque ligne
+    rowHeights=[0.45*cm]*7   # hauteur de chaque ligne
 )
 
     cadre_etudiant.setStyle(TableStyle([
@@ -315,7 +301,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
         # ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
         ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("FONTSIZE", (0, 0), (-1, -1), 7),
         ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f7f7f7")),
          # réduire hauteur interne
        ("TOPPADDING", (0,0), (-1,-1), 1),
@@ -323,39 +309,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ]))
 
     # =====================================================
-    # QR CODE ÉTUDIANT
-    # =====================================================
-    # qr_code_etudiant = generate_qr_image(etudiant, size=2.3 * cm)
-
-    # cadre_qr = Table(
-    #     [
-    #         [qr_code_etudiant],
-    #         [Paragraph(
-    #             '<para align="center"><b>Scanner pour<br/>infos étudiant</b></para>',
-    #             ParagraphStyle(
-    #                 "qr_caption",
-    #                 parent=SMALL,
-    #                 fontSize=6,
-    #                 leading=7,
-    #                 alignment=1,
-    #             )
-    #         )],
-    #     ],
-    #     colWidths=[2.6 * cm],
-    #     rowHeights=[2.7 * cm, 0.9 * cm],   # total 3.6cm, aligné sur les 2 autres cadres
-    # )
-
-    # cadre_qr.setStyle(TableStyle([
-    #     ("BOX", (0, 0), (-1, -1), 1, colors.black),
-    #     ("ROUNDEDCORNERS", [6, 6, 6, 6]),
-    #     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-    #     ("VALIGN", (0, 0), (0, 0), "MIDDLE"),
-    #     ("VALIGN", (0, 1), (0, 1), "TOP"),
-    #     ("TOPPADDING", (0, 0), (-1, -1), 3),
-    #     ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-    #     ("LEFTPADDING", (0, 0), (-1, -1), 3),
-    #     ("RIGHTPADDING", (0, 0), (-1, -1), 3),
-    # ]))
 
     # =====================================================
     # HEADER GLOBAL
@@ -795,11 +748,15 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         ],
     ],
     colWidths=[
+        4.5 * cm,
         5 * cm,
-        5 * cm,
-        4 * cm,
-        5 * cm,
+        3.5 * cm,
+        6 * cm,
     ],
+    rowHeights=[
+        1 * cm,   # hauteur de l'en-tête
+        3 * cm,   # hauteur du contenu
+    ]
   )
 
     visa_table.setStyle(TableStyle([
