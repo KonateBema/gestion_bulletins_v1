@@ -98,8 +98,22 @@ Saisie groupée des notes BTS
                         Matière
 
                     </label>
+                    <select id="matiereSelect" name="matiere" class="form-select form-select-lg" required>
+                        <option value="">-- Choisir la matière --</option>
+                        {% regroup matieres by grande_unite as matiere_groupes %}
+                        {% for groupe in matiere_groupes %}
+                            <optgroup label="{{ groupe.grouper|default:'Sans grande unité' }}">
+                                {% for matiere in groupe.list %}
+                                    <option value="{{ matiere.id }}"
+                                        {% if request.GET.matiere == matiere.id|stringformat:"s" %}selected{% endif %}>
+                                        {% if matiere.code %}{{ matiere.code }} - {% endif %}{{ matiere.libelle }}
+                                    </option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endfor %}
+                    </select>
 
-                    <select  id="matiereSelect"
+                    <!-- <select  id="matiereSelect"
                              name="matiere"
                             class="form-select form-select-lg"
                             required>
@@ -126,7 +140,9 @@ Saisie groupée des notes BTS
 
                         {% endfor %}
 
-                    </select>
+                    </select> -->
+
+
                 </div>
                 <!-- SEMESTRE -->
                 <div class="col-lg-2">

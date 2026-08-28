@@ -1,110 +1,132 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="container py-4">
 
-<div class="container py-5">
-
-    <div class="row justify-content-center">
-
-        <div class="col-lg-6 col-md-8">
-
-            <!-- CARD MODERNE -->
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-
-                <!-- HEADER -->
-                <div class="bg-primary text-white text-center py-4">
-                    <h3 class="mb-0 fw-bold">📘 Ajouter une matière</h3>
-                    <small class="opacity-75">Remplissez les informations de la matière</small>
-                </div>
-
-                <!-- BODY -->
-                <div class="card-body p-4 p-md-5">
-
-                    <form method="POST">
-                        {% csrf_token %}
-
-                        <!-- CODE -->
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Code matière</label>
-                            <div class="input-modern">
-                                {{ form.code }}
-                            </div>
-                        </div>
-
-                        <!-- LIBELLE -->
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Libellé</label>
-                            <div class="input-modern">
-                                {{ form.libelle }}
-                            </div>
-                        </div>
-
-                        <!-- COEFFICIENT -->
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Coefficient</label>
-                            <div class="input-modern">
-                                {{ form.coefficient }}
-                            </div>
-                        </div>
-
-                        <!-- VOLUME HORAIRE -->
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Volume horaire</label>
-                            <div class="input-modern">
-                                {{ form.volume_horaire }}
-                            </div>
-                        </div>
-
-                        <!-- FILIERE -->
-                        <!-- FILIERE BTS -->
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Filière BTS</label>
-                            <div class="input-modern">
-                                {{ form.filiere_bts }}
-                            </div>
-                        </div>
-
-                        <!-- BUTTON -->
-                        <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-3 shadow-sm">
-                            💾 Enregistrer la matière
-                        </button>
-
-                        <a href="{% url 'matiere_list' %}" class="btn btn-outline-secondary w-100 mt-3 py-2 rounded-3">
-                            ⬅ Retour à la liste
-                        </a>
-
-                    </form>
-
-                </div>
-
-            </div>
-
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0 fw-bold">
+                {% if is_edit %}
+                    ✏️ Modifier la matière
+                {% else %}
+                    ➕ Nouvelle matière
+                {% endif %}
+            </h5>
         </div>
 
-    </div>
+        <div class="card-body">
+            <form method="post" id="matiereForm">
+                {% csrf_token %}
 
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Code</label>
+                        {{ form.code }}
+                        {{ form.code.errors }}
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Libellé</label>
+                        {{ form.libelle }}
+                        {{ form.libelle.errors }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Coefficient</label>
+                        {{ form.coefficient }}
+                        {{ form.coefficient.errors }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Volume horaire</label>
+                        {{ form.volume_horaire }}
+                        {{ form.volume_horaire.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Catégorie</label>
+                        {{ form.categorie }}
+                        {{ form.categorie.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Filière BTS</label>
+                        {{ form.filiere_bts }}
+                        {{ form.filiere_bts.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Grande unité</label>
+                        {{ form.grande_unite }}
+                        {{ form.grande_unite.errors }}
+                        <small class="text-muted">
+                            La liste dépend de la filière BTS sélectionnée.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <a href="{% url 'matiere_list' %}" class="btn btn-outline-secondary">
+                        Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save-fill"></i>
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
-<!-- STYLE MODERNE -->
-<style>
-    .input-modern input,
-    .input-modern select,
-    .input-modern textarea {
-        width: 100%;
-        padding: 12px 14px;
-        border-radius: 10px;
-        border: 1px solid #ddd;
-        transition: all 0.2s ease-in-out;
-        background: #fff;
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const filiereSelect = document.getElementById("id_filiere_bts");
+    const grandeUniteSelect = document.getElementById("id_grande_unite");
+
+    // Valeur sélectionnée au chargement (utile en mode édition)
+    const selectedGrandeUniteId = grandeUniteSelect.dataset.selected || grandeUniteSelect.value;
+
+    function loadGrandesUnites(filiereId, preselectId) {
+        grandeUniteSelect.innerHTML = '<option value="">Chargement...</option>';
+
+        if (!filiereId) {
+            grandeUniteSelect.innerHTML = '<option value="">-- Aucune grande unité --</option>';
+            return;
+        }
+
+        fetch(`/ajax/grandes-unites-par-filiere/?filiere_bts=${filiereId}`)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                grandeUniteSelect.innerHTML = '<option value="">-- Aucune grande unité --</option>';
+
+                data.forEach(function (gu) {
+                    const option = document.createElement("option");
+                    option.value = gu.id;
+                    option.textContent = gu.code ? `${gu.code} - ${gu.libelle}` : gu.libelle;
+                    if (preselectId && String(gu.id) === String(preselectId)) {
+                        option.selected = true;
+                    }
+                    grandeUniteSelect.appendChild(option);
+                });
+            })
+            .catch(function () {
+                grandeUniteSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            });
     }
 
-    .input-modern input:focus,
-    .input-modern select:focus,
-    .input-modern textarea:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
-        outline: none;
+    if (filiereSelect) {
+        // Chargement initial (mode édition : on garde la sélection existante)
+        if (filiereSelect.value) {
+            loadGrandesUnites(filiereSelect.value, selectedGrandeUniteId);
+        }
+
+        filiereSelect.addEventListener("change", function () {
+            loadGrandesUnites(this.value, null);
+        });
     }
-</style>
+});
+</script>
 
 {% endblock %}

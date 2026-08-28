@@ -109,8 +109,43 @@ class Categorie(models.Model):
 
     def __str__(self):
         return self.nom
+class GrandeUnite(models.Model):
 
-class Matiere(models.Model):
+    code = models.CharField(
+        max_length=20,
+        unique=True
+    )
+
+    libelle = models.CharField(
+        max_length=150
+    )
+
+    ordre = models.PositiveIntegerField(
+        default=1,
+        help_text="Ordre d'affichage de la grande unité"
+    )
+
+    filiere_bts = models.ForeignKey(
+        Filierebts,
+        on_delete=models.CASCADE,
+        related_name="grandes_unites"
+    )
+
+    description = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    class Meta:
+        ordering = ["ordre", "id"]
+        verbose_name = "Grande unité"
+        verbose_name_plural = "Grandes unités"
+
+    def __str__(self):
+        return f"{self.code} - {self.libelle}"
+
+
+class MatiereAAA(models.Model):
     code = models.CharField(max_length=20, unique=True)
     libelle = models.CharField(max_length=150)
     coefficient = models.IntegerField(default=1)
@@ -129,6 +164,24 @@ class Matiere(models.Model):
     def __str__(self):
         return self.libelle
 
+class Matiere(models.Model):
+    code = models.CharField(max_length=20, unique=True)
+    libelle = models.CharField(max_length=150)
+    coefficient = models.IntegerField(default=1)
+    volume_horaire = models.IntegerField(default=0)
+    filiere_bts = models.ForeignKey(Filierebts, on_delete=models.CASCADE)
+    categorie = models.ForeignKey(Categorie, on_delete=models.SET_NULL, null=True, blank=True)
+
+    grande_unite = models.ForeignKey(
+        GrandeUnite,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="matieres"
+    )
+
+    def __str__(self):
+        return self.libelle
 
 # =========================
 # 5. PROFESSEUR

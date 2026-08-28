@@ -1,0 +1,29 @@
+<form id="guForm" method="post">
+    {% csrf_token %}
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Code</label>
+            {{ form.code }}
+        </div>
+        <div class="col-md-8">
+            <label class="form-label fw-bold">Libellé</label>
+            {{ form.libelle }}
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Ordre</label>
+            {{ form.ordre }}
+        </div>
+        <div class="col-md-8">
+            <label class="form-label fw-bold">Filière BTS</label>
+            {{ form.filiere_bts }}
+        </div>
+        <div class="col-12">
+            <label class="form-label fw-bold">Description</label>
+            {{ form.description }}
+        </div>
+    </div>
+    <div class="text-end mt-3">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Enregistrer</button>
+    </div>
+</form>

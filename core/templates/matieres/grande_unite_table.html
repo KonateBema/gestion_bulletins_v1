@@ -1,0 +1,38 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>Ordre</th>
+                <th>Code</th>
+                <th>Libellé</th>
+                <th>Filière BTS</th>
+                <th class="text-center">Matières</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for gu in grandes_unites %}
+            <tr>
+                <td>{{ gu.ordre }}</td>
+                <td><span class="badge bg-light text-dark border">{{ gu.code }}</span></td>
+                <td class="fw-bold">{{ gu.libelle }}</td>
+                <td>{{ gu.filiere_bts }}</td>
+                <td class="text-center">
+                    <span class="badge bg-primary rounded-pill">{{ gu.matieres.count }}</span>
+                </td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-primary gu-edit-btn" data-id="{{ gu.id }}">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger gu-delete-btn"
+                            data-id="{{ gu.id }}" data-libelle="{{ gu.libelle }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6" class="text-center text-muted py-4">Aucune grande unité enregistrée.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

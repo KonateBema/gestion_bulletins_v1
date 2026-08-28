@@ -1,8 +1,12 @@
 import os
+import io
 from datetime import datetime
+from itertools import groupby
 
 from django.conf import settings
 from django.db.models import Min, Max, Avg
+
+import qrcode
 
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer,
@@ -88,54 +92,44 @@ def format_rang(r):
     return f"{r}e" if r != "-" else "-"
 
 
-def draw_footer(canvas, doc):
-    """Dessine le pied de page directement sur le canvas.
-
-    Appelée automatiquement par ReportLab sur CHAQUE page (via
-    onFirstPage/onLaterPages passés à doc.build), donc le footer
-    reste toujours collé en bas de page, quelle que soit la
-    longueur du contenu — contrairement à un Flowable ajouté à la
-    suite des `elements`, qui peut se retrouver au milieu de la
-    page ou être poussé sur une page suivante.
+def generate_qr_image(etudiant, size=2.2 * cm):
     """
-    canvas.saveState()
-
-    width, height = A4
-
-    # ---------------------------------------------------------
-    # Ligne de séparation : plus épaisse et colorée pour qu'elle
-    # marque clairement la limite entre le contenu et le footer.
-    # ---------------------------------------------------------
-    canvas.setStrokeColor(colors.HexColor("#b30000"))
-    canvas.setLineWidth(1)
-    canvas.line(
-        doc.leftMargin, 2.15 * cm,
-        width - doc.rightMargin, 2.15 * cm,
+    Génère un QR code contenant les informations de l'étudiant
+    et retourne un Flowable RLImage prêt à être inséré dans le PDF.
+    """
+    date_naissance = (
+        etudiant.date_naissance.strftime("%d/%m/%Y")
+        if getattr(etudiant, "date_naissance", None)
+        else ""
     )
 
-    # Nom de l'université : en gras, plus grand, bien lisible.
-    canvas.setFont("Helvetica-Bold", 8.5)
-    canvas.setFillColor(colors.HexColor("#1a1a1a"))
-    canvas.drawCentredString(width / 2, 1.82 * cm, "UNIVERSITÉ INTERNATIONALE DE COCODY")
-
-    # Arrêté et siège social : lisibles, en gris foncé (pas trop pâle).
-    canvas.setFont("Helvetica", 7.5)
-    canvas.setFillColor(colors.HexColor("#333333"))
-    canvas.drawCentredString(width / 2, 1.5 * cm, "Arrêté n°487/MESRS/DGSE du 29/12/2015")
-    canvas.drawCentredString(
-        width / 2, 1.18 * cm,
-        "Siège Social : Cocody 2 Plateaux, 7eme Tranche non loin du café de Versailles",
+    contenu_qr = (
+        f"Nom & Prénom: {etudiant.nom} {etudiant.prenoms}\n"
+        f"Matricule: {etudiant.matricule}\n"
+        f"IP: {getattr(etudiant, 'identifiant_permanent', '') or ''}\n"
+        f"Date de naissance: {date_naissance}\n"
+        f"Lieu de naissance: {getattr(etudiant, 'lieu_naissance', '') or ''}\n"
+        f"Sexe: {getattr(etudiant, 'sexe', '') or ''}\n"
+        f"Classe: {getattr(etudiant.classe, 'nom', '') if getattr(etudiant, 'classe', None) else ''}\n"
+        f"Filière: {getattr(etudiant.filiere_bts, 'nom', '') if getattr(etudiant, 'filiere_bts', None) else ''}"
     )
 
-    # Horodatage d'édition, discret, tout en bas.
-    canvas.setFont("Helvetica", 6)
-    canvas.setFillColor(colors.grey)
-    canvas.drawCentredString(
-        width / 2, 0.55 * cm,
-        f"édité le {datetime.now().strftime('%d/%m/%Y à %H:%M')}",
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=6,
+        border=1,
     )
+    qr.add_data(contenu_qr)
+    qr.make(fit=True)
 
-    canvas.restoreState()
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+
+    buffer = io.BytesIO()
+    qr_img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return RLImage(buffer, width=size, height=size)
 
 
 science_points = 0
@@ -148,9 +142,6 @@ moyenne_science =0
 # GENERATION PDF
 # =====================================================
 def generate_bulletin_pdf(etudiant, classe,semestre):
-    total_fg_points = 0
-    total_fg_coef = 0
-    rows = []
     output_dir = os.path.join(settings.BASE_DIR, "media", "bulletins")
     os.makedirs(output_dir, exist_ok=True)
 
@@ -162,11 +153,9 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
        leftMargin=0.8 * cm,
        rightMargin=0.8 * cm,
        topMargin=0.7 * cm,
-       # Marge basse agrandie : le footer comporte désormais 3 lignes de
-       # texte + une ligne de séparation + l'horodatage, il lui faut
-       # donc un peu plus de place que les 1.9cm précédents pour ne pas
-       # être écrasé ou chevaucher le contenu de la page.
-       bottomMargin=2.5 * cm
+       # Marge basse agrandie pour réserver la place du pied de page fixe
+       # (dessiné directement sur le canvas, hors du flux des "elements")
+       bottomMargin=2.6 * cm
     )
 
     elements = []
@@ -197,7 +186,8 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         Paragraph("""
             <para align="right">
             <b>RÉPUBLIQUE DE CÔTE D'IVOIRE</b><br/>
-            Union - Discipline - Travail
+            Union - Discipline - Travail<br/>
+           
             </para>
         """, style_ministere)
     ]
@@ -225,14 +215,14 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         </para>
     """, style_ministere))
 
-    # elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 8))
     # =====================================================
     # LOGO
     # =====================================================
     logo = get_image(
         os.path.join(settings.BASE_DIR, "core/static/logo.jpeg"),
         1.6 * cm,
-        1.6 * cm,
+        2.5 * cm,
         "LOGO"
     )
 
@@ -251,24 +241,23 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
    
 
     # =====================================================
-    # CADRE UNIVERSITÉ
+    # CADRE UNIVERSITÉ 
     # =====================================================
     cadre_universite = Table(
         [[
             logo,
             Paragraph("""
-                <b>UNIVERSITÉ INTER. DE COCODY</b><br/>
+                <b>GROUPE EXPERT METIER</b><br/>
                 BP Abidjan - Côte d'Ivoire<br/>
-                Tel: +225 07 78 63 74 00<br/>
-                Tél. fixe : 27 XX XX XX<br/>
-                site: www.uci-ci.com<br/>
-                Email: uicinfos@gmail.com
+                Tel: +225 01 50 53 66 86<br/>
+                Tél. fixe : 27 22 20 44 32 <br/>
+                site: www.gem-ci.com<br/>
+                Email: contact@EMBS-CI.COM
            """, style_universite)
         ]],
         # colWidths=[0.5 * cm, 7.5 * cm],
-        colWidths=[1.7 * cm, 6.5 * cm],
-        rowHeights=[3.2 * cm]   # hauteur fixe
-        # rowHeights=[3.7 * cm]
+        colWidths=[1.9 * cm, 6.2 * cm],
+        rowHeights=[3.6 * cm]   # hauteur alignée avec le cadre étudiant (8 lignes x 0.45cm)
     )
     
 
@@ -321,14 +310,15 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
        [
         ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
         ["Matricule", etudiant.matricule],
+        ["Identifiant permanent",getattr(etudiant, "identifiant_permanent", "") or "-"],
         ["Date et lieu de naiss", date_lieu],
         ["Sexe", getattr(etudiant, "sexe", "")],
         ["Classe", nom_classe],
         ["Filière",  etudiant.filiere_bts.nom[:23]],
         ["Redoublant", "NON"],
       ],
-    colWidths=[3.5 * cm, 6.5 * cm],
-    rowHeights=[0.45*cm]*7   # hauteur de chaque ligne
+    colWidths=[3.2 * cm, 7 * cm],
+    rowHeights=[0.45*cm]*8   # hauteur de chaque ligne
 )
 
     cadre_etudiant.setStyle(TableStyle([
@@ -345,21 +335,68 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ]))
 
     # =====================================================
+    # QR CODE ÉTUDIANT
+    # =====================================================
+    # qr_code_etudiant = generate_qr_image(etudiant, size=2.3 * cm)
+
+    # cadre_qr = Table(
+    #     [
+    #         [qr_code_etudiant],
+    #         [Paragraph(
+    #             '<para align="center"><b>Scanner pour<br/>infos étudiant</b></para>',
+    #             ParagraphStyle(
+    #                 "qr_caption",
+    #                 parent=SMALL,
+    #                 fontSize=6,
+    #                 leading=7,
+    #                 alignment=1,
+    #             )
+    #         )],
+    #     ],
+    #     colWidths=[2.6 * cm],
+    #     rowHeights=[2.7 * cm, 0.9 * cm],   # total 3.6cm, aligné sur les 2 autres cadres
+    # )
+
+    # cadre_qr.setStyle(TableStyle([
+    #     ("BOX", (0, 0), (-1, -1), 1, colors.black),
+    #     ("ROUNDEDCORNERS", [6, 6, 6, 6]),
+    #     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+    #     ("VALIGN", (0, 0), (0, 0), "MIDDLE"),
+    #     ("VALIGN", (0, 1), (0, 1), "TOP"),
+    #     ("TOPPADDING", (0, 0), (-1, -1), 3),
+    #     ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+    #     ("LEFTPADDING", (0, 0), (-1, -1), 3),
+    #     ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+    # ]))
+
+    # =====================================================
     # HEADER GLOBAL
     # =====================================================
     page_width = A4[0]
     usable_width = page_width - doc.leftMargin - doc.rightMargin
 
+    # Pas de colWidths imposé ici : chaque cadre (université / étudiant / QR)
+    # a déjà sa propre largeur fixe. Les imposer une 2e fois au niveau du
+    # tableau parent provoquait un dépassement de la largeur de page (donc
+    # un chevauchement visuel) car la somme des largeurs internes dépassait
+    # la largeur utile de la page. On laisse ReportLab dimensionner les
+    # colonnes d'après le contenu, et on espace juste un peu les cadres.
+    # Les 3 cadres ont maintenant tous une hauteur totale de 3.6cm, ce qui
+    # aligne parfaitement leurs bords supérieur et inférieur.
+    
     header = Table(
-        [[cadre_universite, cadre_etudiant]],
-        colWidths=[
-            usable_width * 0.45,
-            usable_width * 0.55
-        ]
+        [[cadre_universite, cadre_etudiant]]
     )
 
     header.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ALIGN", (2, 0), (2, 0), "CENTER"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (0, 0), 8),
+        ("RIGHTPADDING", (1, 0), (1, 0), 8),
+        ("RIGHTPADDING", (2, 0), (2, 0), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
     ]))
 
     elements.append(header)
@@ -368,9 +405,13 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # =====================================================
     # TITRE
     # =====================================================
-    # elements.append(Paragraph("BULLETIN DE NOTES - 1er SEMESTRE", TITLE))
+    if semestre == 1:
+       titre_semestre = "1er"
+    else:
+       titre_semestre = "2ème"
+    
     elements.append(
-    Paragraph(f"BULLETIN DE NOTES - {semestre}er SEMESTRE", TITLE))
+    Paragraph(f"BULLETIN DE NOTES - {titre_semestre} SEMESTRE", TITLE))
     elements.append(Spacer(1, 10))
 
     # =====================================================
@@ -387,7 +428,8 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         etudiant=etudiant,
         semestre=semestre_value
       )
-      .select_related("matiere")
+      .select_related("matiere", "matiere__grande_unite")
+      .order_by("matiere__grande_unite__ordre", "matiere__code")
       )
 
     stats_map = {
@@ -407,14 +449,9 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         .annotate(moy=Avg("moyenne"))
         .order_by("-moy")
     )
-    formation_generale = 0
     rangs = {item["etudiant"]: i + 1 for i, item in enumerate(classement)}
     rang_general = format_rang(rangs.get(etudiant.id, "-"))
 
-    # data = [[
-    #     "MATIÈRE", "MOY", "COEF", "MOY*COEF",
-    #     "MENTION","RANG", "MIN", "MOY", "MAX"
-    # ]]
     data = [
     [
         "MATIÈRE",
@@ -439,189 +476,78 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         "MAX"
     ]]
 
-
     total_points = 0
     total_coef = 0
 
-    fg_points = 0
-    fg_coef = 0
+    # =====================================================
+    # LIGNES DE NOTES + SOUS-TOTAL PAR GRANDE UNITÉ
+    # (les notes sont déjà triées par matiere__grande_unite__ordre)
+    # =====================================================
+    subtotal_rows = []
 
-    pro_points = 0
-    pro_coef = 0
+    for grande_unite, groupe in groupby(notes, key=lambda n: n.matiere.grande_unite):
+        groupe = list(groupe)
+        gu_points = 0
+        gu_coef = 0
 
-    tech_points = 0
-    tech_coef = 0
+        for n in groupe:
+            m = n.matiere
+            stats = stats_map.get(m.id, {})
+            moy = safe_round(n.moyenne)
+            coef = safe_round(m.coefficient)
 
-    ang_points = 0
-    ang_coef = 0
+            total_points += moy * coef
+            total_coef += coef
+            gu_points += moy * coef
+            gu_coef += coef
 
-    fg_row = [
-    "FORMATION GÉNÉRALE",
-    formation_generale,
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    ""
-   ]
+            rang_matiere = (
+                Note.objects.filter(
+                    etudiant__classe=classe,
+                    matiere=m,
+                    moyenne__gt=n.moyenne
+                )
+                .count() + 1
+            )
 
-    rows.insert(6, fg_row)  # index 6 = 7ème ligne
-    total_points = 0
-    total_coef = 0
-    notes_list = list(notes[:6])
-    total_points_gnrl = 0
-    total_coef_gnrl = 0
-    total_points_tech = 0
-    total_coef_tech = 0
-    formation_generl_tech = 0
-    moyenne_professionnelle_tech = 0
-    formation_generl_points = 0
-    formation_ang_expr = 0
-    formation_ang_expr_points = 0
-    formation_generale = 0
-    formation_generl_points = 0
-    moyenne_professionnelle_tech = 0
-    formation_generl_tech = 0
-  
-    for n in notes_list:
-        moy = safe_round(n.moyenne)
-        coef = safe_round(n.matiere.coefficient)
-        total_fg_points += moy * coef
-        total_fg_coef += coef
-    # formation_generale = (
-    #     total_fg_points / total_fg_coef
-    #     if total_fg_coef > 0
-    #     else 0)
+            data.append([
+                m.libelle,
+                moy,
+                coef,
+                safe_round(moy * coef),
+                mention(moy),
+                format_rang(rang_matiere),
+                # getattr(m, "professeur", "") or "-",
+                safe_round(stats.get("min_note")),
+                safe_round(stats.get("avg_note")),
+                safe_round(stats.get("max_note")),
+            ])
 
-    # formation_generale = safe_round(formation_generale)
+        gu_moyenne = safe_round(gu_points / gu_coef) if gu_coef else 0
+        gu_libelle = grande_unite.libelle.upper() if grande_unite else "AUTRES MATIERES"
 
-    for n in notes:
-        m = n.matiere
-        stats = stats_map.get(m.id, {})
-        moy = safe_round(n.moyenne)
-        coef = safe_round(m.coefficient)
-        total_points += moy * coef
-        total_coef += coef
-        fg_points += moy * coef
-        fg_coef += coef
-        
-        if getattr(m, "categorie", None) == "SCIENCE":
-             tech_points += moy * coef
-             tech_coef += coef
-        elif getattr(m, "categorie", None) == "PRO":
-             pro_points += moy * coef
-             pro_coef += coef
-
-        rang_matiere = (
-          Note.objects.filter(
-          etudiant__classe=classe,
-          matiere=m,
-          moyenne__gt=n.moyenne
-          )
-       .count() + 1
-     )
-
+        subtotal_rows.append(len(data))
         data.append([
-            m.libelle,
-            moy,
-            coef,
-            safe_round(moy * coef),
-            mention(moy),
-            format_rang(rang_matiere),
-            safe_round(stats.get("min_note")),
-            safe_round(stats.get("avg_note")),
-            safe_round(stats.get("max_note")),
-        ])
-    # formation general
-    valeurs_fg = [
-          float(ligne[1])
-          for ligne in data[1:8]
-          if isinstance(ligne[1], (int, float))
-        ]
-
-    formation_generale = safe_round(
-           sum(valeurs_fg) / len(valeurs_fg) if valeurs_fg else 0
-          )
-         
-    total_points_gnrl = 0
-    for ligne in data[1:8]:
-          if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
-                 total_points_gnrl += ligne[1] * ligne[2]
-
-    formation_generl_points = safe_round(total_points_gnrl)
-        
-        # Total des coefficients
-    total_coef_gnrl = sum(
-           ligne[2]
-           for ligne in data[1:8]
-           if isinstance(ligne[2], (int, float))
-          )
-
-    total_coef_gnrl = safe_round(total_coef_gnrl)
-        #  "FORMATION TECHNIQUE et PROFESSIONNELLE",
-    valeurs_prof = [
-          float(ligne[1])
-          for ligne in data[9:]
-          if isinstance(ligne[1], (int, float))
-        ]
-
-    moyenne_professionnelle_tech = safe_round(
-            sum(valeurs_prof) / len(valeurs_prof) if valeurs_prof else 0
-          ) 
-        
-    total_points_tech = 0
-
-    for ligne in data[8:]:
-       if isinstance(ligne[1], (int, float)) and isinstance(ligne[2], (int, float)):
-                  total_points_tech += ligne[1] * ligne[2]
-
-    formation_generl_tech = safe_round(total_points_tech)
-        # Total des coefficients
-    total_coef_tech = sum(
-            ligne[2]
-            for ligne in data[8:]
-            if isinstance(ligne[2], (int, float))
-        )
-
-    total_coef_tech = safe_round(total_coef_tech)
-
-    formation_generale = safe_round(formation_generale)
-    safe_round(moyenne_science)  # noqa: F821
-    # moyenne_professionnelle = safe_round(moyenne_professionnelle)
-    A4[0] - 2.4 * cm
-    
-
-    data.insert(8, [
-         "FORMATION GENERALE",
-          formation_generale, total_coef_gnrl, formation_generl_points, "", "", "", "", ""
-       ])
- 
-    data.append([
-        "FORMATION TECHNIQUE et PROFESSIONNELLE",
-        moyenne_professionnelle_tech, total_coef_tech, formation_generl_tech, "", "", "", "", ""
+            gu_libelle,
+            gu_moyenne, gu_coef, safe_round(gu_points), "", "", "","", ""
         ])
 
-    
-    
     # table = Table(data)
     table = Table(data, colWidths=[
-    6 * cm,   # MATIÈRE (plus large)
-    1.5 * cm,
+    6.3 * cm,   # MATIÈRE (plus large)
     1.5 * cm,
     2 * cm,
-    2.5 * cm,
-    1.5 * cm,
-    1.5 * cm,
-    1.5 * cm,
-    1.2 * cm,   # MAX
+    1.7 * cm,
+    2 * cm,
+    1.3 * cm,
+    1.3 * cm,
+    1.3 * cm,
+    1.3 * cm,   # MAX
   ])
 
     style = [
     ("GRID", (0,0), (-1,-1), 0.4, colors.black),
     ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
-    # ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
     ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
     ("ALIGN", (1,1), (-1,-1), "CENTER"),
     ("BACKGROUND", (0, 0), (-1, 1), colors.lightgrey),
@@ -632,13 +558,11 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ("RIGHTPADDING", (0,0), (-1,-1), 3),
     ("FONTSIZE", (0,0), (-1,-1), 7),
     ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
-    
-    ("SPAN", (4, 8), (8, 8)),
-     # Fusion dernière ligne FORMATION TECHNIQUE ET PROFESSIONNELLE
-    ("SPAN", (4, len(data)-1), (8, len(data)-1)),
+
     ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
 
     # Fusion du titre MOYENNE DE LA CLASSE
+    # ("SPAN", (7, 0), (9, 0)),
     ("SPAN", (6, 0), (8, 0)),
 
     # Fusion MATIÈRE sur les deux lignes
@@ -659,33 +583,41 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # Fusion RANG sur les deux lignes
     ("SPAN", (5, 0), (5, 1)),
 
+    # Fusion PROFESSEUR sur les deux lignes
+    # ("SPAN", (6, 0), (6, 1)),
+
     # Centrage
     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+
+    # Matière alignée à gauche (hors en-tête)
+    ("ALIGN", (0, 2), (0, -1), "LEFT"),
+
      # Réduction hauteur des lignes
     ("TOPPADDING", (0,0), (-1,-1), 0.5),
     ("BOTTOMPADDING", (0,0), (-1,-1), 0.5),
      # Réduction espace horizontal
     ("LEFTPADDING", (0,0), (-1,-1), 1),
     ("RIGHTPADDING", (0,0), (-1,-1), 1),
-   
+
    ]
 
-    for ligne in [8,len(data) - 1]:
-        if ligne < len(data):
-            style.append(
-                 ("BACKGROUND", (0,ligne), (-1,ligne), colors.lightgrey) )
-            
+    # Fusion + fond grisé pour chaque ligne de sous-total (une par grande unité)
+    for ligne in subtotal_rows:
+        # style.append(("SPAN", (4, ligne), (9, ligne)))
+        style.append(("SPAN", (4, ligne), (8, ligne)))
+        style.append(("BACKGROUND", (0, ligne), (-1, ligne), colors.lightgrey))
+         # Texte noir
+        style.append(( "TEXTCOLOR",(0, ligne),(0, ligne), colors.black))
+        # Texte en gras
+        style.append(("FONTNAME", (0, ligne),(0, ligne),"Courier-Bold"))
+
     table.setStyle(TableStyle(style)) 
     elements.append(table)
     elements.append(Spacer(1, 10))
     # =====================================================
     # RECAP
     # =====================================================
-    # moyenne_generale = calcul_moyenne_etudiant(etudiant)
-    # Moyennes des deux semestres
-    # moyenne_s1 = calcul_moyenne_etudiant(etudiant, 1)
-    # moyenne_s2 = calcul_moyenne_etudiant(etudiant, 2)
     moyenne_s1 = calcul_moyenne_etudiant(etudiant, "S1")
     moyenne_s2 = calcul_moyenne_etudiant(etudiant, "S2")
     
@@ -779,7 +711,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         f"Félicitations\n"
         f"Tableau d'honneur\n"
         f"Encouragement \n"
-        f"Avertissement "
+        # f"Avertissement "
      ],
    ]
 
@@ -796,13 +728,11 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # HEADER
     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1f3a5f")),
     ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-    # ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
     ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
     ("FONTSIZE", (0, 0), (-1, 0), 9),
     ("ALIGN", (0, 0), (-1, 0), "CENTER"),
 
     # CONTENU
-    # ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
     ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
     ("FONTSIZE", (0, 1), (-1, -1), 8),
     ("VALIGN", (0, 1), (-1, -1), "TOP"),
@@ -814,7 +744,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
   ]))
 
     elements.append(recap)
-    # elements.append(observation)
     elements.append(Spacer(1, 8))
     moyenne_annuelle = calcul_moyenne_etudiant(etudiant)
 
@@ -906,24 +835,67 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ("LEFTPADDING", (0, 0), (-1, -1), 6),
     ("RIGHTPADDING", (0, 0), (-1, -1), 6),
 
-    
-    
-
    ]))
+    
+    FOOTER = ParagraphStyle(
+    "FOOTER",
+    parent=SMALL,
+    fontSize=6,
+    leading=7.5,
+    alignment=1,
+    textColor=colors.grey,
+    fontName="Helvetica"
+)
 
     elements.append(visa_table)
     elements.append(Spacer(1, 10))
 
     # =====================================================
-    # Le pied de page n'est plus un flowable : il est dessiné
-    # directement sur chaque page via draw_footer (voir doc.build
-    # ci-dessous), donc toujours fixé en bas de page.
+    # FOOTER PROFESSIONNEL — FIXÉ EN BAS DE CHAQUE PAGE
     # =====================================================
+    # On ne met plus le footer dans "elements" (il suivrait le flux du
+    # contenu et sa position varierait selon la longueur du bulletin).
+    # On le dessine directement sur le canvas via onFirstPage/onLaterPages,
+    # à une position fixe proche du bas de la page. La "bottomMargin" du
+    # doc a été agrandie ci-dessus pour lui laisser la place nécessaire.
 
-    doc.build(
-        elements,
-        onFirstPage=draw_footer,
-        onLaterPages=draw_footer,
+    footer_text = (
+        """
+       <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/>
+        Arrêté n°487/MESRS/DGSE du 29/12/2015<br/>
+        Siège Social : Cocody 2 Plateaux, 7ème Tranche, non loin du Café de Versailles<br/>
+        édité le %s
+        """
+        % datetime.now().strftime("%d/%m/%Y à %H:%M")
     )
+
+    footer_width = 18 * cm
+    footer_x = (page_width - footer_width) / 2
+
+    def draw_footer(canvas, pdf_doc):
+        canvas.saveState()
+
+        footer_paragraph = Paragraph(footer_text, FOOTER)
+        # largeur dispo, hauteur "infinie" pour laisser le paragraphe
+        # calculer sa propre hauteur réelle
+        w, h = footer_paragraph.wrap(footer_width, 10 * cm)
+
+        # position fixe : collé au bas de la page (dans la bottomMargin
+        # réservée), quel que soit le contenu qui précède sur la page
+        # footer_y = 0.4 * cm
+        footer_y = 0.5 * cm
+
+        # ligne de séparation au-dessus du texte
+        canvas.setStrokeColor(colors.grey)
+        canvas.setLineWidth(0.5)
+        canvas.line(
+            footer_x, footer_y + h + 4,
+            footer_x + footer_width, footer_y + h + 4
+        )
+
+        footer_paragraph.drawOn(canvas, footer_x, footer_y)
+        canvas.restoreState()
+
+    doc.build(elements, onFirstPage=draw_footer, onLaterPages=draw_footer)
 
     return file_path

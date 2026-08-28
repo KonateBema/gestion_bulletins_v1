@@ -1,408 +1,326 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
-
 
 <div class="container py-4">
 
-
     <!-- HEADER -->
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
-
-            <h3 class="fw-bold">
-                📚 Gestion des matières BTS
-            </h3>
-
-            <p class="text-muted mb-0">
-                Gestion des matières par filière
-            </p>
-
+            <h3 class="fw-bold">📚 Gestion des matières BTS</h3>
+            <p class="text-muted mb-0">Gestion des matières par filière</p>
         </div>
 
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary"
+                    data-bs-toggle="modal" data-bs-target="#grandeUniteModal">
+                <i class="bi bi-diagram-3-fill"></i>
+                Grandes unités
+            </button>
 
-        <a href="{% url 'matiere_add' %}" class="btn btn-primary">
-
-            ➕ Nouvelle matière
-
-        </a>
-
-
+            <a href="{% url 'matiere_add' %}" class="btn btn-primary">
+                ➕ Nouvelle matière
+            </a>
+        </div>
     </div>
-
-
 
     <!-- STATISTIQUE -->
-
-
     <div class="row mb-4">
-
-
         <div class="col-md-4">
-
-
             <div class="card shadow-sm border-0">
-
                 <div class="card-body">
-
-
-                    <h6 class="text-muted">
-                        Matières disponibles
-                    </h6>
-
-
-                    <h2 class="fw-bold text-primary">
-
-                        {{ total_matieres }}
-
-                    </h2>
-
-
+                    <h6 class="text-muted">Matières disponibles</h6>
+                    <h2 class="fw-bold text-primary">{{ total_matieres }}</h2>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTRE RECHERCHE -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" name="q" class="form-control"
+                           placeholder="🔎 Rechercher code ou matière"
+                           value="{{ request.GET.q }}">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-dark w-100">Filtrer</button>
+                </div>
+                {% if request.GET.filiere_bts %}
+                    <input type="hidden" name="filiere_bts" value="{{ request.GET.filiere_bts }}">
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- FILTRE PAR FILIÈRE -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+
+                <a href="{% url 'matiere_list' %}"
+                   class="btn {% if not filiere_selectionnee %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Toutes
+                </a>
+
+                {% for f in filiere_list %}
+                    <a href="?filiere_bts={{ f.id }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                       class="btn {% if filiere_selectionnee|stringformat:'s' == f.id|stringformat:'s' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        {{ f.nom }}
+                    </a>
+                {% endfor %}
 
             </div>
-
-
         </div>
-
-
-
     </div>
-
-
-
-
-    <!-- FILTRE -->
-
-
-    <div class="card shadow-sm mb-4">
-
-
-        <div class="card-body">
-
-
-            <form method="GET" class="row g-3">
-
-
-                <div class="col-md-5">
-
-
-                    <input type="text" name="q" class="form-control" placeholder="🔎 Rechercher code ou matière"
-                        value="{{ request.GET.q }}">
-
-
-                </div>
-
-
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                
-                        <div class="d-flex flex-wrap gap-2">
-                
-                            <a href="{% url 'matiere_list' %}"
-                               class="btn {% if not filiere_selectionnee %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                                Toutes
-                            </a>
-                
-                            {% for f in filiere_list %}
-                
-                                <a href="?filiere_bts={{ f.id }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
-                                   class="btn {% if filiere_selectionnee|stringformat:'s' == f.id|stringformat:'s' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                
-                                    {{ f.nom }}
-                
-                                </a>
-                
-                            {% endfor %}
-                
-                        </div>
-                
-                    </div>
-                </div>
-
-
-
-                <div class="col-md-2">
-
-
-                    <button class="btn btn-dark w-100">
-
-                        Filtrer
-
-                    </button>
-
-
-                </div>
-
-
-
-            </form>
-
-
-        </div>
-
-
-    </div>
-
-
-
-
 
     <!-- TABLE -->
-
-
     <div class="card shadow-sm">
-
-
         <div class="card-header bg-primary text-white">
-
-
-            <h5 class="mb-0">
-
-                📖 Liste des matières
-
-            </h5>
-
-
+            <h5 class="mb-0">📖 Liste des matières</h5>
         </div>
-
-
 
         <div class="table-responsive">
-
-
             <table class="table table-hover mb-0">
-
-
                 <thead class="table-light">
-
-
                     <tr>
-
                         <th>Code</th>
-
                         <th>Matière</th>
-
                         <th>Coefficient</th>
-
                         <th>Volume</th>
-
                         <th>Filière</th>
-
-                        <th width="150">
-                            Actions
-                        </th>
-
-
+                        <th width="150">Actions</th>
                     </tr>
-
-
                 </thead>
-
-
-
-
                 <tbody>
-
-
                     {% for m in page_obj %}
-
-
-                    <tr>
-
-
-                        <td>
-
-                            <span class="badge bg-secondary">
-
-                                {{m.code}}
-
-                            </span>
-
-                        </td>
-
-
-
-                        <td class="fw-semibold">
-
-                            {{m.libelle}}
-
-                        </td>
-
-
-
-                        <td>
-
-                            <span class="badge bg-info">
-
-                                {{m.coefficient}}
-
-                            </span>
-
-                        </td>
-
-
-
-                        <td>
-
-                            {{m.volume_horaire}} H
-
-                        </td>
-
-
-
-                        <td>
-
-                            {{m.filiere_bts.nom}}
-
-                        </td>
-
-
-
-
-                        <td>
-
-
-                            <a href="{% url 'matiere_edit' m.id %}" class="btn btn-warning btn-sm">
-
-                                ✏️
-
-                            </a>
-
-
-                            <a href="{% url 'matiere_delete' m.id %}" class="btn btn-danger btn-sm">
-
-                                🗑️
-
-                            </a>
-
-
-                        </td>
-
-
-
-                    </tr>
-
-
-
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ m.code }}</span></td>
+                            <td class="fw-semibold">{{ m.libelle }}</td>
+                            <td><span class="badge bg-info">{{ m.coefficient }}</span></td>
+                            <td>{{ m.volume_horaire }} H</td>
+                            <td>{{ m.filiere_bts.nom }}</td>
+                            <td>
+                                <a href="{% url 'matiere_edit' m.id %}" class="btn btn-warning btn-sm">✏️</a>
+                                <a href="{% url 'matiere_delete' m.id %}" class="btn btn-danger btn-sm">🗑️</a>
+                            </td>
+                        </tr>
                     {% empty %}
-
-
-                    <tr>
-
-                        <td colspan="6" class="text-center py-4">
-
-
-                            Aucune matière trouvée
-
-
-                        </td>
-
-
-                    </tr>
-
-
-
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                Aucune matière trouvée
+                            </td>
+                        </tr>
                     {% endfor %}
-
-
                 </tbody>
-
-
-
             </table>
-
-
         </div>
-
-
     </div>
 
-
-
-
-
     <!-- PAGINATION -->
-
-
     <nav class="mt-4">
-
-
         <ul class="pagination justify-content-center">
 
-
             {% if page_obj.has_previous %}
-
-
-            <li class="page-item">
-
-
-                <a class="page-link"
-                    href="?page={{page_obj.previous_page_number}}&q={{request.GET.q}}&filiere_bts={{request.GET.filiere_bts}}">
-
-                    ⬅
-
-                </a>
-
-
-            </li>
-
-
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}&filiere_bts={{ request.GET.filiere_bts }}">
+                        ⬅
+                    </a>
+                </li>
             {% endif %}
-
-
 
             <li class="page-item active">
-
                 <span class="page-link">
-
-                    {{page_obj.number}}
-                    /
-                    {{page_obj.paginator.num_pages}}
-
+                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
                 </span>
-
-
             </li>
-
-
-
 
             {% if page_obj.has_next %}
-
-
-            <li class="page-item">
-
-
-                <a class="page-link"
-                    href="?page={{page_obj.next_page_number}}&q={{request.GET.q}}&filiere_bts={{request.GET.filiere_bts}}">
-
-
-                    ➡
-
-
-                </a>
-
-
-            </li>
-
-
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}&filiere_bts={{ request.GET.filiere_bts }}">
+                        ➡
+                    </a>
+                </li>
             {% endif %}
 
-
-
         </ul>
-
-
     </nav>
-
-
-
 
 </div>
 
+<!-- =====================================================
+     MODAL LISTE DES GRANDES UNITÉS
+====================================================== -->
+<div class="modal fade" id="grandeUniteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content rounded-4">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-diagram-3-fill"></i>
+                    Gestion des grandes unités
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button" class="btn btn-success" id="guAddBtn">
+                        <i class="bi bi-plus-lg"></i>
+                        Nouvelle grande unité
+                    </button>
+                </div>
+                <div id="guTableContainer">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =====================================================
+     MODAL FORMULAIRE GRANDE UNITÉ
+====================================================== -->
+<div class="modal fade" id="guFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="guFormModalTitle">Nouvelle grande unité</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="guFormContainer"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const guModal = document.getElementById("grandeUniteModal");
+    const guTableContainer = document.getElementById("guTableContainer");
+    const guFormModalEl = document.getElementById("guFormModal");
+    const guFormModal = new bootstrap.Modal(guFormModalEl);
+    const guFormContainer = document.getElementById("guFormContainer");
+    const guFormModalTitle = document.getElementById("guFormModalTitle");
+
+    function getCookie(name) {
+        let value = null;
+        document.cookie.split(";").forEach(function (c) {
+            c = c.trim();
+            if (c.startsWith(name + "=")) {
+                value = decodeURIComponent(c.substring(name.length + 1));
+            }
+        });
+        return value;
+    }
+    const csrftoken = getCookie("csrftoken");
+
+    function loadTable() {
+        guTableContainer.innerHTML =
+            '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+
+        fetch("{% url 'grande_unite_list' %}")
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                guTableContainer.innerHTML = data.html;
+                attachRowEvents();
+            })
+            .catch(function () {
+                guTableContainer.innerHTML =
+                    '<div class="alert alert-danger m-3">Erreur de chargement des grandes unités.</div>';
+            });
+    }
+
+    function attachRowEvents() {
+        guTableContainer.querySelectorAll(".gu-edit-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                openForm("update", btn.dataset.id);
+            });
+        });
+
+        guTableContainer.querySelectorAll(".gu-delete-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                if (confirm('Supprimer la grande unité "' + btn.dataset.libelle + '" ?')) {
+                    deleteGrandeUnite(btn.dataset.id);
+                }
+            });
+        });
+    }
+
+    function openForm(action, id) {
+        const url = action === "create"
+            ? "{% url 'grande_unite_create' %}"
+            : "/grandes-unites/" + id + "/modifier/";
+
+        guFormModalTitle.textContent =
+            action === "create" ? "Nouvelle grande unité" : "Modifier la grande unité";
+
+        fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                guFormContainer.innerHTML = data.html;
+                guFormModal.show();
+                bindFormSubmit(url);
+            });
+    }
+
+    function bindFormSubmit(url) {
+        const form = document.getElementById("guForm");
+        if (!form) return;
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            fetch(url, {
+                method: "POST",
+                headers: { "X-CSRFToken": csrftoken },
+                body: new FormData(form)
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        guFormModal.hide();
+                        loadTable();
+                    } else {
+                        Object.values(data.errors || {}).forEach(function (err) {
+                            alert(err);
+                        });
+                    }
+                });
+        }, { once: true });
+    }
+
+    function deleteGrandeUnite(id) {
+        fetch("/grandes-unites/" + id + "/supprimer/", {
+            method: "POST",
+            headers: { "X-CSRFToken": csrftoken }
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    loadTable();
+                } else {
+                    alert(data.error || "Suppression impossible.");
+                }
+            });
+    }
+
+    if (guModal) {
+        guModal.addEventListener("show.bs.modal", loadTable);
+    }
+
+    const guAddBtn = document.getElementById("guAddBtn");
+    if (guAddBtn) {
+        guAddBtn.addEventListener("click", function () {
+            openForm("create");
+        });
+    }
+
+});
+</script>
 
 {% endblock %}

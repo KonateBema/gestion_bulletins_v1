@@ -71,5 +71,12 @@ urlpatterns = [
     
     path("dashboard/gestionnaire/",views.dashboard_gestionnaire,name="dashboard_gestionnaire"),
     path("ajax/matieres-par-classe/",views.matieres_par_classe,name="matieres_par_classe"),
+    
+    path("grandes-unites/", views.grande_unite_list, name="grande_unite_list"),
+    path("grandes-unites/ajouter/", views.grande_unite_create, name="grande_unite_create"),
+    path("grandes-unites/<int:pk>/modifier/", views.grande_unite_update, name="grande_unite_update"),
+    path("grandes-unites/<int:pk>/supprimer/", views.grande_unite_delete, name="grande_unite_delete"),
+    path("ajax/matieres-par-classe/", views.matieres_par_classe, name="matieres_par_classe"),
+    path("ajax/grandes-unites-par-filiere/", views.grandes_unites_par_filiere, name="grandes_unites_par_filiere"),
 
 ]

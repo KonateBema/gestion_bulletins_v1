@@ -27,6 +27,10 @@ from datetime import datetime
 from core.decorators import role_required
 from django.http import JsonResponse
 
+from django.views.decorators.http import require_http_methods
+from django.template.loader import render_to_string
+from .models import GrandeUnite
+from .forms import GrandeUniteForm
 # =========================
 # 🔐 LOGIN
 # =========================
@@ -905,13 +909,25 @@ def matiere_list(request):
     )
 
 
-def matiere_create(request):
+def matiere_createAAA(request):
     form = MatiereForm(request.POST or None)
     if form.is_valid():
         form.save()
         return redirect("matiere_list")
     return render(request, "matieres/form.html", {"form": form})
 
+def matiere_create(request):
+    form = MatiereForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Matière ajoutée avec succès.")
+        return redirect('matiere_list')
+
+    return render(request, 'matieres/form.html', {
+        'form': form,
+        'is_edit': False,
+    })
 
 def affectation_list(request):
     return render(request, "affectations/list.html", {
@@ -1041,7 +1057,7 @@ def classe_delete(request, pk):
     classe.delete()
     return redirect('classe_list')
 
-def matiere_update(request, id):
+def matiere_updateAAA(request, id):
     matiere = get_object_or_404(Matiere, id=id)
     form = MatiereForm(request.POST or None, instance=matiere)
 
@@ -1056,6 +1072,20 @@ def matiere_delete(request, id):
     matiere.delete()
     return redirect('matiere_list')
 
+def matiere_update(request, id):
+    matiere = get_object_or_404(Matiere, id=id)
+    form = MatiereForm(request.POST or None, instance=matiere)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Matière modifiée avec succès.")
+        return redirect('matiere_list')
+
+    return render(request, 'matieres/form.html', {
+        'form': form,
+        'matiere': matiere,
+        'is_edit': True,
+    })
 
 def download_bulletin_pdf(request, etudiant_id, classe_id, semestre):
 
@@ -1728,7 +1758,7 @@ def import_etudiants_excel(request):
 
 
 
-def matieres_par_classe(request):
+def matieres_par_classeAAA(request):
     classe_id = request.GET.get("classe")
 
     if not classe_id:
@@ -1752,4 +1782,104 @@ def matieres_par_classe(request):
         for m in matieres
     ]
 
+    return JsonResponse(data, safe=False)
+
+def grande_unite_list(request):
+    """HTML du tableau des grandes unités (rechargé dans le modal)."""
+    grandes_unites = GrandeUnite.objects.select_related("filiere_bts").prefetch_related("matieres")
+    html = render_to_string(
+        "matieres/grande_unite_table.html",
+        {"grandes_unites": grandes_unites},
+        request=request,
+    )
+    return JsonResponse({"html": html})
+
+
+@require_http_methods(["GET", "POST"])
+def grande_unite_create(request):
+    if request.method == "POST":
+        form = GrandeUniteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({"success": True})
+        return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
+    form = GrandeUniteForm()
+    html = render_to_string(
+        "matieres/grande_unite_form.html",
+        {"form": form, "action": "create"},
+        request=request,
+    )
+    return JsonResponse({"html": html})
+
+
+@require_http_methods(["GET", "POST"])
+def grande_unite_update(request, pk):
+    grande_unite = get_object_or_404(GrandeUnite, pk=pk)
+
+    if request.method == "POST":
+        form = GrandeUniteForm(request.POST, instance=grande_unite)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({"success": True})
+        return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
+    form = GrandeUniteForm(instance=grande_unite)
+    html = render_to_string(
+         "matieres/grande_unite_form.html",
+        {"form": form, "action": "update", "grande_unite": grande_unite},
+        request=request,
+    )
+    return JsonResponse({"html": html})
+
+
+@require_http_methods(["POST"])
+def grande_unite_delete(request, pk):
+    grande_unite = get_object_or_404(GrandeUnite, pk=pk)
+    nb_matieres = grande_unite.matieres.count()
+
+    if nb_matieres > 0:
+        return JsonResponse({
+            "success": False,
+            "error": f"Impossible de supprimer : {nb_matieres} matière(s) rattachée(s)."
+        }, status=400)
+
+    grande_unite.delete()
+    return JsonResponse({"success": True})
+
+
+def matieres_par_classe(request):
+    """
+    ⚠️ Adapte le filtre ci-dessous à ta vraie relation Classe -> Filiere/Niveau.
+    Je n'ai pas le modèle Classe donc je pars sur classe.filiere_bts_id.
+    """
+    classe_id = request.GET.get("classe")
+
+    matieres = Matiere.objects.filter(
+        filiere_bts__classe__id=classe_id  # <-- à adapter selon ton modèle Classe
+    ).select_related("grande_unite").order_by("grande_unite__ordre", "libelle")
+
+    data = [
+        {
+            "id": m.id,
+            "code": m.code,
+            "libelle": m.libelle,
+            "grande_unite": m.grande_unite.libelle if m.grande_unite else "Sans grande unité",
+            "grande_unite_ordre": m.grande_unite.ordre if m.grande_unite else 999,
+        }
+        for m in matieres
+    ]
+    return JsonResponse(data, safe=False)
+
+def grandes_unites_par_filiere(request):
+    filiere_id = request.GET.get("filiere_bts")
+
+    grandes_unites = GrandeUnite.objects.filter(
+        filiere_bts_id=filiere_id
+    ).order_by("ordre")
+
+    data = [
+        {"id": gu.id, "code": gu.code, "libelle": gu.libelle}
+        for gu in grandes_unites
+    ]
     return JsonResponse(data, safe=False)
