@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from django.urls import path, include
-
+from .views import export_etudiants_pdf
 urlpatterns = [
     path('', views.dashboard, name='home'),
     path('lmd/', include('lmd.urls')),
@@ -78,5 +78,8 @@ urlpatterns = [
     path("grandes-unites/<int:pk>/supprimer/", views.grande_unite_delete, name="grande_unite_delete"),
     path("ajax/matieres-par-classe/", views.matieres_par_classe, name="matieres_par_classe"),
     path("ajax/grandes-unites-par-filiere/", views.grandes_unites_par_filiere, name="grandes_unites_par_filiere"),
+    path("etudiants/export/pdf/",export_etudiants_pdf,name="export_etudiants_pdf"),
+   
+
 
 ]

@@ -31,6 +31,14 @@ Gestion des étudiants BTS
             Total : {{ page_obj.paginator.count }}
         </span>
 
+        <a href="{% url 'export_etudiants_pdf' %}?filiere_bts={{ request.GET.filiere_bts }}&niveau={{ request.GET.niveau }}&q={{ request.GET.q }}"
+            class="btn btn-danger shadow-sm"
+            target="_blank">
+     
+            <i class="bi bi-file-earmark-pdf"></i>
+             Exporter PDF
+     
+         </a>
         <a href="{% url 'import_etudiants_excel' %}"
            class="btn btn-success shadow-sm">
 

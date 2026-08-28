@@ -31,6 +31,18 @@ from django.views.decorators.http import require_http_methods
 from django.template.loader import render_to_string
 from .models import GrandeUnite
 from .forms import GrandeUniteForm
+from django.http import FileResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+)
 # =========================
 # 🔐 LOGIN
 # =========================
@@ -1883,3 +1895,347 @@ def grandes_unites_par_filiere(request):
         for gu in grandes_unites
     ]
     return JsonResponse(data, safe=False)
+
+
+import io
+
+from django.http import FileResponse
+from django.db.models import Q
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+)
+
+
+def export_etudiants_pdf(request):
+
+    filiere_id = request.GET.get("filiere_bts")
+    niveau = request.GET.get("niveau")
+    recherche = request.GET.get("q", "").strip()
+
+    # =====================================================
+    # RÉCUPÉRATION DES ÉTUDIANTS
+    # =====================================================
+
+    etudiants = Etudiant.objects.select_related(
+        "classe",
+        "filiere_bts"
+    ).all()
+
+    # Filtre filière
+    if filiere_id:
+        etudiants = etudiants.filter(
+            filiere_bts_id=filiere_id
+        )
+
+    # Filtre classe / niveau
+    if niveau:
+        etudiants = etudiants.filter(
+            classe__niveau__nom=niveau
+        )
+
+    # Recherche
+    if recherche:
+        etudiants = etudiants.filter(
+            Q(nom__icontains=recherche)
+            | Q(prenoms__icontains=recherche)
+            | Q(matricule__icontains=recherche)
+        )
+
+    etudiants = etudiants.order_by(
+        "filiere_bts__nom",
+        "classe__nom",
+        "nom",
+        "prenoms"
+    )
+
+    # =====================================================
+    # PDF
+    # =====================================================
+
+    buffer = io.BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        rightMargin=0.8 * cm,
+        leftMargin=0.8 * cm,
+        topMargin=0.8 * cm,
+        bottomMargin=0.8 * cm,
+    )
+
+    styles = getSampleStyleSheet()
+
+    titre_style = ParagraphStyle(
+        "Titre",
+        parent=styles["Heading1"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        alignment=1,
+        spaceAfter=8,
+    )
+
+    sous_titre_style = ParagraphStyle(
+        "SousTitre",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=9,
+        alignment=1,
+        spaceAfter=10,
+    )
+
+    cell_style = ParagraphStyle(
+        "Cell",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=7,
+        leading=8,
+    )
+
+    cell_center = ParagraphStyle(
+        "CellCenter",
+        parent=cell_style,
+        alignment=1,
+    )
+
+    elements = []
+
+    # =====================================================
+    # TITRE
+    # =====================================================
+
+    elements.append(
+        Paragraph(
+            "LISTE DES ÉTUDIANTS BTS",
+            titre_style
+        )
+    )
+
+    # =====================================================
+    # FILTRES AFFICHÉS
+    # =====================================================
+
+    filiere_nom = "Toutes les filières"
+
+    if filiere_id:
+        etudiant_filiere = (
+            etudiants.first()
+        )
+
+        if etudiant_filiere and etudiant_filiere.filiere_bts:
+            filiere_nom = etudiant_filiere.filiere_bts.nom
+
+    niveau_affiche = niveau or "Toutes les années"
+
+    elements.append(
+        Paragraph(
+            f"<b>Filière :</b> {filiere_nom} "
+            f"&nbsp;&nbsp;&nbsp; "
+            f"<b>Année :</b> {niveau_affiche} "
+            f"&nbsp;&nbsp;&nbsp; "
+            f"<b>Total :</b> {etudiants.count()} étudiant(s)",
+            sous_titre_style
+        )
+    )
+    header_style = ParagraphStyle(
+    "HeaderStyle",
+    parent=styles["Normal"],
+    fontName="Helvetica-Bold",
+    fontSize=8,
+    leading=9,
+    alignment=1,
+    textColor=colors.white,  # 👈 écriture blanche
+)
+
+    # =====================================================
+    # TABLEAU
+    # =====================================================
+
+    data = [
+        [
+            Paragraph("<b>N°</b>", header_style),
+            Paragraph("<b>NOM</b>", header_style),
+            Paragraph("<b>PRÉNOMS</b>", header_style),
+            Paragraph("<b>MATRICULE</b>", header_style),
+            Paragraph("<b>SEXE</b>", header_style),
+            Paragraph("<b>CLASSE</b>", header_style),
+            Paragraph("<b>FILIÈRE</b>", header_style),
+        ]
+    ]
+
+    for index, etudiant in enumerate(etudiants, start=1):
+
+        sexe = (
+            "Homme"
+            if etudiant.sexe == "M"
+            else "Femme"
+            if etudiant.sexe == "F"
+            else "-"
+        )
+
+        classe = (
+            etudiant.classe.nom
+            if etudiant.classe
+            else "-"
+        )
+
+        filiere = (
+            etudiant.filiere_bts.nom
+            if etudiant.filiere_bts
+            else "-"
+        )
+
+        data.append(
+            [
+                Paragraph(str(index), cell_center),
+
+                Paragraph(
+                    etudiant.nom or "",
+                    cell_style
+                ),
+
+                Paragraph(
+                    etudiant.prenoms or "",
+                    cell_style
+                ),
+
+                Paragraph(
+                    etudiant.matricule or "",
+                    cell_center
+                ),
+
+                Paragraph(
+                    sexe,
+                    cell_center
+                ),
+
+                Paragraph(
+                    classe,
+                    cell_style
+                ),
+
+                Paragraph(
+                    filiere,
+                    cell_style
+                ),
+            ]
+        )
+
+    table = Table(
+        data,
+        colWidths=[
+            1.0 * cm,
+            4.0 * cm,
+            6.0 * cm,
+            4.0 * cm,
+            2.5 * cm,
+            4.5 * cm,
+            7.0 * cm,
+        ],
+        repeatRows=1,
+    )
+
+    table.setStyle(
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.HexColor("#1f3a5f"),
+                ),
+
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, 0),
+                    colors.white,
+                ),
+
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold",
+                ),
+
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.4,
+                    colors.grey,
+                ),
+
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "MIDDLE",
+                ),
+
+                (
+                    "ALIGN",
+                    (0, 0),
+                    (0, -1),
+                    "CENTER",
+                ),
+
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    4,
+                ),
+
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    4,
+                ),
+
+                (
+                    "LEFTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    4,
+                ),
+
+                (
+                    "RIGHTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    4,
+                ),
+            ]
+        )
+    )
+
+    elements.append(table)
+
+    # =====================================================
+    # GÉNÉRATION
+    # =====================================================
+
+    doc.build(elements)
+
+    buffer.seek(0)
+
+    return FileResponse(
+        buffer,
+        as_attachment=False,
+        filename="liste_etudiants_bts.pdf",
+        content_type="application/pdf",
+    )
+
+   
+    
