@@ -222,12 +222,12 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         [[
             logo,
             Paragraph("""
-                <b>GROUPE EXPERT METIER</b><br/>
+                <b>UNIVERSITÉ INTER. DE COCODY</b><br/>
                 BP Abidjan - Côte d'Ivoire<br/>
-                Tel: +225 01 50 53 66 86<br/>
-                Tél. fixe : 27 22 20 44 32 <br/>
-                site: www.gem-ci.com<br/>
-                Email: contact@EMBS-CI.COM
+                Tel: +225 07 78 63 74 00<br/>
+                Tél. fixe : 27 XX XX XX<br/>
+                site: www.uci-ci.com<br/>
+                Email: uicinfos@gmail.com
            """, style_universite)
         ]],
         # colWidths=[0.5 * cm, 7.5 * cm],
