@@ -5,9 +5,6 @@ from itertools import groupby
 
 from django.conf import settings
 from django.db.models import Min, Max, Avg
-
-import qrcode
-
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer,
     Table, TableStyle, Image as RLImage
@@ -114,19 +111,10 @@ def generate_qr_image(etudiant, size=2.2 * cm):
         f"Filière: {getattr(etudiant.filiere_bts, 'nom', '') if getattr(etudiant, 'filiere_bts', None) else ''}"
     )
 
-    qr = qrcode.QRCode(
-        version=None,
-        error_correction=qrcode.constants.ERROR_CORRECT_M,
-        box_size=6,
-        border=1,
-    )
-    qr.add_data(contenu_qr)
-    qr.make(fit=True)
-
-    qr_img = qr.make_image(fill_color="black", back_color="white")
+    
 
     buffer = io.BytesIO()
-    qr_img.save(buffer, format="PNG")
+    
     buffer.seek(0)
 
     return RLImage(buffer, width=size, height=size)
