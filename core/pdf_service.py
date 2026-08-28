@@ -341,7 +341,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ]))
 
     elements.append(header)
-    elements.append(Spacer(1, 12))
+    # elements.append(Spacer(1, 12))
 
     # =====================================================
     # TITRE
@@ -353,7 +353,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     
     elements.append(
     Paragraph(f"BULLETIN DE NOTES - {titre_semestre} SEMESTRE", TITLE))
-    elements.append(Spacer(1, 10))
+    # elements.append(Spacer(1, 10))
 
     # =====================================================
     # NOTES
