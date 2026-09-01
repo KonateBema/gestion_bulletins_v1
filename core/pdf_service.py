@@ -426,10 +426,26 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # (les notes sont déjà triées par matiere__grande_unite__ordre)
     # =====================================================
     subtotal_rows = []
+    notes = sorted(
+    notes,
+    key=lambda n: (
+        n.matiere.grande_unite.ordre
+        if n.matiere.grande_unite else 999,
+        n.matiere.grande_unite.id
+        if n.matiere.grande_unite else 999,
+        n.matiere.id
+       )
+      )
 
-    for grande_unite, groupe in groupby(notes, key=lambda n: n.matiere.grande_unite):
-        groupe = list(groupe)
-        grande_unite = groupe[0].matiere.grande_unite
+    # for grande_unite, groupe in groupby(notes, key=lambda n: n.matiere.grande_unite):
+    #     groupe = list(groupe)
+    #     grande_unite = groupe[0].matiere.grande_unite
+    #     gu_points = 0
+    #     gu_coef = 0
+    for grande_unite, groupe in groupby(
+        notes,
+        key=lambda n: n.matiere.grande_unite
+        ):
         gu_points = 0
         gu_coef = 0
 
