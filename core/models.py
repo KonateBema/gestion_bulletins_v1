@@ -109,11 +109,11 @@ class Categorie(models.Model):
 
     def __str__(self):
         return self.nom
+    
 class GrandeUnite(models.Model):
 
     code = models.CharField(
-        max_length=20,
-        unique=True
+        max_length=20
     )
 
     libelle = models.CharField(
@@ -136,14 +136,28 @@ class GrandeUnite(models.Model):
         null=True
     )
 
+    niveau = models.ForeignKey(
+        Niveau,
+        on_delete=models.CASCADE,
+        related_name="grandes_unites",
+        null=True,
+         blank=True
+    )
     class Meta:
         ordering = ["ordre", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["filiere_bts", "niveau", "code"],
+                name="unique_grande_unite_filiere_niveau_code"
+            )
+        ]
+
         verbose_name = "Grande unité"
         verbose_name_plural = "Grandes unités"
 
     def __str__(self):
         return f"{self.code} - {self.libelle}"
-
+    
 class Matiere(models.Model):
     code = models.CharField(max_length=20, unique=True)
     libelle = models.CharField(max_length=150)
