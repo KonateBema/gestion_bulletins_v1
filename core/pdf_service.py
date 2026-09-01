@@ -371,7 +371,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         semestre=semestre_value
       )
       .select_related("matiere", "matiere__grande_unite")
-      .order_by("matiere__grande_unite__ordre", "matiere__code")
+      .order_by("matiere__grande_unite__ordre", "matiere__grande_unite__id", "matiere__code")
       )
 
     stats_map = {
@@ -429,6 +429,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
 
     for grande_unite, groupe in groupby(notes, key=lambda n: n.matiere.grande_unite):
         groupe = list(groupe)
+        grande_unite = groupe[0].matiere.grande_unite
         gu_points = 0
         gu_coef = 0
 
