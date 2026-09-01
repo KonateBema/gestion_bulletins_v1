@@ -29,6 +29,9 @@ from .pdf_licence_qhse import generer_bulletin_qhse_pdf
 from .models import UE, ECUE, NoteLMD, GrandeUnite
 import pandas as pd
 from .pdf_licence_qhse import generer_bulletin_qhse_pdf
+from django.contrib.auth.decorators import login_required
+from core.decorators import role_required
+
 def niveau_list(request):
     niveaux = Niveau.objects.all()
     return render(request, "lmd/niveaux/list.html", {"niveaux": niveaux})
@@ -442,7 +445,8 @@ def bulletin_lmd_listRE(request):
     })
     
     
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def bulletin_lmd_list(request):
 
     matricule = request.GET.get("matricule")
@@ -770,7 +774,8 @@ def resultat_ue(request, etudiant_id):
         "etudiant": etudiant,
         "resultats": resultats
     })
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def bulletin_lmd_pdf(request, etudiant_id):
 
     file_path = os.path.join(
@@ -1614,6 +1619,8 @@ def deliberation_rattrapage(request):
         }
     )
     
+@login_required(login_url="login")
+@role_required("ADMIN")    
 def bulletin_rattrapage_list(request):
 
     candidats = CandidatRattrapage.objects.select_related(
@@ -3138,7 +3145,8 @@ def droit_prive_note_addAAAA(request):
 
 
  
- 
+@login_required(login_url="login")
+@role_required("ADMIN")
 def l3_droit_bulletins(request):
 
     filiere = get_object_or_404(
@@ -3682,7 +3690,8 @@ def l3_gestion_notes(request, ecue_id=None):
         context,
     )
 
- 
+@login_required(login_url="login")
+@role_required("ADMIN")
 def l3_gestion_bulletins(request):
 
     return render(
@@ -4354,7 +4363,8 @@ from .models import EtudiantMaster
 from django.shortcuts import render
 from .models import EtudiantMaster
 
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def master_bulletin_list(request):
 
     etudiants = EtudiantMaster.objects.select_related(
@@ -4420,7 +4430,9 @@ def master_bulletin_list(request):
         "lmd/master/bulletins.html",
         context
     )
-
+    
+@login_required(login_url="login")
+@role_required("ADMIN")
 def master_bulletin_pdf(request, id, semestre):
 
     etudiant = get_object_or_404(
@@ -4782,7 +4794,8 @@ def liste_bulletins_l3_droit_priveFFF(request):
         }
     )
 
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def liste_bulletins_l3_droit_prive(request):
 
     etudiants = EtudiantLMD.objects.filter(
@@ -5771,7 +5784,8 @@ def l3_gestion_ecue_delete(request, pk):
             "ecue": ecue
         }
     )
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def liste_bulletins_gestion(request):
 
     filiere = get_object_or_404(
@@ -5798,7 +5812,8 @@ def liste_bulletins_gestion(request):
             "filiere": filiere
         }
     )
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def bulletin_gestion_lmd_pdf(request, id, semestre):
 
     etudiant = get_object_or_404(
@@ -5835,7 +5850,8 @@ def bulletin_gestion_lmd_pdf(request, id, semestre):
         open(file_path, "rb"),
         content_type="application/pdf"
     )
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def liste_bulletins_tronc_commun(request):
 
     etudiants = EtudiantLMD.objects.filter(
@@ -5856,7 +5872,8 @@ def liste_bulletins_tronc_commun(request):
         }
     )
 
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def imprimer_bulletin_tronc_commun(request, pk):
 
     etudiant = get_object_or_404(
@@ -6345,7 +6362,8 @@ def tronc_commun_gestion(request):
 # =====================================================
 # LISTE BULLETINS
 # =====================================================
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def bulletin_tronc_commun_list(request):
 
     etudiants = EtudiantLMD.objects.filter(
@@ -6359,8 +6377,10 @@ def bulletin_tronc_commun_list(request):
         {
             "etudiants":etudiants
         }
-    )    
-
+    ) 
+       
+@login_required(login_url="login")
+@role_required("ADMIN")
 def bulletin_tronc_commun_pdf(request, id, semestre):
 
     etudiant = get_object_or_404(
@@ -6951,7 +6971,8 @@ def l3_qhse_notes(request):
 # =====================================================
 # BULLETINS QHSE
 # =====================================================
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def l3_qhse_bulletins(request):
 
     filiere = get_filiere_qhse()
@@ -7556,114 +7577,8 @@ def master_programme_list(request):
     )
     
 
-def imprimer_bulletin_licence_qhseAAAA(request, pk, semestre):
-
-    etudiant = get_object_or_404(
-        EtudiantLMD,
-        pk=pk
-    )
-
-
-    pdf_dir = os.path.join(
-        settings.MEDIA_ROOT,
-        "bulletins_licence_qhse"
-    )
-
-
-    os.makedirs(
-        pdf_dir,
-        exist_ok=True
-    )
-
-
-    fichier = os.path.join(
-        pdf_dir,
-        f"bulletin_{etudiant.matricule}_{semestre}.pdf"
-    )
-
-
-    generer_bulletin_qhse_pdf(
-        etudiant,
-        fichier,
-        semestre
-    )
-
-
-    return FileResponse(
-        open(fichier, "rb"),
-        content_type="application/pdf",
-        filename=f"Bulletin_{etudiant.matricule}_{semestre}.pdf"
-    )
-
-def imprimer_bulletin_licence_qhseDS(request, pk, semestre):
-
-    print("====================================")
-    print("IMPRESSION QHSE")
-    print("PK :", pk)
-    print("SEMESTRE :", semestre)
-
-    try:
-
-        etudiant = get_object_or_404(
-            EtudiantLMD,
-            pk=pk
-        )
-
-        print("Étudiant :", etudiant)
-        print("Matricule :", etudiant.matricule)
-        print("Filière :", etudiant.filiere)
-        print("Niveau :", etudiant.niveau)
-
-        pdf_dir = os.path.join(
-            settings.MEDIA_ROOT,
-            "bulletins_licence_qhse"
-        )
-
-        os.makedirs(
-            pdf_dir,
-            exist_ok=True
-        )
-
-        fichier = os.path.join(
-            pdf_dir,
-            f"bulletin_{etudiant.matricule}_{semestre}.pdf"
-        )
-
-        print("Fichier :", fichier)
-
-        resultat = generer_bulletin_qhse_pdf(
-            etudiant,
-            fichier,
-            semestre
-        )
-
-        print("Résultat génération :", resultat)
-
-        print("Fichier existe :", os.path.exists(fichier))
-
-        if not os.path.exists(fichier):
-            raise Exception(
-                f"Le fichier PDF n'a pas été créé : {fichier}"
-            )
-
-        print("Taille :", os.path.getsize(fichier))
-
-        return FileResponse(
-            open(fichier, "rb"),
-            content_type="application/pdf",
-            filename=f"Bulletin_{etudiant.matricule}_{semestre}.pdf"
-        )
-
-    except Exception as ex:
-
-        print("====================================")
-        print("ERREUR PDF QHSE")
-        print(type(ex).__name__)
-        print(str(ex))
-        print("====================================")
-
-        raise
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def imprimer_bulletin_licence_qhse(request, pk, semestre):
 
     print("====================================")
@@ -7979,7 +7894,8 @@ def l3_tc_ecue_delete(request, pk):
         }
     )
 
-    
+@login_required(login_url="login")
+@role_required("ADMIN")    
 def bulletin_rattrapage_pdf(request, id, semestre):
 
     etudiant = get_object_or_404(
@@ -8505,7 +8421,8 @@ def l3_droit_etudiant_modele_excel(request):
 
     return response
 
-
+@login_required(login_url="login")
+@role_required("ADMIN")
 def imprimer_bulletin_droit_prive(request, id, semestre):
 
     etudiant = get_object_or_404(
@@ -8543,7 +8460,8 @@ def imprimer_bulletin_droit_prive(request, id, semestre):
         open(file_path,"rb"),
         content_type="application/pdf"
     )
-    
+@login_required(login_url="login")
+@role_required("ADMIN")    
 def imprimer_bulletin_lmd(request, id, semestre):
 
     etudiant = get_object_or_404(
@@ -9421,7 +9339,9 @@ def sciences_gestion_etudiant_deleteH(request, niveau, id):
             "niveau": niveau,
         }
     )
-
+    
+@login_required(login_url="login")
+@role_required("ADMIN")
 def sciences_gestion_bulletins(request):
   etudiants = EtudiantLMD.objects.filter(
      filiere__libelle__icontains="Sciences de Gestion"

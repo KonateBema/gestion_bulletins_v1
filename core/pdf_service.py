@@ -288,6 +288,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         ["Date et lieu de naiss", date_lieu],
         ["Sexe", getattr(etudiant, "sexe", "")],
         ["Classe", nom_classe],
+        # ["Classe", etudiant.salle.nom],
         ["Filière",  etudiant.filiere_bts.nom[:23]],
         ["Redoublant", "NON"],
       ],

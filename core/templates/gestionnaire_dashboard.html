@@ -1,379 +1,337 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% load static %}
-
-{% block title %}
-Tableau de bord Gestionnaire
-{% endblock %}
+{% block title %}Dashboard Administrateur{% endblock %}
 
 {% block content %}
 
-<div class="container-fluid py-4">
+<style>
+    .dashboard-header {
+        background:
+            linear-gradient(135deg,
+                #0d6efd,
+                #6610f2);
+        color: white;
+        padding: 35px;
+        border-radius: 25px;
+        margin-bottom: 30px;
+    }
+    .dashboard-header h2 {
+        font-weight: 800;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow:
+            0 10px 25px rgba(0, 0, 0, .08);
+        transition: .3s;
+        height: 100%;
+    }
+    .stat-card:hover {
+        transform: translateY(-6px);
+    }
+    .icon-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 30px;
+        margin-bottom: 15px;
+    }
 
+    .stat-number {
+        font-size: 35px;
+        font-weight: 800;
+    }
+    .section-card {
+        background: white;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow:
+            0 10px 25px rgba(0, 0, 0, .08);
+    }
 
-<!-- ============================= -->
-<!-- EN-TÊTE -->
-<!-- ============================= -->
+    .action-btn {
+        padding: 13px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        font-weight: 600;
+    }
+    .system-item {
+        padding: 12px;
+        border-radius: 12px;
+        background: #f8fafc;
+        margin-bottom: 10px;
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+    }
+</style>
 
-    <div>
-        <h2 class="fw-bold mb-1">
-            <i class="bi bi-speedometer2 text-primary"></i>
-            Tableau de bord Gestionnaire
+<div class="container-fluid">
+
+    <!-- HEADER -->
+
+    <div class="dashboard-header">
+
+        <h2>
+
+            <i class="bi bi-speedometer2"></i>
+
+            Dashboard Administrateur
+
         </h2>
+        <p>
 
-        <p class="text-muted mb-0">
-            Bienvenue,
-            <strong>
-                {{ request.user.first_name|default:request.user.username }}
-            </strong>
+            Gestion complète de la plateforme académique BTS & LMD
         </p>
+
     </div>
 
-    <div>
-        <span class="badge bg-primary px-3 py-2">
-            <i class="bi bi-person-badge"></i>
-            GESTIONNAIRE
-        </span>
-    </div>
+    <!-- STATISTIQUES -->
 
-</div>
+    <div class="row g-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card">
+                <div class="icon-box bg-primary text-white">
 
+                    <i class="bi bi-people"></i>
+                </div>
+                <h6>
+                    Étudiants BTS
+                </h6>
+                <div class="stat-number text-primary">
 
-<!-- ============================= -->
-<!-- STATISTIQUES -->
-<!-- ============================= -->
+                    {{ etudiants }}
 
-<div class="row g-4 mb-4">
+                </div>
+            </div>
+        </div>
 
-    <!-- Classes -->
-    <div class="col-md-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card">
 
-        <div class="card border-0 shadow-sm h-100">
-
-            <div class="card-body d-flex justify-content-between align-items-center">
-
-                <div>
-                    <p class="text-muted mb-1">
-                        Classes
-                    </p>
-
-                    <h3 class="fw-bold mb-0">
-                        {{ classes }}
-                    </h3>
+                <div class="icon-box bg-success text-white">
+                    <i class="bi bi-mortarboard"></i>
                 </div>
 
-                <div class="fs-1 text-primary">
+                <h6>
+                    Étudiants LMD
+                </h6>
+
+                <div class="stat-number text-success">
+
+                    {{ etudiants_lmd }}
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card">
+
+                <div class="icon-box bg-warning text-white">
+
+                    <i class="bi bi-person-workspace"></i>
+                </div>
+
+                <h6>
+                    Professeurs
+                </h6>
+
+                <div class="stat-number text-warning">
+
+                    {{ professeurs }}
+
+                </div>
+
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card">
+
+                <div class="icon-box bg-danger text-white">
+
                     <i class="bi bi-building"></i>
+
+                </div>
+
+                <h6>
+                    Classes
+                </h6>
+
+                <div class="stat-number text-danger">
+
+                    {{ classes }}
+
                 </div>
 
             </div>
-
         </div>
 
     </div>
 
+    <!-- ACTIONS -->
 
-    <!-- Filières -->
-    <div class="col-md-4">
+    <div class="row mt-5 g-4">
 
-        <div class="card border-0 shadow-sm h-100">
+        <div class="col-lg-6">
 
-            <div class="card-body d-flex justify-content-between align-items-center">
+            <div class="section-card">
 
-                <div>
-                    <p class="text-muted mb-1">
-                        Filières BTS
-                    </p>
+                <h4 class="mb-4">
+                    <i class="bi bi-lightning-charge"></i>
+                    Actions rapides
+                </h4>
 
-                    <h3 class="fw-bold mb-0">
-                        {{ filieres }}
-                    </h3>
-                </div>
+                <a href="{% url 'etudiant_list' %}" class="btn btn-primary w-100 action-btn">
 
-                <div class="fs-1 text-success">
-                    <i class="bi bi-diagram-3"></i>
-                </div>
+                    <i class="bi bi-person-plus"></i>
 
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- Matières -->
-    <div class="col-md-4">
-
-        <div class="card border-0 shadow-sm h-100">
-
-            <div class="card-body d-flex justify-content-between align-items-center">
-
-                <div>
-                    <p class="text-muted mb-1">
-                        Matières
-                    </p>
-
-                    <h3 class="fw-bold mb-0">
-                        {{ matieres }}
-                    </h3>
-                </div>
-
-                <div class="fs-1 text-warning">
-                    <i class="bi bi-book"></i>
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ============================= -->
-<!-- GESTION ACADÉMIQUE -->
-<!-- ============================= -->
-
-<div class="card border-0 shadow-sm mb-4">
-
-    <div class="card-header bg-white border-0 py-3">
-
-        <h5 class="fw-bold mb-0">
-            <i class="bi bi-mortarboard text-primary"></i>
-            Gestion académique
-        </h5>
-
-    </div>
-
-    <div class="card-body">
-
-        <div class="row g-3">
-
-
-            <!-- Étudiants -->
-
-            <div class="col-md-6 col-lg-4">
-
-                <a href="{% url 'etudiant_list' %}"
-                   class="text-decoration-none">
-
-                    <div class="card border h-100 dashboard-action">
-
-                        <div class="card-body">
-
-                            <i class="bi bi-people fs-1 text-primary"></i>
-
-                            <h5 class="fw-bold mt-3">
-                                Étudiants
-                            </h5>
-
-                            <p class="text-muted mb-0">
-                                Consulter et gérer les étudiants.
-                            </p>
-
-                        </div>
-
-                    </div>
+                    Gestion étudiants BTS
 
                 </a>
-
-            </div>
-
-
-            <!-- Classes -->
-
-            <div class="col-md-6 col-lg-4">
-
-                <a href="{% url 'classe_list' %}"
-                   class="text-decoration-none">
-
-                    <div class="card border h-100 dashboard-action">
-
-                        <div class="card-body">
-
-                            <i class="bi bi-building fs-1 text-success"></i>
-
-                            <h5 class="fw-bold mt-3">
-                                Classes
-                            </h5>
-
-                            <p class="text-muted mb-0">
-                                Gérer les classes et leurs affectations.
-                            </p>
-
-                        </div>
-
-                    </div>
-
+                <a href="{% url 'etudiant_lmd_list' %}" class="btn btn-success w-100 action-btn">
+                    <i class="bi bi-mortarboard"></i>
+                    Gestion étudiants LMD
                 </a>
-
-            </div>
-
-
-            <!-- Matières -->
-
-            <div class="col-md-6 col-lg-4">
-
-                <a href="{% url 'matiere_list' %}"
-                   class="text-decoration-none">
-
-                    <div class="card border h-100 dashboard-action">
-
-                        <div class="card-body">
-
-                            <i class="bi bi-book fs-1 text-warning"></i>
-
-                            <h5 class="fw-bold mt-3">
-                                Matières
-                            </h5>
-
-                            <p class="text-muted mb-0">
-                                Gérer les matières.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </a>
-
-            </div>
-
-
-            <!-- Filières -->
-
-            <div class="col-md-6 col-lg-4">
-
-                <a href="{% url 'liste_filieres_bts' %}"
-                   class="text-decoration-none">
-
-                    <div class="card border h-100 dashboard-action">
-
-                        <div class="card-body">
-
-                            <i class="bi bi-diagram-3 fs-1 text-info"></i>
-
-                            <h5 class="fw-bold mt-3">
-                                Filières BTS
-                            </h5>
-
-                            <p class="text-muted mb-0">
-                                Gérer les filières BTS.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </a>
-
-            </div>
-
-
-            <!-- Salles -->
-
-            <div class="col-md-6 col-lg-4">
-
-                <a href="{% url 'salle_list' %}"
-                   class="text-decoration-none">
-
-                    <div class="card border h-100 dashboard-action">
-
-                        <div class="card-body">
-
-                            <i class="bi bi-door-open fs-1 text-danger"></i>
-
-                            <h5 class="fw-bold mt-3">
-                                Salles
-                            </h5>
-
-                            <p class="text-muted mb-0">
-                                Gérer les salles de cours.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </a>
-
-            </div>
-
-
-            <!-- Notes -->
-
-            <div class="col-md-6 col-lg-4">
-
-                <a href="{% url 'note_list' %}"
-                   class="text-decoration-none">
-
-                    <div class="card border h-100 dashboard-action">
-
-                        <div class="card-body">
-
-                            <i class="bi bi-journal-text fs-1 text-secondary"></i>
-
-                            <h5 class="fw-bold mt-3">
-                                Notes
-                            </h5>
-
-                            <p class="text-muted mb-0">
-                                Consulter et gérer les notes.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </a>
-
-            </div>
-
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ============================= -->
-<!-- SAISIE DES NOTES -->
-<!-- ============================= -->
-
-<div class="card border-0 shadow-sm">
-
-    <div class="card-body">
-
-        <div class="row align-items-center">
-
-            <div class="col-md-8">
-
-                <h5 class="fw-bold">
-                    <i class="bi bi-pencil-square text-primary"></i>
-                    Saisie groupée des notes
-                </h5>
-
-                <p class="text-muted mb-md-0">
-                    Saisissez rapidement les notes d'une classe
-                    pour une matière et un semestre.
-                </p>
-
-            </div>
-
-            <div class="col-md-4 text-md-end">
-
-                <a href="{% url 'saisie_note_groupee' %}"
-                   class="btn btn-primary">
+                <a href="{% url 'saisie_note_groupee' %}" class="btn btn-warning w-100 action-btn">
 
                     <i class="bi bi-pencil-square"></i>
 
-                    Saisir les notes
+                    Saisie groupée BTS
 
                 </a>
+
+                <a href="{% url 'saisie_list' %}" class="btn btn-dark w-100 action-btn">
+
+                    <i class="bi bi-calculator"></i>
+
+                    Saisie notes ECUE
+
+                </a>
+
+                <a href="{% url 'bulletin_lmd_list' %}" class="btn btn-danger w-100 action-btn">
+
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    Générer bulletins LMD
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- SYSTEME -->
+
+        <div class="col-lg-6">
+
+            <div class="section-card">
+                <h4 class="mb-4">
+                    <i class="bi bi-shield-check"></i>
+                    État du système
+                </h4>
+
+                <div class="system-item text-success">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Base de données opérationnelle
+
+                </div>
+                <div class="system-item text-primary">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Authentification sécurisée
+
+                </div>
+                <div class="system-item text-info">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Modules BTS actifs
+
+                </div>
+
+                <div class="system-item text-warning">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Modules LMD actifs
+
+                </div>
+
+                <div class="system-item text-danger">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Génération PDF disponible
+
+                </div>
+
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ACTIVITE -->
+    <div class="row mt-4">
+
+        <div class="col-12">
+
+            <div class="section-card">
+
+                <h4>
+
+                    <i class="bi bi-clock-history"></i>
+
+                    Dernières activités
+
+                </h4>
+
+                <table class="table table-hover mt-3">
+
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>Utilisateur</th>
+
+                            <th>Action</th>
+
+                            <th>Date</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+
+                            <td>Administrateur</td>
+
+                            <td>Ajout d'un étudiant</td>
+
+                            <td>{{ today }}</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td>Professeur</td>
+
+                            <td>Saisie des notes ECUE</td>
+
+                            <td>{{ today }}</td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
 
             </div>
 
@@ -383,31 +341,5 @@ Tableau de bord Gestionnaire
 
 </div>
 
-
-</div>
-
-<style>
-
-.dashboard-action {
-
-    transition: all .25s ease;
-
-}
-
-.dashboard-action:hover {
-
-    transform: translateY(-5px);
-
-    box-shadow: 0 10px 25px rgba(0,0,0,.08);
-
-}
-
-.dashboard-action .card-body {
-
-    padding: 25px;
-
-}
-
-</style>
 
 {% endblock %}

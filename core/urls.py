@@ -69,7 +69,8 @@ urlpatterns = [
     # urls.py
     path("etudiants/import-excel/",views.import_etudiants_excel, name="import_etudiants_excel"),
     
-    path("dashboard/gestionnaire/",views.dashboard_gestionnaire,name="dashboard_gestionnaire"),
+    # path("dashboard/gestionnaire/",views.dashboard_gestionnaire,name="dashboard_gestionnaire"),
+    path('gestionnaire/dashboard/', views.dashboard_gestionnaire, name='dashboard_gestionnaire'),
     path("ajax/matieres-par-classe/",views.matieres_par_classe,name="matieres_par_classe"),
     
     path("grandes-unites/", views.grande_unite_list, name="grande_unite_list"),
@@ -79,7 +80,5 @@ urlpatterns = [
     path("ajax/matieres-par-classe/", views.matieres_par_classe, name="matieres_par_classe"),
     path("ajax/grandes-unites-par-filiere/", views.grandes_unites_par_filiere, name="grandes_unites_par_filiere"),
     path("etudiants/export/pdf/",export_etudiants_pdf,name="export_etudiants_pdf"),
-   
-
 
 ]

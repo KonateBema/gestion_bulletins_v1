@@ -119,6 +119,8 @@ def login_view(request):
             return redirect("dashboard_admin")
 
         elif profile.role == "GESTIONNAIRE":
+            print("ROLE GESTIONNAIRE DETECTE")
+            print("Redirection vers dashboard_gestionnaire")
 
             return redirect("dashboard_gestionnaire")
 
@@ -399,6 +401,11 @@ def dashboard_etudiant(request):
 @login_required(login_url="login")
 @role_required("GESTIONNAIRE")
 def dashboard_gestionnaire(request):
+    print("=== DASHBOARD GESTIONNAIRE ===")
+    print("Etudiants :", Etudiant.objects.count())
+    print("Classes :", Classe.objects.count())
+    print("Filieres :", Filierebts.objects.count())
+    print("Matieres :", Matiere.objects.count())
 
     return render(
         request,

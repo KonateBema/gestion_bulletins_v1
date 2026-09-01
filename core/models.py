@@ -144,26 +144,6 @@ class GrandeUnite(models.Model):
     def __str__(self):
         return f"{self.code} - {self.libelle}"
 
-
-class MatiereAAA(models.Model):
-    code = models.CharField(max_length=20, unique=True)
-    libelle = models.CharField(max_length=150)
-    coefficient = models.IntegerField(default=1)
-    volume_horaire = models.IntegerField(default=0)
-    filiere_bts = models.ForeignKey(
-        Filierebts,
-        on_delete=models.CASCADE
-    )
-    categorie = models.ForeignKey(
-        Categorie,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-
-    def __str__(self):
-        return self.libelle
-
 class Matiere(models.Model):
     code = models.CharField(max_length=20, unique=True)
     libelle = models.CharField(max_length=150)
