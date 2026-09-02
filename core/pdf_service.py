@@ -1,7 +1,6 @@
 import os
 import io
 from datetime import datetime
-from itertools import groupby
 
 from django.conf import settings
 from django.db.models import Min, Max, Avg
@@ -101,7 +100,7 @@ def generate_qr_image(etudiant, size=2.2 * cm):
     )
 
     buffer = io.BytesIO()
-    
+
     buffer.seek(0)
 
     return RLImage(buffer, width=size, height=size)
@@ -109,14 +108,14 @@ def generate_qr_image(etudiant, size=2.2 * cm):
 
 science_points = 0
 science_coef = 0
-moyenne_professionnelle=0
+moyenne_professionnelle = 0
 professionnel_points = 0
 professionnel_coef = 0
-moyenne_science =0
+moyenne_science = 0
 # =====================================================
 # GENERATION PDF
 # =====================================================
-def generate_bulletin_pdf(etudiant, classe,semestre):
+def generate_bulletin_pdf(etudiant, classe, semestre):
     output_dir = os.path.join(settings.BASE_DIR, "media", "bulletins")
     os.makedirs(output_dir, exist_ok=True)
 
@@ -149,7 +148,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     spaceAfter=0,
     spaceBefore=0,
    )
-    
+
     header_table = Table([
     [
         Paragraph("""
@@ -162,7 +161,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
             <para align="right">
             <b>RÉPUBLIQUE DE CÔTE D'IVOIRE</b><br/>
             Union - Discipline - Travail<br/>
-           
+
             </para>
         """, style_ministere)
     ]
@@ -213,10 +212,10 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     fontSize=9,
     leading=11,
    )
-   
+
 
     # =====================================================
-    # CADRE UNIVERSITÉ 
+    # CADRE UNIVERSITÉ
     # =====================================================
     cadre_universite = Table(
         [[
@@ -230,33 +229,23 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
                 Email: uicinfos@gmail.com
            """, style_universite)
         ]],
-        # colWidths=[0.5 * cm, 7.5 * cm],
         colWidths=[1.7 * cm, 6.5 * cm],
-        rowHeights=[3.2 * cm]   # hauteur fixe  # hauteur alignée avec le cadre étudiant (8 lignes x 0.45cm)
+        rowHeights=[3.2 * cm]   # hauteur fixe alignée avec le cadre étudiant
     )
-    
+
 
     cadre_universite.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
-        ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
+        ("ROUNDEDCORNERS", [6, 6, 6, 6]),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
-        # ("LEFTPADDING", (0, 0), (-1, -1), 6),
         ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-
-          # Décaler uniquement le texte vers la droite
         ("LEFTPADDING", (1, 0), (1, 0), 15),
-
-         # Padding du logo
         ("LEFTPADDING", (0, 0), (0, 0), 5),
         ("RIGHTPADDING", (0, 0), (0, 0), 5),
-        
-         # réduire les marges internes
         ("TOPPADDING", (0,0), (-1,-1), 2),
         ("BOTTOMPADDING", (0,0), (-1,-1), 2),
-
         ("LEFTPADDING", (1,0), (1,0), 8),
-
         ("LEFTPADDING", (0,0), (0,0), 3),
         ("RIGHTPADDING", (0,0), (0,0), 3),
     ]))
@@ -264,12 +253,11 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # =====================================================
     # CADRE ÉTUDIANT
     # =====================================================
-  
-    
+
     nom_classe = classe.nom.strip()
     if classe.filiere_bts:
         nom_filiere = classe.filiere_bts.nom.strip()
-    # Supprimer le nom de la filière uniquement au début
+        # Supprimer le nom de la filière uniquement au début
         if nom_classe.startswith(nom_filiere):
              nom_classe = nom_classe[len(nom_filiere):].strip()
 
@@ -280,7 +268,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     if etudiant.date_naissance
     else ""
     )
-       
+
     cadre_etudiant = Table(
        [
         ["Nom & Prénom", f"{etudiant.nom} {etudiant.prenoms}"],
@@ -288,28 +276,23 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         ["Date et lieu de naiss", date_lieu],
         ["Sexe", getattr(etudiant, "sexe", "")],
         ["Classe", nom_classe],
-        # ["Classe", etudiant.salle.nom],
         ["Filière",  etudiant.filiere_bts.nom[:23]],
         ["Redoublant", "NON"],
       ],
     colWidths=[3.2 * cm, 7 * cm],
-    rowHeights=[0.45*cm]*7   # hauteur de chaque ligne
+    rowHeights=[0.45*cm]*7
 )
 
     cadre_etudiant.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 1, colors.black),
-        ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 arrondi
+        ("ROUNDEDCORNERS", [6, 6, 6, 6]),
         ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
-        # ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
         ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
         ("FONTSIZE", (0, 0), (-1, -1), 7),
         ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f7f7f7")),
-         # réduire hauteur interne
        ("TOPPADDING", (0,0), (-1,-1), 1),
        ("BOTTOMPADDING", (0,0), (-1,-1), 1),
     ]))
-
-    # =====================================================
 
     # =====================================================
     # HEADER GLOBAL
@@ -317,15 +300,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     page_width = A4[0]
     usable_width = page_width - doc.leftMargin - doc.rightMargin
 
-    # Pas de colWidths imposé ici : chaque cadre (université / étudiant / QR)
-    # a déjà sa propre largeur fixe. Les imposer une 2e fois au niveau du
-    # tableau parent provoquait un dépassement de la largeur de page (donc
-    # un chevauchement visuel) car la somme des largeurs internes dépassait
-    # la largeur utile de la page. On laisse ReportLab dimensionner les
-    # colonnes d'après le contenu, et on espace juste un peu les cadres.
-    # Les 3 cadres ont maintenant tous une hauteur totale de 3.6cm, ce qui
-    # aligne parfaitement leurs bords supérieur et inférieur.
-    
     header = Table(
         [[cadre_universite, cadre_etudiant]]
     )
@@ -342,7 +316,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ]))
 
     elements.append(header)
-    # elements.append(Spacer(1, 12))
 
     # =====================================================
     # TITRE
@@ -351,10 +324,9 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
        titre_semestre = "1er"
     else:
        titre_semestre = "2ème"
-    
+
     elements.append(
     Paragraph(f"BULLETIN DE NOTES - {titre_semestre} SEMESTRE", TITLE))
-    # elements.append(Spacer(1, 10))
 
     # =====================================================
     # NOTES
@@ -423,29 +395,36 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
 
     # =====================================================
     # LIGNES DE NOTES + SOUS-TOTAL PAR GRANDE UNITÉ
-    # (les notes sont déjà triées par matiere__grande_unite__ordre)
+    #
+    # Regroupement par LIBELLÉ (et non par objet GrandeUnite / groupby)
+    # pour éviter les doublons de sous-total lorsque plusieurs
+    # enregistrements GrandeUnite en base partagent le même libellé
+    # (ex: deux id différents nommés "FORMATIONS GENERALES").
     # =====================================================
-    subtotal_rows = []
     notes = sorted(
-    notes,
-    key=lambda n: (
-        n.matiere.grande_unite.ordre
-        if n.matiere.grande_unite else 999,
-        n.matiere.grande_unite.id
-        if n.matiere.grande_unite else 999,
-        n.matiere.id
-       )
-      )
-
-    # for grande_unite, groupe in groupby(notes, key=lambda n: n.matiere.grande_unite):
-    #     groupe = list(groupe)
-    #     grande_unite = groupe[0].matiere.grande_unite
-    #     gu_points = 0
-    #     gu_coef = 0
-    for grande_unite, groupe in groupby(
         notes,
-        key=lambda n: n.matiere.grande_unite
-        ):
+        key=lambda n: (
+            n.matiere.grande_unite.ordre if n.matiere.grande_unite else 999,
+            (n.matiere.grande_unite.libelle.strip().upper()
+             if n.matiere.grande_unite else "AUTRES MATIERES"),
+            n.matiere.id,
+        )
+    )
+
+    subtotal_rows = []
+    groupes = {}
+    ordre_groupes = []
+
+    for n in notes:
+        gu = n.matiere.grande_unite
+        cle = gu.libelle.strip().upper() if gu else "AUTRES MATIERES"
+        if cle not in groupes:
+            groupes[cle] = []
+            ordre_groupes.append(cle)
+        groupes[cle].append(n)
+
+    for cle in ordre_groupes:
+        groupe = groupes[cle]
         gu_points = 0
         gu_coef = 0
 
@@ -476,22 +455,19 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
                 safe_round(moy * coef),
                 mention(moy),
                 format_rang(rang_matiere),
-                # getattr(m, "professeur", "") or "-",
                 safe_round(stats.get("min_note")),
                 safe_round(stats.get("avg_note")),
                 safe_round(stats.get("max_note")),
             ])
 
         gu_moyenne = safe_round(gu_points / gu_coef) if gu_coef else 0
-        gu_libelle = grande_unite.libelle.upper() if grande_unite else "AUTRES MATIERES"
 
         subtotal_rows.append(len(data))
         data.append([
-            gu_libelle,
-            gu_moyenne, gu_coef, safe_round(gu_points), "", "", "","", ""
+            cle,
+            gu_moyenne, gu_coef, safe_round(gu_points), "", "", "", "", ""
         ])
 
-    # table = Table(data)
     table = Table(data, colWidths=[
     6.3 * cm,   # MATIÈRE (plus large)
     1.5 * cm,
@@ -516,12 +492,11 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ("LEFTPADDING", (0,0), (-1,-1), 3),
     ("RIGHTPADDING", (0,0), (-1,-1), 3),
     ("FONTSIZE", (0,0), (-1,-1), 7),
-    ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
+    ("ROUNDEDCORNERS", [6, 6, 6, 6]),
 
     ("GRID", (0, 0), (-1, -1), 0.4, colors.black),
 
     # Fusion du titre MOYENNE DE LA CLASSE
-    # ("SPAN", (7, 0), (9, 0)),
     ("SPAN", (6, 0), (8, 0)),
 
     # Fusion MATIÈRE sur les deux lignes
@@ -542,9 +517,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # Fusion RANG sur les deux lignes
     ("SPAN", (5, 0), (5, 1)),
 
-    # Fusion PROFESSEUR sur les deux lignes
-    # ("SPAN", (6, 0), (6, 1)),
-
     # Centrage
     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -563,15 +535,12 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
 
     # Fusion + fond grisé pour chaque ligne de sous-total (une par grande unité)
     for ligne in subtotal_rows:
-        # style.append(("SPAN", (4, ligne), (9, ligne)))
         style.append(("SPAN", (4, ligne), (8, ligne)))
         style.append(("BACKGROUND", (0, ligne), (-1, ligne), colors.lightgrey))
-         # Texte noir
         style.append(( "TEXTCOLOR",(0, ligne),(0, ligne), colors.black))
-        # Texte en gras
         style.append(("FONTNAME", (0, ligne),(0, ligne),"Courier-Bold"))
 
-    table.setStyle(TableStyle(style)) 
+    table.setStyle(TableStyle(style))
     elements.append(table)
     elements.append(Spacer(1, 10))
     # =====================================================
@@ -579,7 +548,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # =====================================================
     moyenne_s1 = calcul_moyenne_etudiant(etudiant, "S1")
     moyenne_s2 = calcul_moyenne_etudiant(etudiant, "S2")
-    
+
     classement_s1 = (
     Note.objects.filter(
         etudiant__classe=classe,
@@ -598,7 +567,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     rang_s1 = format_rang(
              rangs_s1.get(etudiant.id, "-")
       )
-    
+
     classement_s2 = (
     Note.objects.filter(
         etudiant__classe=classe,
@@ -617,7 +586,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     rang_s2 = format_rang(
       rangs_s2.get(etudiant.id, "-")
     )
-    
+
     if str(semestre) in ["1", "S1"]:
 
         rappel_semestre = Paragraph(
@@ -643,14 +612,14 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
          """,
          SMALL
     )
-    
-    moyenne_generale = calcul_moyenne_etudiant(etudiant,semestre)
+
+    moyenne_generale = calcul_moyenne_etudiant(etudiant, semestre)
 
     recap_data = [
        ["RAPPEL SEMESTRE", "TRAVAIL", "CONDUITE", "CONSEIL DE CLASSE"],
 
        [
-        rappel_semestre ,
+        rappel_semestre,
 
         # TRAVAIL
         f"Total points : {safe_round(total_points)}\n"
@@ -670,7 +639,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         f"Félicitations\n"
         f"Tableau d'honneur\n"
         f"Encouragement \n"
-        # f"Avertissement "
      ],
    ]
 
@@ -678,7 +646,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
      recap_data,
       colWidths=[4.5 * cm, 4.5 * cm, 4.5 * cm, 5 * cm]
     )
-    
+
     recap.setStyle(TableStyle([
     # Bordures globales
     ("BOX", (0, 0), (-1, -1), 1.2, colors.black),
@@ -699,7 +667,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ("RIGHTPADDING", (0, 1), (-1, -1), 6),
     ("TOPPADDING", (0, 1), (-1, -1), 6),
     ("BOTTOMPADDING", (0, 1), (-1, -1), 6),
-    ("ROUNDEDCORNERS", [6, 6, 6, 6]),  # 👉 effet arrondi
+    ("ROUNDEDCORNERS", [6, 6, 6, 6]),
   ]))
 
     elements.append(recap)
@@ -728,7 +696,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         textColor=colors.white,
         fontSize=9,
       )
-    
+
     visa_table = Table(
     [
         [
@@ -778,9 +746,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
   )
 
     visa_table.setStyle(TableStyle([
-    # bordure principale plus élégante
     ("BOX", (0, 0), (-1, -1), 1, colors.black),
-    # grille interne discrète (si plusieurs cases)
     ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1f3a5f")),
     ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
@@ -799,7 +765,7 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     ("RIGHTPADDING", (0, 0), (-1, -1), 6),
 
    ]))
-    
+
     FOOTER = ParagraphStyle(
     "FOOTER",
     parent=SMALL,
@@ -816,12 +782,6 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
     # =====================================================
     # FOOTER PROFESSIONNEL — FIXÉ EN BAS DE CHAQUE PAGE
     # =====================================================
-    # On ne met plus le footer dans "elements" (il suivrait le flux du
-    # contenu et sa position varierait selon la longueur du bulletin).
-    # On le dessine directement sur le canvas via onFirstPage/onLaterPages,
-    # à une position fixe proche du bas de la page. La "bottomMargin" du
-    # doc a été agrandie ci-dessus pour lui laisser la place nécessaire.
-
     footer_text = (
         """
        <b>UNIVERSITÉ INTERNATIONALE DE COCODY</b><br/>
@@ -839,16 +799,10 @@ def generate_bulletin_pdf(etudiant, classe,semestre):
         canvas.saveState()
 
         footer_paragraph = Paragraph(footer_text, FOOTER)
-        # largeur dispo, hauteur "infinie" pour laisser le paragraphe
-        # calculer sa propre hauteur réelle
         w, h = footer_paragraph.wrap(footer_width, 10 * cm)
 
-        # position fixe : collé au bas de la page (dans la bottomMargin
-        # réservée), quel que soit le contenu qui précède sur la page
-        # footer_y = 0.4 * cm
         footer_y = 0.5 * cm
 
-        # ligne de séparation au-dessus du texte
         canvas.setStrokeColor(colors.grey)
         canvas.setLineWidth(0.5)
         canvas.line(
