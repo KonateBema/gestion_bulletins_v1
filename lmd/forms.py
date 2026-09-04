@@ -33,7 +33,7 @@ class EtudiantLMDForm(forms.ModelForm):
         ]
 
 
-class EtudiantDroitForm(forms.ModelForm):
+class EtudiantDroitFormAAA(forms.ModelForm):
     class Meta:
         model = EtudiantLMD
 
@@ -61,6 +61,134 @@ class EtudiantDroitForm(forms.ModelForm):
             "email": forms.EmailInput(attrs={"class": "form-control"}),
         }
 
+from django import forms
+from .models import EtudiantLMD
+
+
+class EtudiantDroitForm(forms.ModelForm):
+
+    class Meta:
+        model = EtudiantLMD
+
+        fields = [
+            "matricule",
+            "nom",
+            "prenoms",
+            "sexe",
+            "niveau",
+            "date_naissance",
+            "lieu_naissance",
+            "telephone",
+            "email",
+            "annee_academique",
+        ]
+
+        widgets = {
+
+            # =========================
+            # MATRICULE
+            # =========================
+            "matricule": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Ex : UIC20260001",
+                    "autocomplete": "off",
+                }
+            ),
+
+            # =========================
+            # NOM
+            # =========================
+            "nom": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Nom de famille",
+                    "autocomplete": "family-name",
+                }
+            ),
+
+            # =========================
+            # PRÉNOMS
+            # =========================
+            "prenoms": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Prénom(s)",
+                    "autocomplete": "given-name",
+                }
+            ),
+
+            # =========================
+            # SEXE
+            # =========================
+            "sexe": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
+            ),
+
+            # =========================
+            # NIVEAU
+            # =========================
+            "niveau": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
+            ),
+
+            # =========================
+            # DATE DE NAISSANCE
+            # =========================
+            "date_naissance": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={
+                    "type": "date",
+                    "class": "form-control",
+                }
+            ),
+
+            # =========================
+            # LIEU DE NAISSANCE
+            # =========================
+            "lieu_naissance": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Ex : Abidjan",
+                }
+            ),
+
+            # =========================
+            # TÉLÉPHONE
+            # =========================
+            "telephone": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Ex : 07 XX XX XX XX",
+                    "autocomplete": "tel",
+                }
+            ),
+
+            # =========================
+            # EMAIL
+            # =========================
+            "email": forms.EmailInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "exemple@email.com",
+                    "autocomplete": "email",
+                }
+            ),
+
+            # =========================
+            # ANNÉE ACADÉMIQUE
+            # =========================
+            "annee_academique": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Ex : 2026-2027",
+                }
+            ),
+        }
 
 class UEDroitForm(forms.ModelForm):
     class Meta:

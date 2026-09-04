@@ -1,164 +1,450 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 
 <style>
 
-    .form-header {
-        background: linear-gradient(135deg, #0d6efd, #6610f2);
-        color: white;
+/* =========================================================
+   PAGE
+========================================================= */
+
+.student-page {
+    padding: 30px 0 50px;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.student-header {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    border-radius: 22px;
+    padding: 30px 32px;
+    color: white;
+    margin-bottom: 28px;
+    box-shadow: 0 12px 35px rgba(13, 110, 253, .18);
+}
+
+.student-header::before {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
+    right: -70px;
+    top: -90px;
+}
+
+.student-header::after {
+    content: "";
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.06);
+    right: 100px;
+    bottom: -90px;
+}
+
+.student-header-content {
+    position: relative;
+    z-index: 2;
+}
+
+.student-header-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 27px;
+    margin-bottom: 15px;
+}
+
+.student-header h3 {
+    font-size: 25px;
+    font-weight: 750;
+    margin: 0 0 7px;
+}
+
+.student-header p {
+    margin: 0;
+    opacity: .88;
+    font-size: 14px;
+}
+
+.header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 17px;
+    padding: 7px 13px;
+    border-radius: 30px;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.18);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* =========================================================
+   MAIN CARD
+========================================================= */
+
+.student-card {
+    background: white;
+    border: none;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 8px 35px rgba(0,0,0,.07);
+}
+
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.student-card-header {
+    padding: 23px 28px;
+    border-bottom: 1px solid #edf0f3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.card-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.card-title-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 13px;
+    background: #eef5ff;
+    color: #0d6efd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+}
+
+.student-card-header h5 {
+    font-weight: 700;
+    margin: 0;
+    color: #212529;
+}
+
+.student-card-header small {
+    display: block;
+    margin-top: 3px;
+    color: #7a8491;
+}
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.student-card-body {
+    padding: 30px;
+}
+
+/* =========================================================
+   SECTION
+========================================================= */
+
+.form-section {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 25px;
+}
+
+.form-section-icon {
+    width: 43px;
+    height: 43px;
+    border-radius: 12px;
+    background: #f0f6ff;
+    color: #0d6efd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    flex-shrink: 0;
+}
+
+.form-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #212529;
+    margin: 0;
+}
+
+.form-section-description {
+    font-size: 13px;
+    color: #7b8490;
+    margin-top: 2px;
+}
+
+/* =========================================================
+   FORM GROUP
+========================================================= */
+
+.form-group-custom {
+    margin-bottom: 23px;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 650;
+    color: #343a40;
+    margin-bottom: 8px;
+}
+
+.required-star {
+    color: #dc3545;
+    font-weight: 800;
+}
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+.form-control,
+.form-select {
+    min-height: 48px;
+    border-radius: 12px;
+    border: 1px solid #dfe3e8;
+    background: #fff;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: #343a40;
+    transition: all .2s ease;
+}
+
+.form-control:hover,
+.form-select:hover {
+    border-color: #b9c2cc;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13,110,253,.09);
+    outline: none;
+}
+
+/* =========================================================
+   INPUT ICON AREA
+========================================================= */
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper .field-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8a94a1;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.input-wrapper .form-control,
+.input-wrapper .form-select {
+    padding-left: 42px;
+}
+
+/* =========================================================
+   HELP TEXT
+========================================================= */
+
+.help-text {
+    display: block;
+    margin-top: 6px;
+    color: #8a94a1;
+    font-size: 12px;
+}
+
+/* =========================================================
+   ERRORS
+========================================================= */
+
+.field-error {
+    margin-top: 7px;
+    padding: 8px 11px;
+    border-radius: 8px;
+    background: #fff1f2;
+    color: #dc3545;
+    font-size: 12px;
+    border-left: 3px solid #dc3545;
+}
+
+.field-error ul {
+    margin: 0;
+    padding-left: 16px;
+}
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.form-divider {
+    height: 1px;
+    background: #edf0f3;
+    margin: 10px 0 25px;
+}
+
+/* =========================================================
+   INFORMATION BOX
+========================================================= */
+
+.info-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px 17px;
+    border-radius: 13px;
+    background: #f6f9ff;
+    border: 1px solid #e2ecff;
+    margin-bottom: 25px;
+}
+
+.info-box i {
+    color: #0d6efd;
+    font-size: 18px;
+    margin-top: 1px;
+}
+
+.info-box strong {
+    display: block;
+    color: #344054;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+.info-box span {
+    color: #667085;
+    font-size: 12px;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.btn-back,
+.btn-save {
+    min-height: 47px;
+    border-radius: 11px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 650;
+    transition: all .2s ease;
+}
+
+.btn-back:hover {
+    transform: translateY(-1px);
+}
+
+.btn-save {
+    min-width: 145px;
+    box-shadow: 0 5px 14px rgba(25,135,84,.18);
+}
+
+.btn-save:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(25,135,84,.25);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .student-page {
+        padding: 20px 0 35px;
+    }
+
+    .student-header {
+        padding: 23px 20px;
         border-radius: 18px;
-        padding: 28px;
-        margin-bottom: 25px;
-        box-shadow: 0 8px 25px rgba(13, 110, 253, 0.18);
     }
 
-    .form-header h3 {
-        font-weight: 700;
-        margin-bottom: 6px;
+    .student-header h3 {
+        font-size: 21px;
     }
 
-    .form-header p {
-        margin-bottom: 0;
-        opacity: .85;
-    }
-
-    .form-card {
-        border: none;
+    .student-card {
         border-radius: 18px;
-        overflow: hidden;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, .07);
     }
 
-    .form-card-header {
-        padding: 20px 24px;
-        background: #fff;
-        border-bottom: 1px solid #eee;
+    .student-card-header {
+        padding: 19px;
     }
 
-    .form-card-header h5 {
-        font-weight: 700;
-        margin-bottom: 3px;
+    .student-card-body {
+        padding: 20px;
     }
 
-    .form-card-body {
-        padding: 28px;
+    .form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
     }
 
-    .form-label {
-        font-weight: 600;
-        color: #343a40;
-        margin-bottom: 8px;
-    }
-
-    .form-control,
-    .form-select {
-        border-radius: 10px;
-        border: 1px solid #dee2e6;
-        padding: 11px 13px;
-        min-height: 46px;
-        transition: .2s ease;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .10);
-    }
-
-    .readonly-field {
-        background-color: #f8f9fa;
-        color: #6c757d;
-    }
-
-    .required-star {
-        color: #dc3545;
-    }
-
-    .form-section {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 16px 18px;
-        margin-bottom: 22px;
-        border-left: 4px solid #0d6efd;
-    }
-
-    .form-section-title {
-        font-weight: 700;
-        color: #212529;
-        margin-bottom: 2px;
-    }
-
-    .form-section-description {
-        font-size: 13px;
-        color: #6c757d;
-    }
-
+    .btn-back,
     .btn-save {
-        border-radius: 10px;
-        padding: 11px 22px;
-        font-weight: 600;
+        width: 100%;
     }
-
-    .btn-back {
-        border-radius: 10px;
-        padding: 11px 20px;
-        font-weight: 600;
-    }
-
-    .field-error {
-        color: #dc3545;
-        font-size: 13px;
-        margin-top: 6px;
-    }
-
-    .field-error ul {
-        margin: 0;
-        padding-left: 18px;
-    }
-
-    @media (max-width: 768px) {
-
-        .form-header {
-            padding: 20px;
-        }
-
-        .form-card-body {
-            padding: 20px;
-        }
-
-    }
+}
 
 </style>
 
+<div class="container-fluid px-3 px-md-4">
 
-<div class="container-fluid px-3 px-md-4 mt-4">
+<div class="student-page">
 
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
 
-    <!-- ================= HEADER ================= -->
+    <div class="student-header">
 
-    <div class="form-header">
+        <div class="student-header-content">
 
-        <div class="row align-items-center">
+            <div class="student-header-icon">
+                <i class="bi bi-person-vcard"></i>
+            </div>
 
-            <div class="col-md-8">
+            <h3>
+                {{ titre }}
+            </h3>
 
-                <h3>
+            <p>
+                Gestion des étudiants de Licence 1, Licence 2 et Licence 3
+                — Droit Privé
+            </p>
 
-                    <i class="bi bi-person-vcard me-2"></i>
-
-                    {{ titre }}
-
-                </h3>
-
-                <p>
-
-                    Gestion des étudiants de Licence 1, Licence 2 et Licence 3 -
-                    Droit Privé
-
-                </p>
-
+            <div class="header-badge">
+                <i class="bi bi-mortarboard-fill"></i>
+                Parcours universitaire
             </div>
 
         </div>
@@ -166,113 +452,207 @@
     </div>
 
 
-    <!-- ================= FORMULAIRE ================= -->
+    <!-- =====================================================
+         FORMULAIRE
+    ====================================================== -->
 
-    <div class="card form-card">
+    <div class="student-card">
 
+        <!-- CARD HEADER -->
 
-        <!-- HEADER FORMULAIRE -->
+        <div class="student-card-header">
 
-        <div class="form-card-header">
+            <div class="card-title-wrapper">
 
-            <h5>
+                <div class="card-title-icon">
+                    <i class="bi bi-person-plus"></i>
+                </div>
 
-                <i class="bi bi-person-vcard me-2 text-primary"></i>
+                <div>
 
-                Informations étudiant
+                    <h5>
+                        Informations étudiant
+                    </h5>
 
-            </h5>
+                    <small>
+                        Renseignez les informations demandées
+                    </small>
 
-            <small class="text-muted">
+                </div>
 
-                Veuillez renseigner les informations de l'étudiant.
-
-            </small>
+            </div>
 
         </div>
 
 
-        <!-- BODY -->
+        <!-- CARD BODY -->
 
-        <div class="form-card-body">
+        <div class="student-card-body">
+
+            <!-- =================================================
+                 INFORMATION
+            ================================================== -->
+
+            <div class="info-box">
+
+                <i class="bi bi-info-circle-fill"></i>
+
+                <div>
+
+                    <strong>
+                        Création d'un étudiant
+                    </strong>
+
+                    <span>
+                        Les champs obligatoires doivent être renseignés
+                        avant l'enregistrement.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 SECTION IDENTIFICATION
+            ================================================== -->
+
+            <div class="form-section">
+
+                <div class="form-section-icon">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+
+                <div>
+
+                    <div class="form-section-title">
+                        Identification
+                    </div>
+
+                    <div class="form-section-description">
+                        Informations principales de l'étudiant
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 FORM
+            ================================================== -->
 
             <form method="post">
 
                 {% csrf_token %}
 
-
-                <!-- ================= IDENTIFICATION ================= -->
-
-                <div class="form-section">
-
-                    <div class="form-section-title">
-
-                        <i class="bi bi-person-badge me-2 text-primary"></i>
-
-                        Identification
-
-                    </div>
-
-                    <div class="form-section-description">
-
-                        Informations principales de l'étudiant
-
-                    </div>
-
-                </div>
-
-
-                <div class="row g-4">
-
+                <div class="row">
 
                     {% for field in form %}
 
                         <div class="col-md-6">
 
-                            <label class="form-label">
+                            <div class="form-group-custom">
 
-                                {{ field.label }}
+                                <label
+                                    for="{{ field.id_for_label }}"
+                                    class="form-label"
+                                >
 
-                            </label>
+                                    {{ field.label }}
+
+                                    {% if field.field.required %}
+                                        <span class="required-star">*</span>
+                                    {% endif %}
+
+                                </label>
 
 
-                            {{ field }}
+                                <div class="input-wrapper">
+
+                                    {% if "nom" in field.name|lower %}
+                                        <i class="bi bi-person field-icon"></i>
+
+                                    {% elif "prenom" in field.name|lower %}
+                                        <i class="bi bi-person-vcard field-icon"></i>
+
+                                    {% elif "matricule" in field.name|lower %}
+                                        <i class="bi bi-credit-card-2-front field-icon"></i>
+
+                                    {% elif "date" in field.name|lower %}
+                                        <i class="bi bi-calendar3 field-icon"></i>
+
+                                    {% elif "telephone" in field.name|lower or "phone" in field.name|lower %}
+                                        <i class="bi bi-telephone field-icon"></i>
+
+                                    {% elif "email" in field.name|lower %}
+                                        <i class="bi bi-envelope field-icon"></i>
+
+                                    {% elif "sexe" in field.name|lower %}
+                                        <i class="bi bi-gender-ambiguous field-icon"></i>
+
+                                    {% elif "classe" in field.name|lower %}
+                                        <i class="bi bi-people field-icon"></i>
+
+                                    {% elif "filiere" in field.name|lower %}
+                                        <i class="bi bi-diagram-3 field-icon"></i>
+
+                                    {% elif "niveau" in field.name|lower %}
+                                        <i class="bi bi-mortarboard field-icon"></i>
+
+                                    {% else %}
+                                        <i class="bi bi-pencil field-icon"></i>
+                                    {% endif %}
 
 
-                            {% if field.errors %}
-
-                                <div class="field-error">
-
-                                    {{ field.errors }}
+                                    {{ field }}
 
                                 </div>
 
-                            {% endif %}
+
+                                {% if field.help_text %}
+
+                                    <span class="help-text">
+                                        {{ field.help_text }}
+                                    </span>
+
+                                {% endif %}
+
+
+                                {% if field.errors %}
+
+                                    <div class="field-error">
+
+                                        {{ field.errors }}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
 
                         </div>
 
                     {% endfor %}
 
-
                 </div>
 
 
-                <hr class="my-4">
+                <div class="form-divider"></div>
 
 
-                <!-- ================= BOUTONS ================= -->
+                <!-- =================================================
+                     ACTIONS
+                ================================================== -->
 
-                <div class="d-flex justify-content-between align-items-center">
-
-
-                    <!-- URL CONSERVÉE -->
+                <div class="form-actions">
 
                     <a
                         href="{% url 'droit_prive_etudiants' %}"
                         class="btn btn-outline-secondary btn-back"
                     >
 
-                        <i class="bi bi-arrow-left me-1"></i>
+                        <i class="bi bi-arrow-left me-2"></i>
 
                         Retour à la liste
 
@@ -284,14 +664,13 @@
                         class="btn btn-success btn-save"
                     >
 
-                        <i class="bi bi-check-circle me-1"></i>
+                        <i class="bi bi-check2-circle me-2"></i>
 
                         Enregistrer
 
                     </button>
 
                 </div>
-
 
             </form>
 
@@ -302,5 +681,6 @@
 </div>
 
 
-{% endblock %}
+</div>
 
+{% endblock %}

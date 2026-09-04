@@ -2,291 +2,1081 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<style>
 
-<div class="card shadow">
+/* =========================================================
+   PAGE
+========================================================= */
 
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0">
-            {% if etudiant %}
-                ✏️ Modifier l'étudiant
-            {% else %}
-                ➕ Ajouter un étudiant
-            {% endif %}
-        </h4>
+.student-page {
+    padding: 30px 0 55px;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.student-header {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    border-radius: 22px;
+    padding: 30px 32px;
+    color: white;
+    margin-bottom: 28px;
+    box-shadow: 0 12px 35px rgba(13, 110, 253, .18);
+}
+
+.student-header::before {
+    content: "";
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.07);
+    right: -70px;
+    top: -110px;
+}
+
+.student-header::after {
+    content: "";
+    position: absolute;
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+    right: 120px;
+    bottom: -110px;
+}
+
+.student-header-content {
+    position: relative;
+    z-index: 2;
+}
+
+.student-header-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 27px;
+    margin-bottom: 15px;
+}
+
+.student-header h3 {
+    font-size: 25px;
+    font-weight: 750;
+    margin: 0 0 7px;
+}
+
+.student-header p {
+    margin: 0;
+    opacity: .88;
+    font-size: 14px;
+}
+
+.header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 17px;
+    padding: 7px 14px;
+    border-radius: 30px;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.18);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   FORM CARD
+========================================================= */
+
+.student-card {
+    background: #fff;
+    border: none;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 8px 35px rgba(0,0,0,.07);
+}
+
+
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.student-card-header {
+    padding: 23px 28px;
+    border-bottom: 1px solid #edf0f3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.card-title-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: #eef5ff;
+    color: #0d6efd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+}
+
+.student-card-header h5 {
+    font-weight: 700;
+    margin: 0;
+    color: #212529;
+}
+
+.student-card-header small {
+    display: block;
+    margin-top: 3px;
+    color: #7a8491;
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.student-card-body {
+    padding: 30px;
+}
+
+
+/* =========================================================
+   INFO BOX
+========================================================= */
+
+.info-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px 17px;
+    border-radius: 13px;
+    background: #f6f9ff;
+    border: 1px solid #e2ecff;
+    margin-bottom: 28px;
+}
+
+.info-box i {
+    color: #0d6efd;
+    font-size: 18px;
+    margin-top: 1px;
+}
+
+.info-box strong {
+    display: block;
+    color: #344054;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.info-box span {
+    color: #667085;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.form-section {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 25px;
+}
+
+.form-section-icon {
+    width: 43px;
+    height: 43px;
+    border-radius: 12px;
+    background: #f0f6ff;
+    color: #0d6efd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+}
+
+.form-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.form-section-description {
+    font-size: 13px;
+    color: #7b8490;
+    margin-top: 2px;
+}
+
+
+/* =========================================================
+   FORM GROUP
+========================================================= */
+
+.form-group-custom {
+    margin-bottom: 23px;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 650;
+    color: #343a40;
+    margin-bottom: 8px;
+}
+
+.required-star {
+    color: #dc3545;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+.form-control,
+.form-select {
+    min-height: 48px;
+    border-radius: 12px;
+    border: 1px solid #dfe3e8;
+    background: #fff;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: #343a40;
+    transition: all .2s ease;
+}
+
+.form-control:hover,
+.form-select:hover {
+    border-color: #b9c2cc;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13,110,253,.09);
+    outline: none;
+}
+
+
+/* =========================================================
+   ICONES DANS LES CHAMPS
+========================================================= */
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper .field-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8a94a1;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.input-wrapper .form-control,
+.input-wrapper .form-select {
+    padding-left: 42px;
+}
+
+
+/* =========================================================
+   FILIERE READONLY
+========================================================= */
+
+.readonly-wrapper {
+    position: relative;
+}
+
+.readonly-field {
+    background: #f8f9fb !important;
+    color: #667085 !important;
+    cursor: not-allowed;
+}
+
+.readonly-badge {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    background: #e9ecef;
+    color: #667085;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   HELP TEXT
+========================================================= */
+
+.help-text {
+    display: block;
+    margin-top: 6px;
+    color: #8a94a1;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   ERREURS
+========================================================= */
+
+.field-error {
+    margin-top: 7px;
+    padding: 8px 11px;
+    border-radius: 8px;
+    background: #fff1f2;
+    color: #dc3545;
+    font-size: 12px;
+    border-left: 3px solid #dc3545;
+}
+
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.form-divider {
+    height: 1px;
+    background: #edf0f3;
+    margin: 5px 0 25px;
+}
+
+
+/* =========================================================
+   BOUTONS
+========================================================= */
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.btn-back,
+.btn-save {
+    min-height: 47px;
+    border-radius: 11px;
+    padding: 10px 21px;
+    font-size: 14px;
+    font-weight: 650;
+    transition: all .2s ease;
+}
+
+.btn-back:hover {
+    transform: translateY(-1px);
+}
+
+.btn-save {
+    min-width: 150px;
+    box-shadow: 0 5px 14px rgba(25,135,84,.18);
+}
+
+.btn-save:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(25,135,84,.25);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .student-page {
+        padding: 20px 0 35px;
+    }
+
+    .student-header {
+        padding: 23px 20px;
+        border-radius: 18px;
+    }
+
+    .student-header h3 {
+        font-size: 21px;
+    }
+
+    .student-card {
+        border-radius: 18px;
+    }
+
+    .student-card-header {
+        padding: 19px;
+    }
+
+    .student-card-body {
+        padding: 20px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .btn-back,
+    .btn-save {
+        width: 100%;
+    }
+
+}
+
+</style>
+
+<div class="container-fluid px-3 px-md-4">
+
+
+<div class="student-page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="student-header">
+
+        <div class="student-header-content">
+
+            <div class="student-header-icon">
+                <i class="bi bi-person-vcard"></i>
+            </div>
+
+            <h3>
+
+                {% if etudiant %}
+                    Modifier l'étudiant
+                {% else %}
+                    Ajouter un étudiant
+                {% endif %}
+
+            </h3>
+
+            <p>
+                Gestion des étudiants de Licence 1, Licence 2 et Licence 3
+                — Sciences de Gestion
+            </p>
+
+            <div class="header-badge">
+
+                <i class="bi bi-mortarboard-fill"></i>
+
+                Sciences de Gestion
+
+            </div>
+
+        </div>
+
     </div>
 
-    <div class="card-body">
 
-        <form method="post">
+    <!-- =====================================================
+         CARD
+    ====================================================== -->
 
-            {% csrf_token %}
+    <div class="student-card">
 
-            <div class="row">
 
-                <!-- MATRICULE -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">
-                        Matricule *
-                    </label>
+        <!-- CARD HEADER -->
 
-                    <input
-                        type="text"
-                        name="matricule"
-                        class="form-control"
-                        value="{{ etudiant.matricule|default:'' }}"
-                        required
-                    >
+        <div class="student-card-header">
+
+            <div class="card-title-wrapper">
+
+                <div class="card-title-icon">
+                    <i class="bi bi-person-plus"></i>
                 </div>
 
+                <div>
 
-                <!-- NOM -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">
-                        Nom *
-                    </label>
+                    <h5>
+                        Informations étudiant
+                    </h5>
 
-                    <input
-                        type="text"
-                        name="nom"
-                        class="form-control"
-                        value="{{ etudiant.nom|default:'' }}"
-                        required
-                    >
-                </div>
-
-
-                <!-- PRENOMS -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">
-                        Prénoms *
-                    </label>
-
-                    <input
-                        type="text"
-                        name="prenoms"
-                        class="form-control"
-                        value="{{ etudiant.prenoms|default:'' }}"
-                        required
-                    >
-                </div>
-
-
-                <!-- NIVEAU -->
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
-                        Niveau *
-                    </label>
-
-                    <select
-                        name="niveau"
-                        class="form-select"
-                        required
-                    >
-
-                        <option value="">
-                            -- Sélectionner le niveau --
-                        </option>
-
-                        <option value="L1"
-                            {% if etudiant and etudiant.niveau == "L1" %}
-                                selected
-                            {% endif %}
-                        >
-                            Licence 1
-                        </option>
-
-                        <option value="L2"
-                            {% if etudiant and etudiant.niveau == "L2" %}
-                                selected
-                            {% endif %}
-                        >
-                            Licence 2
-                        </option>
-
-                        <option value="L3"
-                            {% if etudiant and etudiant.niveau == "L3" %}
-                                selected
-                            {% endif %}
-                        >
-                            Licence 3
-                        </option>
-
-                    </select>
+                    <small>
+                        Renseignez les informations demandées
+                    </small>
 
                 </div>
 
+            </div>
 
-                <!-- FILIERE -->
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
-                        Filière
-                    </label>
-
-                    <input
-                        type="text"
-                        class="form-control"
-                        value="Sciences de Gestion"
-                        readonly
-                    >
-
-                    <!-- On envoie quand même la filière au serveur -->
-                    <input
-                        type="hidden"
-                        name="filiere"
-                        value="Sciences de Gestion"
-                    >
-
-                </div>
+        </div>
 
 
-                <!-- SEXE -->
-                <div class="col-md-6 mb-3">
+        <!-- =================================================
+             BODY
+        ================================================== -->
 
-                    <label class="form-label">
-                        Sexe
-                    </label>
-
-                    <select
-                        name="sexe"
-                        class="form-select"
-                    >
-
-                        <option value="">
-                            -- Sélectionner --
-                        </option>
-
-                        <option value="M"
-                            {% if etudiant and etudiant.sexe == "M" %}
-                                selected
-                            {% endif %}
-                        >
-                            Masculin
-                        </option>
-
-                        <option value="F"
-                            {% if etudiant and etudiant.sexe == "F" %}
-                                selected
-                            {% endif %}
-                        >
-                            Féminin
-                        </option>
-
-                    </select>
-
-                </div>
+        <div class="student-card-body">
 
 
-                <!-- DATE DE NAISSANCE -->
-                <div class="col-md-6 mb-3">
+            <!-- INFO -->
 
-                    <label class="form-label">
-                        Date de naissance
-                    </label>
+            <div class="info-box">
 
-                    <input
-                        type="date"
-                        name="date_naissance"
-                        class="form-control"
-                        value="{{ etudiant.date_naissance|date:'Y-m-d' }}"
-                    >
+                <i class="bi bi-info-circle-fill"></i>
 
-                </div>
+                <div>
 
+                    <strong>
+                        {% if etudiant %}
+                            Modification de l'étudiant
+                        {% else %}
+                            Création d'un étudiant
+                        {% endif %}
+                    </strong>
 
-                <!-- LIEU DE NAISSANCE -->
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
-                        Lieu de naissance
-                    </label>
-
-                    <input
-                        type="text"
-                        name="lieu_naissance"
-                        class="form-control"
-                        value="{{ etudiant.lieu_naissance|default:'' }}"
-                    >
-
-                </div>
-
-
-                <!-- STATUT -->
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
-                        Statut
-                    </label>
-
-                    <select
-                        name="statut"
-                        class="form-select"
-                    >
-
-                        <option value="">
-                            -- Sélectionner --
-                        </option>
-
-                        <option value="Régulier"
-                            {% if etudiant and etudiant.statut == "Régulier" %}
-                                selected
-                            {% endif %}
-                        >
-                            Régulier
-                        </option>
-
-                        <option value="Auditeur"
-                            {% if etudiant and etudiant.statut == "Auditeur" %}
-                                selected
-                            {% endif %}
-                        >
-                            Auditeur
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <!-- ANNEE ACADEMIQUE -->
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
-                        Année académique
-                    </label>
-
-                    <input
-                        type="text"
-                        name="annee_academique"
-                        class="form-control"
-                        value="{{ etudiant.annee_academique|default:'2025-2026' }}"
-                    >
+                    <span>
+                        Les champs marqués d'un astérisque (*) sont
+                        obligatoires.
+                    </span>
 
                 </div>
 
             </div>
 
 
-            <!-- BOUTONS -->
-            <div class="mt-3">
+            <!-- =================================================
+                 SECTION IDENTIFICATION
+            ================================================== -->
 
-                <button
-                    type="submit"
-                    class="btn btn-success"
-                >
-                    💾 Enregistrer
-                </button>
+            <div class="form-section">
+
+                <div class="form-section-icon">
+
+                    <i class="bi bi-person-badge"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="form-section-title">
+                        Identification
+                    </div>
+
+                    <div class="form-section-description">
+                        Informations principales de l'étudiant
+                    </div>
+
+                </div>
 
             </div>
 
-        </form>
+
+            <!-- =================================================
+                 FORMULAIRE
+            ================================================== -->
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="row">
+
+
+                    <!-- =================================================
+                         MATRICULE
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+
+                                Matricule
+
+                                <span class="required-star">*</span>
+
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="bi bi-credit-card-2-front field-icon"></i>
+
+                                <input
+                                    type="text"
+                                    name="matricule"
+                                    class="form-control"
+                                    value="{{ etudiant.matricule|default:'' }}"
+                                    placeholder="Ex : UIC20260001"
+                                    autocomplete="off"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         NOM
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+
+                                Nom
+
+                                <span class="required-star">*</span>
+
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="bi bi-person field-icon"></i>
+
+                                <input
+                                    type="text"
+                                    name="nom"
+                                    class="form-control"
+                                    value="{{ etudiant.nom|default:'' }}"
+                                    placeholder="Nom de famille"
+                                    autocomplete="family-name"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PRENOMS
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+
+                                Prénoms
+
+                                <span class="required-star">*</span>
+
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="bi bi-person-vcard field-icon"></i>
+
+                                <input
+                                    type="text"
+                                    name="prenoms"
+                                    class="form-control"
+                                    value="{{ etudiant.prenoms|default:'' }}"
+                                    placeholder="Prénom(s)"
+                                    autocomplete="given-name"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         NIVEAU
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+
+                                Niveau
+
+                                <span class="required-star">*</span>
+
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="bi bi-mortarboard field-icon"></i>
+
+                                <select
+                                    name="niveau"
+                                    class="form-select"
+                                    required
+                                >
+
+                                    <option value="">
+                                        -- Sélectionner le niveau --
+                                    </option>
+
+                                    <option
+                                        value="L1"
+                                        {% if etudiant and etudiant.niveau == "L1" %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        Licence 1
+                                    </option>
+
+                                    <option
+                                        value="L2"
+                                        {% if etudiant and etudiant.niveau == "L2" %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        Licence 2
+                                    </option>
+
+                                    <option
+                                        value="L3"
+                                        {% if etudiant and etudiant.niveau == "L3" %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        Licence 3
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         FILIERE
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+                                Filière
+                            </label>
+
+                            <div class="readonly-wrapper">
+
+                                <div class="input-wrapper">
+
+                                    <i class="bi bi-diagram-3 field-icon"></i>
+
+                                    <input
+                                        type="text"
+                                        class="form-control readonly-field"
+                                        value="Sciences de Gestion"
+                                        readonly
+                                    >
+
+                                </div>
+
+                                <span class="readonly-badge">
+                                    Automatique
+                                </span>
+
+                            </div>
+
+                            <input
+                                type="hidden"
+                                name="filiere"
+                                value="Sciences de Gestion"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SEXE
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+                                Sexe
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="bi bi-gender-ambiguous field-icon"></i>
+
+                                <select
+                                    name="sexe"
+                                    class="form-select"
+                                >
+
+                                    <option value="">
+                                        -- Sélectionner --
+                                    </option>
+
+                                    <option
+                                        value="M"
+                                        {% if etudiant and etudiant.sexe == "M" %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        Masculin
+                                    </option>
+
+                                    <option
+                                        value="F"
+                                        {% if etudiant and etudiant.sexe == "F" %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        Féminin
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         DATE NAISSANCE
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+                                Date de naissance
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="bi bi-calendar3 field-icon"></i>
+
+                                <input
+                                    type="date"
+                                    name="date_naissance"
+                                    class="form-control"
+                                    value="{{ etudiant.date_naissance|date:'Y-m-d' }}"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         LIEU NAISSANCE
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+                                Lieu de naissance
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="bi bi-geo-alt field-icon"></i>
+
+                                <input
+                                    type="text"
+                                    name="lieu_naissance"
+                                    class="form-control"
+                                    value="{{ etudiant.lieu_naissance|default:'' }}"
+                                    placeholder="Ex : Abidjan"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         STATUT
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+                                Statut
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="bi bi-person-check field-icon"></i>
+
+                                <select
+                                    name="statut"
+                                    class="form-select"
+                                >
+
+                                    <option value="">
+                                        -- Sélectionner --
+                                    </option>
+
+                                    <option
+                                        value="Régulier"
+                                        {% if etudiant and etudiant.statut == "Régulier" %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        Régulier
+                                    </option>
+
+                                    <option
+                                        value="Auditeur"
+                                        {% if etudiant and etudiant.statut == "Auditeur" %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        Auditeur
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         ANNEE ACADEMIQUE
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="form-group-custom">
+
+                            <label class="form-label">
+                                Année académique
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="bi bi-calendar-range field-icon"></i>
+
+                                <input
+                                    type="text"
+                                    name="annee_academique"
+                                    class="form-control"
+                                    value="{{ etudiant.annee_academique|default:'2025-2026' }}"
+                                    placeholder="Ex : 2025-2026"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DIVIDER -->
+
+                <div class="form-divider"></div>
+
+
+                <!-- =================================================
+                     ACTIONS
+                ================================================== -->
+
+                <div class="form-actions">
+
+
+                    <a
+                        href="javascript:history.back()"
+                        class="btn btn-outline-secondary btn-back"
+                    >
+
+                        <i class="bi bi-arrow-left me-2"></i>
+
+                        Retour
+
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-success btn-save"
+                    >
+
+                        {% if etudiant %}
+
+                            <i class="bi bi-check2-circle me-2"></i>
+
+                            Enregistrer les modifications
+
+                        {% else %}
+
+                            <i class="bi bi-person-plus me-2"></i>
+
+                            Ajouter l'étudiant
+
+                        {% endif %}
+
+                    </button>
+
+
+                </div>
+
+            </form>
+
+        </div>
 
     </div>
 
 </div>
-
 
 </div>
 
