@@ -1,0 +1,49 @@
+
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}
+    UIC — Administration
+{% endblock %}
+
+
+{% block extrastyle %}
+    {{ block.super }}
+
+    <link rel="stylesheet"
+          href="{% static 'core/css/admin-custom.css' %}">
+{% endblock %}
+
+
+{% block branding %}
+
+<div id="branding">
+
+    <h1>
+
+        <a href="{% url 'admin:index' %}"
+           class="uic-admin-brand">
+
+            <img
+                src="{% static 'gestion/images/logo.jpeg' %}"
+                alt="Logo UIC"
+                class="uic-admin-logo"
+            >
+
+            <span>
+                UIC — Administration
+            </span>
+
+        </a>
+
+    </h1>
+
+</div>
+
+{% endblock %}
+
+
+{% block nav-global %}
+    {{ block.super }}
+{% endblock %}
+

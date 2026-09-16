@@ -1,447 +1,197 @@
 {% extends "base.html" %}
 
-
 {% block title %}
 Bulletins de rattrapage
 {% endblock %}
 
-
-
 {% block content %}
-
 
 <div class="container-fluid mt-4">
 
-
     <!-- En-tête -->
     <div class="card shadow-sm border-0 mb-4">
-
-
-        <div class="card-body d-flex justify-content-between align-items-center">
-
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
 
             <div>
-
-
                 <h3 class="fw-bold text-primary mb-1">
-
                     <i class="bi bi-file-earmark-text"></i>
-
                     Bulletins de rattrapage
-
                 </h3>
-
-
                 <p class="text-muted mb-0">
-
                     Consultation des résultats de la session de rattrapage
-
                 </p>
-
-
             </div>
 
-
-            <div>
+            <div class="d-flex align-items-center gap-2">
+                {% if sessions_disponibles %}
+                    <form method="get" class="d-flex align-items-center gap-2">
+                        <select name="semestre" class="form-select form-select-sm"
+                                onchange="this.form.submit()">
+                            {% for s in sessions_disponibles %}
+                                <option value="{{ s.semestre }}"
+                                    {% if s.semestre == semestre %}selected{% endif %}>
+                                    {{ s.get_semestre_display }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                {% endif %}
 
                 <button class="btn btn-outline-primary">
-
                     <i class="bi bi-printer"></i>
-
                     Imprimer tous
-
                 </button>
-
-
             </div>
 
-
         </div>
-
-
     </div>
-
-
-
-
 
     <!-- Tableau -->
-
     <div class="card shadow border-0">
-
-
         <div class="card-body">
 
+            {% if not sessions_disponibles %}
+
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-exclamation-circle fs-1"></i>
+                    <p class="mt-2">
+                        Aucune session de rattrapage active pour le moment.
+                    </p>
+                </div>
+
+            {% else %}
 
             <div class="table-responsive">
-
-
                 <table class="table table-hover align-middle">
-
-
                     <thead class="table-primary">
-
-
                         <tr>
-
-
-                            <th>
-                                Matricule
-                            </th>
-
-
-                            <th>
-                                Étudiant
-                            </th>
-
-
-                            <th>
-                                Filière
-                            </th>
-
-
-                            <th>
-                                ECUE
-                            </th>
-                            <th>
-                                Semestre
-                            </th>
-
-
-                            <th>
-                                Note initiale
-                            </th>
-
-
-                            <th>
-                                Note rattrapage
-                            </th>
-
-
-                            <th>
-                                Décision
-                            </th>
-
-
-                            <th class="text-center">
-                                Action
-                            </th>
-
-
+                            <th>Matricule</th>
+                            <th>Étudiant</th>
+                            <th>Filière</th>
+                            <th>ECUE</th>
+                            <th>Semestre</th>
+                            <th>Note initiale</th>
+                            <th>Note rattrapage</th>
+                            <th>Décision</th>
+                            <th class="text-center">Action</th>
                         </tr>
-
-
                     </thead>
 
-
-
-
-
                     <tbody>
-
-
                     {% for c in candidats %}
-
-
-
-                    <tr>
-
-
-
-                        <!-- Matricule -->
-
-                        <td>
-
-                            <span class="fw-semibold">
-
-                                {{ c.etudiant.matricule }}
-
-                            </span>
-
-                        </td>
-
-
-
-
-
-                        <!-- Etudiant -->
-
-                        <td>
-
-
-                            <div class="fw-bold">
-
-                                {{ c.etudiant.nom }}
-
-                                {{ c.etudiant.prenoms }}
-
-                            </div>
-
-
-                            <small class="text-muted">
-
-                                {{ c.etudiant.email }}
-
-                            </small>
-
-
-                        </td>
-
-
-
-
-
-                        <!-- Filiere -->
-
-                        <td>
-
-
-                            <span class="badge bg-light text-dark">
-
-
-                                {{ c.etudiant.filiere.libelle }}
-
-
-                            </span>
-
-
-                        </td>
-
-
-
-
-
-                        <!-- ECUE -->
-
-                        <td>
-
-
-                            <strong>
-
-                                {{ c.ecue.code }}
-
-                            </strong>
-
-
-                            <br>
-
-
-                            <small class="text-muted">
-
-                                {{ c.ecue.libelle }}
-
-                            </small>
-
-
-                        </td>
-                        <td>
-
-                            <span class="badge bg-info">
-                        
-                                {{ c.semestre }}
-                        
-                            </span>
-                        
-                        </td>
-
-
-
-
-
-                        <!-- Ancienne note -->
-
-                        <td>
-
-
-                            <span class="text-danger fw-bold">
-
-                                {{ c.ancienne_note }}/20
-
-                            </span>
-
-
-                        </td>
-
-
-
-
-
-                        <!-- Note rattrapage -->
-
-                        <td>
-
-
-                            {% if c.nouvelle_note %}
-
-
-                                <span class="text-success fw-bold">
-
-                                    {{ c.nouvelle_note }}/20
-
+                        <tr>
+
+                            <!-- Matricule -->
+                            <td>
+                                <span class="fw-semibold">
+                                    {{ c.etudiant.matricule }}
                                 </span>
+                            </td>
 
+                            <!-- Etudiant -->
+                            <td>
+                                <div class="fw-bold">
+                                    {{ c.etudiant.nom }} {{ c.etudiant.prenoms }}
+                                </div>
+                                <small class="text-muted">
+                                    {{ c.etudiant.email }}
+                                </small>
+                            </td>
 
-                            {% else %}
-
-
-                                <span class="text-muted">
-
-                                    Non saisie
-
+                            <!-- Filiere -->
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    {{ c.etudiant.filiere.libelle }}
                                 </span>
+                            </td>
 
+                            <!-- ECUE -->
+                            <td>
+                                <strong>{{ c.ecue.code }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ c.ecue.libelle }}
+                                </small>
+                            </td>
 
-                            {% endif %}
-
-
-                        </td>
-
-
-
-
-
-                        <!-- Décision -->
-
-                        <td>
-
-
-                            {% if c.statut == "VALIDE" %}
-
-
-
-                                <span class="badge rounded-pill bg-success">
-
-
-                                    <i class="bi bi-check-circle"></i>
-
-                                    Validé
-
-
+                            <!-- Semestre : vient de l'ECUE -> UE, pas de CandidatRattrapage -->
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ c.ecue.ue.semestre }}
                                 </span>
+                            </td>
 
-
-
-                            {% elif c.statut == "ECHEC" %}
-
-
-
-                                <span class="badge rounded-pill bg-danger">
-
-
-                                    <i class="bi bi-x-circle"></i>
-
-                                    Échec
-
-
+                            <!-- Ancienne note -->
+                            <td>
+                                <span class="text-danger fw-bold">
+                                    {{ c.ancienne_note }}/20
                                 </span>
+                            </td>
 
+                            <!-- Note rattrapage -->
+                            <td>
+                                {% if c.nouvelle_note %}
+                                    <span class="text-success fw-bold">
+                                        {{ c.nouvelle_note }}/20
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Non saisie</span>
+                                {% endif %}
+                            </td>
 
+                            <!-- Décision -->
+                            <td>
+                                {% if c.statut == "VALIDE" %}
+                                    <span class="badge rounded-pill bg-success">
+                                        <i class="bi bi-check-circle"></i>
+                                        Validé
+                                    </span>
+                                {% elif c.statut == "ECHEC" %}
+                                    <span class="badge rounded-pill bg-danger">
+                                        <i class="bi bi-x-circle"></i>
+                                        Échec
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill bg-warning text-dark">
+                                        <i class="bi bi-clock"></i>
+                                        En attente
+                                    </span>
+                                {% endif %}
+                            </td>
 
-                            {% else %}
+                            <!-- Action impression -->
+                            <td class="text-center">
+                                <a href="{% url 'bulletin_rattrapage_pdf' c.etudiant.id c.ecue.ue.semestre %}"
+                                   class="btn btn-sm btn-outline-primary"
+                                   target="_blank">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                    Imprimer
+                                </a>
+                            </td>
 
-
-
-                                <span class="badge rounded-pill bg-warning text-dark">
-
-
-                                    <i class="bi bi-clock"></i>
-
-                                    En attente
-
-
-                                </span>
-
-
-
-                            {% endif %}
-
-
-
-                        </td>
-
-
-
-
-
-                        <!-- Action impression -->
-
-                        <td class="text-center">
-
-                            <a href="{% url 'bulletin_rattrapage_pdf' c.etudiant.id c.ecue.ue.semestre %}"
-                               class="btn btn-sm btn-outline-primary"
-                               target="_blank">
-                        
-                                <i class="bi bi-file-earmark-pdf"></i>
-                        
-                                Imprimer
-                        
-                            </a>
-                        
-                        </td>
-
-
-                    </tr>
-
-
-
-
-
+                        </tr>
                     {% empty %}
-
-
-
-                    <tr>
-
-
-                        <td colspan="8" class="text-center py-5">
-
-
-                            <div class="text-muted">
-
-
-                                <i class="bi bi-folder-x fs-1"></i>
-
-
-                                <p class="mt-3">
-
-                                    Aucun bulletin de rattrapage disponible
-
-                                </p>
-
-
-                            </div>
-
-
-                        </td>
-
-
-                    </tr>
-
-
-
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-folder-x fs-1"></i>
+                                    <p class="mt-3">
+                                        Aucun bulletin de rattrapage disponible pour ce semestre
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
                     {% endfor %}
-
-
-
                     </tbody>
 
-
-
                 </table>
-
-
-
             </div>
 
+            {% endif %}
 
         </div>
-
-
     </div>
 
-
 </div>
-
-
 
 {% endblock %}

@@ -1,0 +1,482 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>
+    {% block title %}
+        UIC — Administration
+    {% endblock %}
+</title>
+
+{% block extrastyle %}
+{% endblock %}
+
+<style>
+
+    /* =====================================================
+       UIC — VARIABLES
+       ===================================================== */
+
+    :root {
+        --uic-primary: #123b65;
+        --uic-primary-dark: #0b2947;
+        --uic-secondary: #f2b705;
+        --uic-light: #f5f7fa;
+        --uic-white: #ffffff;
+        --uic-border: #e2e8f0;
+        --uic-text: #334155;
+        --uic-muted: #64748b;
+        --uic-success: #16a34a;
+        --uic-danger: #dc2626;
+    }
+
+
+    /* =====================================================
+       RESET
+       ===================================================== */
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Arial,
+            sans-serif;
+
+        background: var(--uic-light);
+        color: var(--uic-text);
+    }
+
+
+    /* =====================================================
+       HEADER
+       ===================================================== */
+
+    #header {
+        background: var(--uic-primary);
+        color: var(--uic-white);
+        min-height: 70px;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        padding: 0 30px;
+
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+
+    #branding {
+        display: flex;
+        align-items: center;
+    }
+
+
+    #branding h1 {
+        margin: 0;
+        padding: 0;
+
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+
+    #branding h1 a {
+        color: white;
+        text-decoration: none;
+
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+
+    .uic-admin-logo {
+        width: 44px;
+        height: 44px;
+
+        object-fit: contain;
+
+        background: white;
+        border-radius: 8px;
+
+        padding: 3px;
+    }
+
+
+    /* =====================================================
+       USER TOOLS
+       ===================================================== */
+
+    #user-tools {
+        color: white;
+        font-size: 14px;
+
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+
+    #user-tools a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+
+    #user-tools a:hover {
+        color: var(--uic-secondary);
+    }
+
+
+    /* =====================================================
+       CONTENT
+       ===================================================== */
+
+    #content {
+        max-width: 1400px;
+
+        margin: 0 auto;
+
+        padding: 30px;
+    }
+
+
+    #content-main {
+        width: 100%;
+    }
+
+
+    /* =====================================================
+       TITRES
+       ===================================================== */
+
+    h1 {
+        color: var(--uic-primary);
+        font-weight: 700;
+    }
+
+
+    h2 {
+        color: var(--uic-primary);
+    }
+
+
+    /* =====================================================
+       MODULES
+       ===================================================== */
+
+    .module {
+        background: white;
+
+        border: 1px solid var(--uic-border);
+
+        border-radius: 10px;
+
+        overflow: hidden;
+
+        margin-bottom: 25px;
+
+        box-shadow:
+            0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+
+    .module caption,
+    .module h2 {
+        background: var(--uic-primary);
+
+        color: white;
+
+        padding: 13px 16px;
+
+        font-size: 15px;
+
+        font-weight: 700;
+    }
+
+
+    .module table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+
+    .module th,
+    .module td {
+        padding: 12px 15px;
+
+        border-bottom: 1px solid var(--uic-border);
+    }
+
+
+    .module tr:last-child td {
+        border-bottom: none;
+    }
+
+
+    .module tr:hover {
+        background: var(--uic-light);
+    }
+
+
+    /* =====================================================
+       LIENS
+       ===================================================== */
+
+    a {
+        color: var(--uic-primary);
+    }
+
+
+    a:hover {
+        color: var(--uic-primary-dark);
+    }
+
+
+    /* =====================================================
+       BOUTONS
+       ===================================================== */
+
+    .button,
+    input[type="submit"],
+    input[type="button"],
+    .submit-row input {
+
+        background: var(--uic-primary);
+
+        color: white;
+
+        border: none;
+
+        border-radius: 6px;
+
+        padding: 9px 16px;
+
+        font-weight: 600;
+
+        cursor: pointer;
+    }
+
+
+    .button:hover,
+    input[type="submit"]:hover,
+    input[type="button"]:hover {
+
+        background: var(--uic-primary-dark);
+    }
+
+
+    /* =====================================================
+       FOOTER
+       ===================================================== */
+
+    #footer {
+
+        text-align: center;
+
+        padding: 25px;
+
+        margin-top: 30px;
+
+        color: var(--uic-muted);
+
+        font-size: 13px;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
+    @media (max-width: 768px) {
+
+        #header {
+            padding: 15px;
+
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            gap: 10px;
+        }
+
+
+        #user-tools {
+            flex-wrap: wrap;
+        }
+
+
+        #content {
+            padding: 15px;
+        }
+
+
+        #branding h1 a {
+            font-size: 18px;
+        }
+
+
+        .module {
+            overflow-x: auto;
+        }
+
+    }
+
+</style>
+
+{% block extrahead %}
+{% endblock %}
+```
+
+</head>
+
+<body>
+
+```
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+
+<header id="header">
+
+    <div id="branding">
+
+        {% block branding %}
+
+        <h1>
+
+            <a href="{% url 'admin:index' %}">
+
+                <img
+                    src="{% static 'gestion/images/logo.jpeg' %}"
+                    alt="UIC"
+                    class="uic-admin-logo"
+                >
+
+                UIC — Administration
+
+            </a>
+
+        </h1>
+
+        {% endblock %}
+
+    </div>
+
+
+    <!-- =================================================
+         USER TOOLS
+         ================================================= -->
+
+    {% if user.is_authenticated %}
+
+    <div id="user-tools">
+
+        <span>
+            Bonjour,
+            <strong>
+                {% firstof user.get_short_name user.username %}
+            </strong>
+        </span>
+
+
+        <a href="/">
+
+            Retour au site
+
+        </a>
+
+
+        <a href="{% url 'admin:logout' %}">
+
+            Déconnexion
+
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</header>
+
+
+<!-- =====================================================
+     MAIN CONTENT
+     ===================================================== -->
+
+<main id="content">
+
+    {% block breadcrumbs %}
+
+    {% endblock %}
+
+
+    {% block messages %}
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <div class="messagelist">
+
+                    {{ message }}
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endblock %}
+
+
+    {% block content %}
+
+    {% endblock %}
+
+</main>
+
+
+<!-- =====================================================
+     FOOTER
+     ===================================================== -->
+
+<footer id="footer">
+
+    {% block footer %}
+
+        <div>
+            © {% now "Y" %} UIC — Gestion Scolaire
+        </div>
+
+        <div>
+            Administration sécurisée
+        </div>
+
+    {% endblock %}
+
+</footer>
+
+</body>
+
+</html>

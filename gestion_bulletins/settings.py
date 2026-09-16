@@ -13,11 +13,13 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = True
 # =========================================================
 # SECURITY
 # =========================================================
-
+SECURE_REFERRER_POLICY = "same-origin"
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "django-insecure-v-5c)vcsv6_(ei75o6a1+@^d2y*%z$3ayp9$4-*uz+11vn_^es"
@@ -43,8 +45,10 @@ ALLOWED_HOSTS = os.environ.get(
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "http://gestion-bulletins-v1-2.onrender.com",
-    "http://uic.eu.com",
+    # "http://gestion-bulletins-v1-2.onrender.com",
+    # "http://uic.eu.com",
+    "https://gestion-bulletins-v1-2.onrender.com",
+    "https://uic.eu.com",
 ]
 
 
@@ -113,7 +117,8 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
 
-        "DIRS": [],
+        # "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
 
         "APP_DIRS": True,
 

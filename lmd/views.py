@@ -31,6 +31,7 @@ import pandas as pd
 from .pdf_licence_qhse import generer_bulletin_qhse_pdf
 from django.contrib.auth.decorators import login_required
 from core.decorators import role_required
+from .pdf_tronc_commun_service import generer_bulletin_tronc_commun_pdf
 
 def niveau_list(request):
     niveaux = Niveau.objects.all()
@@ -1306,6 +1307,28 @@ def filiere_master_detail(request,id):
         }
     )
     
+def get_session_rattrapage(request):
+    """
+    Détermine quelle SessionAcademique de rattrapage utiliser,
+    en tenant compte du semestre choisi (paramètre GET 'semestre').
+    Retourne (session, semestre, sessions_disponibles).
+    """
+    sessions_disponibles = SessionAcademique.objects.filter(
+        type_session="RATTRAPAGE",
+        active=True
+    ).order_by("semestre")
+
+    semestre = request.GET.get("semestre")
+
+    if semestre:
+        session = sessions_disponibles.filter(semestre=semestre).first()
+    else:
+        session = sessions_disponibles.first()
+        semestre = session.semestre if session else None
+
+    return session, semestre, sessions_disponibles
+    
+    
 def generer_rattrapages(etudiant):
 
     notes = NoteLMD.objects.filter(
@@ -1333,90 +1356,173 @@ def meilleure_note(note1,note2):
         note1,
         note2
     )
-    
+
+def sync_candidats_rattrapage(session_rattrapage):
+    """Partagée par rattrapage_liste et liste_rattrapage."""
+    notes = NoteLMD.objects.filter(
+        session="1",
+        semestre=session_rattrapage.semestre,
+        moyenne__lt=10
+    ).select_related("etudiant", "ecue")
+
+    for note in notes:
+        candidat, created = CandidatRattrapage.objects.get_or_create(
+            etudiant=note.etudiant,
+            ecue=note.ecue,
+            session=session_rattrapage,
+            annee_academique=session_rattrapage.annee_academique,
+            defaults={"ancienne_note": note.moyenne, "statut": "EN_ATTENTE"},
+        )
+        if not created and candidat.ancienne_note != note.moyenne:
+            candidat.ancienne_note = note.moyenne
+            candidat.save(update_fields=["ancienne_note"])
+                
 
 @login_required
 def rattrapage_liste(request):
 
-    semestre = request.GET.get("semestre")
-
-
-    session_rattrapage = SessionAcademique.objects.filter(
-        type_session="RATTRAPAGE",
-        active=True
-    ).first()
-
+    session_rattrapage, semestre, sessions_disponibles = get_session_rattrapage(request)
 
     if not session_rattrapage:
-        return render(
-            request,
-            "lmd/rattrapage/liste.html",
-            {
-                "candidats": [],
-                "semestre": semestre
-            }
-        )
+        return render(request, "lmd/rattrapage/liste.html", {
+            "candidats": [],
+            "semestre": semestre,
+            "sessions_disponibles": sessions_disponibles,
+        })
 
-
-    notes = NoteLMD.objects.filter(
-        session="1",
-        moyenne__lt=10
-    ).select_related(
-        "etudiant",
-        "ecue"
-    )
-
-
-    for note in notes:
-
-        candidat, created = CandidatRattrapage.objects.get_or_create(
-
-            etudiant=note.etudiant,
-
-            ecue=note.ecue,
-
-            session=session_rattrapage,
-
-            annee_academique="2025-2026",
-
-            defaults={
-                "ancienne_note": note.moyenne,
-                "statut":"EN_ATTENTE"
-            }
-        )
-
-
-        candidat.ancienne_note = note.moyenne
-        candidat.save()
-
-
+    sync_candidats_rattrapage(session_rattrapage)
 
     candidats = CandidatRattrapage.objects.filter(
         session=session_rattrapage
-    ).select_related(
-        "etudiant",
-        "ecue"
-    )
+    ).select_related("etudiant", "ecue").order_by("etudiant__nom", "ecue__libelle")
+
+    return render(request, "lmd/rattrapage/liste.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "session_rattrapage": session_rattrapage,
+        "sessions_disponibles": sessions_disponibles,
+    })
 
 
-    if semestre:
-
-        candidats = candidats.filter(
-            ecue__ue__semestre=semestre
-        )
-
-
-    return render(
-        request,
-        "lmd/rattrapage/liste.html",
-        {
-            "candidats": candidats,
-            "semestre": semestre
-        }
-    )
-    
 @login_required
-def saisie_rattrapage(request):
+def saisie_rattrapageAN(request):
+
+    session, semestre, sessions_disponibles = get_session_rattrapage(request)
+
+    if not session:
+        return render(request, "lmd/rattrapage/saisie.html", {
+            "candidats": [],
+            "semestre": semestre,
+            "sessions_disponibles": sessions_disponibles,
+        })
+
+    sync_candidats_rattrapage(session)
+
+    candidats = CandidatRattrapage.objects.filter(
+        session=session, statut="EN_ATTENTE"
+    ).select_related("etudiant", "ecue")
+
+    if request.method == "POST":
+        erreurs = []
+        for candidat in candidats:
+            valeur = request.POST.get(f"note_{candidat.id}")
+            if valeur in [None, ""]:
+                continue
+            try:
+                nouvelle_note = float(valeur)
+            except ValueError:
+                erreurs.append(f"Note invalide pour {candidat.etudiant}")
+                continue
+            if not (0 <= nouvelle_note <= 20):
+                erreurs.append(f"Note hors limites (0-20) pour {candidat.etudiant}")
+                continue
+
+            candidat.nouvelle_note = nouvelle_note
+            candidat.statut = "VALIDE" if nouvelle_note >= 10 else "ECHEC"
+            candidat.save()
+
+            # La note de session (candidat.session.semestre) garantit
+            # que la note remonte sur le BON semestre.
+            NoteLMD.objects.update_or_create(
+                etudiant=candidat.etudiant,
+                ecue=candidat.ecue,
+                semestre=candidat.session.semestre,
+                session="2",
+                defaults={"cc": 0, "examen": nouvelle_note},
+            )
+
+        if erreurs:
+            for e in erreurs:
+                messages.error(request, e)
+        else:
+            messages.success(request, "Les notes de rattrapage ont été enregistrées.")
+
+        return redirect(f"{reverse('rattrapage_liste')}?semestre={semestre}")
+
+    return render(request, "lmd/rattrapage/saisie.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "sessions_disponibles": sessions_disponibles,
+    })
+
+
+@login_required
+def liste_rattrapageAN(request):
+
+    session_rattrapage, semestre, sessions_disponibles = get_session_rattrapage(request)
+
+    if not session_rattrapage:
+        return render(request, "lmd/rattrapage/liste.html", {
+            "candidats": [],
+            "semestre": semestre,
+            "sessions_disponibles": sessions_disponibles,
+        })
+
+    sync_candidats_rattrapage(session_rattrapage)
+
+    candidats = CandidatRattrapage.objects.filter(
+        session=session_rattrapage
+    ).select_related("etudiant", "ecue", "session").order_by("etudiant__nom", "ecue__libelle")
+
+    return render(request, "lmd/rattrapage/liste.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "sessions_disponibles": sessions_disponibles,
+    })
+
+
+def deliberation_rattrapageAAAA(request):
+
+    session_rattrapage, semestre, sessions_disponibles = get_session_rattrapage(request)
+
+    candidats = CandidatRattrapage.objects.filter(
+        session=session_rattrapage
+    ).select_related("etudiant", "ecue", "session") if session_rattrapage else CandidatRattrapage.objects.none()
+
+    return render(request, "lmd/rattrapage/deliberation.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "sessions_disponibles": sessions_disponibles,
+    })
+
+
+@login_required(login_url="login")
+@role_required("ADMIN")
+def bulletin_rattrapage_listAAAA(request):
+
+    session_rattrapage, semestre, sessions_disponibles = get_session_rattrapage(request)
+
+    candidats = CandidatRattrapage.objects.filter(
+        session=session_rattrapage
+    ).select_related("etudiant", "ecue", "session") if session_rattrapage else CandidatRattrapage.objects.none()
+
+    return render(request, "lmd/rattrapage/bulletins.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "sessions_disponibles": sessions_disponibles,
+    })
+@login_required
+def saisie_rattrapageANC(request):
 
     session = SessionAcademique.objects.filter(
         type_session="RATTRAPAGE",
@@ -1505,137 +1611,359 @@ def saisie_rattrapage(request):
         }
 
     )
-    
-    
+ 
+@login_required
+def saisie_rattrapageAA(request):
+    session = SessionAcademique.objects.filter(
+        type_session="RATTRAPAGE", active=True
+    ).first()
+
+    if not session:
+        return render(request, "lmd/rattrapage/saisie.html", {"candidats": []})
+
+    sync_candidats_rattrapage(session)  # <- pour être sûr que la liste est à jour aussi ici
+
+    candidats = CandidatRattrapage.objects.filter(
+        session=session, statut="EN_ATTENTE"
+    ).select_related("etudiant", "ecue")
+
+    if request.method == "POST":
+        erreurs = []
+        for candidat in candidats:
+            valeur = request.POST.get(f"note_{candidat.id}")
+            if valeur in [None, ""]:
+                continue
+            try:
+                nouvelle_note = float(valeur)
+            except ValueError:
+                erreurs.append(f"Note invalide pour {candidat.etudiant}")
+                continue
+            if not (0 <= nouvelle_note <= 20):
+                erreurs.append(f"Note hors limites (0-20) pour {candidat.etudiant}")
+                continue
+
+            candidat.nouvelle_note = nouvelle_note
+            candidat.statut = "VALIDE" if nouvelle_note >= 10 else "ECHEC"
+            candidat.save()
+
+            NoteLMD.objects.update_or_create(
+                etudiant=candidat.etudiant,
+                ecue=candidat.ecue,
+                semestre=candidat.session.semestre,
+                session="2",
+                defaults={"cc": 0, "examen": nouvelle_note},
+            )
+
+        if erreurs:
+            for e in erreurs:
+                messages.error(request, e)
+        else:
+            messages.success(request, "Les notes de rattrapage ont été enregistrées.")
+        return redirect("rattrapage_liste")
+
+    return render(request, "lmd/rattrapage/saisie.html", {"candidats": candidats})  
+   
+@login_required
+def rattrapage_liste(request):
+
+    session_rattrapage, semestre, sessions_disponibles = get_session_rattrapage(request)
+
+    if not session_rattrapage:
+        return render(request, "lmd/rattrapage/liste.html", {
+            "candidats": [],
+            "semestre": semestre,
+            "sessions_disponibles": sessions_disponibles,
+        })
+
+    sync_candidats_rattrapage(session_rattrapage)
+
+    candidats = CandidatRattrapage.objects.filter(
+        session=session_rattrapage
+    ).select_related("etudiant", "ecue").order_by("etudiant__nom", "ecue__libelle")
+
+    return render(request, "lmd/rattrapage/liste.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "session_rattrapage": session_rattrapage,
+        "sessions_disponibles": sessions_disponibles,
+    })
+
+
+@login_required
+def saisie_rattrapage(request):
+
+    session, semestre, sessions_disponibles = get_session_rattrapage(request)
+
+    if not session:
+        return render(request, "lmd/rattrapage/saisie.html", {
+            "candidats": [],
+            "semestre": semestre,
+            "sessions_disponibles": sessions_disponibles,
+        })
+
+    sync_candidats_rattrapage(session)
+
+    candidats = CandidatRattrapage.objects.filter(
+        session=session, statut="EN_ATTENTE"
+    ).select_related("etudiant", "ecue")
+
+    if request.method == "POST":
+        erreurs = []
+        for candidat in candidats:
+            valeur = request.POST.get(f"note_{candidat.id}")
+            if valeur in [None, ""]:
+                continue
+            try:
+                nouvelle_note = float(valeur)
+            except ValueError:
+                erreurs.append(f"Note invalide pour {candidat.etudiant}")
+                continue
+            if not (0 <= nouvelle_note <= 20):
+                erreurs.append(f"Note hors limites (0-20) pour {candidat.etudiant}")
+                continue
+
+            candidat.nouvelle_note = nouvelle_note
+            candidat.statut = "VALIDE" if nouvelle_note >= 10 else "ECHEC"
+            candidat.save()
+
+            # La note de session (candidat.session.semestre) garantit
+            # que la note remonte sur le BON semestre.
+            NoteLMD.objects.update_or_create(
+                etudiant=candidat.etudiant,
+                ecue=candidat.ecue,
+                semestre=candidat.session.semestre,
+                session="2",
+                defaults={"cc": 0, "examen": nouvelle_note},
+            )
+
+        if erreurs:
+            for e in erreurs:
+                messages.error(request, e)
+        else:
+            messages.success(request, "Les notes de rattrapage ont été enregistrées.")
+
+        return redirect(f"{reverse('rattrapage_liste')}?semestre={semestre}")
+
+    return render(request, "lmd/rattrapage/saisie.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "sessions_disponibles": sessions_disponibles,
+    })
+
+
 @login_required
 def liste_rattrapage(request):
 
-    session_rattrapage = SessionAcademique.objects.filter(
-        type_session="RATTRAPAGE",
-        active=True
-    ).first()
-
+    session_rattrapage, semestre, sessions_disponibles = get_session_rattrapage(request)
 
     if not session_rattrapage:
-        return render(
-            request,
-            "lmd/rattrapage/liste.html",
-            {
-                "candidats": []
-            }
-        )
+        return render(request, "lmd/rattrapage/liste.html", {
+            "candidats": [],
+            "semestre": semestre,
+            "sessions_disponibles": sessions_disponibles,
+        })
 
-
-    # ===============================
-    # Création automatique des candidats
-    # depuis les notes session normale
-    # ===============================
-
-    notes = NoteLMD.objects.filter(
-        session="1",
-        moyenne__lt=10
-    ).select_related(
-        "etudiant",
-        "ecue"
-    )
-
-
-    for note in notes:
-
-        candidat, created = CandidatRattrapage.objects.get_or_create(
-
-            etudiant=note.etudiant,
-
-            ecue=note.ecue,
-
-            session=session_rattrapage,
-
-            annee_academique="2025-2026",
-
-            defaults={
-                "ancienne_note": note.moyenne,
-                "statut": "EN_ATTENTE"
-            }
-        )
-
-
-        # Mise à jour de l'ancienne note
-        if not created:
-
-            candidat.ancienne_note = note.moyenne
-
-            candidat.save()
-
-
-
-    # ===============================
-    # Récupération des candidats
-    # ===============================
+    sync_candidats_rattrapage(session_rattrapage)
 
     candidats = CandidatRattrapage.objects.filter(
-
         session=session_rattrapage
+    ).select_related("etudiant", "ecue", "session").order_by("etudiant__nom", "ecue__libelle")
 
-    ).select_related(
+    return render(request, "lmd/rattrapage/liste.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "sessions_disponibles": sessions_disponibles,
+    })
 
-        "etudiant",
-        "ecue",
-        "session"
-
-    ).order_by(
-
-        "etudiant__nom",
-        "ecue__libelle"
-
-    )
-
-
-
-    return render(
-
-        request,
-
-        "lmd/rattrapage/liste.html",
-
-        {
-            "candidats": candidats
-        }
-
-    )
 
 def deliberation_rattrapage(request):
 
-    candidats = CandidatRattrapage.objects.select_related(
-        "etudiant",
-        "ecue",
-        "session"
-    ).all()
+    session_rattrapage, semestre, sessions_disponibles = get_session_rattrapage(request)
 
-    return render(
-        request,
-        "lmd/rattrapage/deliberation.html",
-        {
-            "candidats": candidats
-        }
-    )
-    
+    candidats = CandidatRattrapage.objects.filter(
+        session=session_rattrapage
+    ).select_related("etudiant", "ecue", "session") if session_rattrapage else CandidatRattrapage.objects.none()
+
+    return render(request, "lmd/rattrapage/deliberation.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "sessions_disponibles": sessions_disponibles,
+    })
+
+
 @login_required(login_url="login")
-@role_required("ADMIN")    
+@role_required("ADMIN")
 def bulletin_rattrapage_list(request):
 
-    candidats = CandidatRattrapage.objects.select_related(
-        "etudiant",
-        "ecue",
-        "session"
-    ).all()
+    session_rattrapage, semestre, sessions_disponibles = get_session_rattrapage(request)
+
+    candidats = CandidatRattrapage.objects.filter(
+        session=session_rattrapage
+    ).select_related("etudiant", "ecue", "session") if session_rattrapage else CandidatRattrapage.objects.none()
+
+    return render(request, "lmd/rattrapage/bulletins.html", {
+        "candidats": candidats,
+        "semestre": semestre,
+        "sessions_disponibles": sessions_disponibles,
+    })  
+   
+# services.py
+
+def get_meilleure_note(etudiant, ecue, semestre):
+    """
+    Retourne la note à retenir pour un etudiant/ecue/semestre :
+    priorité à la session de rattrapage (session="2") si elle existe,
+    sinon la session normale (session="1").
+    Fonction canonique : à utiliser dans TOUS les générateurs PDF
+    et dans calcul_moyenne_ecue().
+    """
+    note = NoteLMD.objects.filter(
+        etudiant=etudiant,
+        ecue=ecue,
+        semestre=semestre,
+        session="2",
+    ).first()
+
+    if note is None:
+        note = NoteLMD.objects.filter(
+            etudiant=etudiant,
+            ecue=ecue,
+            semestre=semestre,
+            session="1",
+        ).first()
+
+    return note
+
+
+# @login_required
+# def liste_rattrapage(request):
+
+#     session_rattrapage = SessionAcademique.objects.filter(
+#         type_session="RATTRAPAGE",
+#         active=True
+#     ).first()
+
+
+#     if not session_rattrapage:
+#         return render(
+#             request,
+#             "lmd/rattrapage/liste.html",
+#             {
+#                 "candidats": []
+#             }
+#         )
+
+
+#     # ===============================
+#     # Création automatique des candidats
+#     # depuis les notes session normale
+#     # ===============================
+
+#     notes = NoteLMD.objects.filter(
+#         session="1",
+#         moyenne__lt=10
+#     ).select_related(
+#         "etudiant",
+#         "ecue"
+#     )
+
+
+#     for note in notes:
+
+#         candidat, created = CandidatRattrapage.objects.get_or_create(
+
+#             etudiant=note.etudiant,
+
+#             ecue=note.ecue,
+
+#             session=session_rattrapage,
+
+#             annee_academique="2025-2026",
+
+#             defaults={
+#                 "ancienne_note": note.moyenne,
+#                 "statut": "EN_ATTENTE"
+#             }
+#         )
+
+
+#         # Mise à jour de l'ancienne note
+#         if not created:
+
+#             candidat.ancienne_note = note.moyenne
+
+#             candidat.save()
+
+
+
+#     # ===============================
+#     # Récupération des candidats
+#     # ===============================
+
+#     candidats = CandidatRattrapage.objects.filter(
+
+#         session=session_rattrapage
+
+#     ).select_related(
+
+#         "etudiant",
+#         "ecue",
+#         "session"
+
+#     ).order_by(
+
+#         "etudiant__nom",
+#         "ecue__libelle"
+
+#     )
+
+
+
+#     return render(
+
+#         request,
+
+#         "lmd/rattrapage/liste.html",
+
+#         {
+#             "candidats": candidats
+#         }
+
+#     )
+
+# def deliberation_rattrapage(request):
+
+#     candidats = CandidatRattrapage.objects.select_related(
+#         "etudiant",
+#         "ecue",
+#         "session"
+#     ).all()
+
+#     return render(
+#         request,
+#         "lmd/rattrapage/deliberation.html",
+#         {
+#             "candidats": candidats
+#         }
+#     )
     
-    return render(
-        request,
-        "lmd/rattrapage/bulletins.html",
-        {
-            "candidats": candidats
-        }
-    )
+# @login_required(login_url="login")
+# @role_required("ADMIN")    
+# def bulletin_rattrapage_list(request):
+
+#     candidats = CandidatRattrapage.objects.select_related(
+#         "etudiant",
+#         "ecue",
+#         "session"
+#     ).all()
+    
+#     return render(
+#         request,
+#         "lmd/rattrapage/bulletins.html",
+#         {
+#             "candidats": candidats
+#         }
+#     )
 
 
 
@@ -7895,50 +8223,69 @@ def l3_tc_ecue_delete(request, pk):
     )
 
 @login_required(login_url="login")
-@role_required("ADMIN")    
+@role_required("ADMIN")
+def bulletin_rattrapage_pdfAAA(request, id, semestre):
+
+    etudiant = get_object_or_404(EtudiantLMD, id=id)
+    filiere = etudiant.filiere.libelle.lower()
+
+    if "gestion" in filiere and "droit" in filiere:
+        return bulletin_tronc_commun_pdf(request, id, semestre)
+
+    elif "droit privé" in filiere:
+        return imprimer_bulletin_droit_prive(request, id, semestre)
+
+    elif "qhse" in filiere:
+        return imprimer_bulletin_licence_qhse(request, id, semestre)
+
+    else:
+        return HttpResponse("Aucun service PDF trouvé pour cette filière")
+    
+@login_required(login_url="login")
+@role_required("ADMIN")
 def bulletin_rattrapage_pdf(request, id, semestre):
 
-    etudiant = get_object_or_404(
-        EtudiantLMD,
-        id=id
-    )
+    etudiant = get_object_or_404(EtudiantLMD, id=id)
 
+    # BUG CORRIGÉ : si l'étudiant n'a pas de filière assignée,
+    # "etudiant.filiere.libelle" plantait avec un AttributeError (500).
+    if not etudiant.filiere or not etudiant.filiere.libelle:
+        return HttpResponse(
+            "Aucune filière renseignée pour cet étudiant.",
+            status=404,
+        )
 
     filiere = etudiant.filiere.libelle.lower()
 
+    # NOTE IMPORTANTE (à vérifier côté métier) : cette vue s'appelle
+    # "bulletin_rattrapage_pdf" mais appelle exactement les mêmes fonctions
+    # que pour un bulletin normal, sans indiquer nulle part qu'il s'agit
+    # d'une session de rattrapage (session 2). Le générateur PDF
+    # (generer_bulletin_tronc_commun_pdf) récupère lui-même la session
+    # via SaisieNoteLMD.filter(...).session, donc si la saisie de
+    # rattrapage existe bien en base avec session="2", ça peut fonctionner ;
+    # mais rien ici ne garantit que c'est la bonne saisie qui est trouvée.
+    # Il faut confirmer que .filter(filiere=..., niveau=..., semestre=...)
+    # renvoie bien l'enregistrement de rattrapage et pas celui de la
+    # session normale quand les deux existent pour le même semestre.
+    if "SCIENCES ECONOMIQUES & DE GESTION" in filiere and "droit" in filiere:
+        return bulletin_tronc_commun_pdf(request, id, semestre)
 
-    if "gestion" in filiere and "droit" in filiere:
-
-        return bulletin_tronc_commun_pdf(
-            request,
-            id,
-            semestre
-        )
-
-
-    elif "droit privé" in filiere:
-
-        return pdf_droit_prive_service_pdf(
-            request,
-            id,
-            semestre
-        )
-
+    elif "SCIENCES JURIDIQUE" in filiere:
+        return imprimer_bulletin_droit_prive(request, id, semestre)
 
     elif "qhse" in filiere:
-
-        return pdf_licence_qhse(
-            request,
-            id,
-            semestre
-        )
+        return imprimer_bulletin_licence_qhse(request, id, semestre)
 
     else:
-
+        # BUG CORRIGÉ : renvoyait un statut 200 sur un cas d'échec,
+        # rendant l'erreur invisible pour un appelant (JS, monitoring...).
         return HttpResponse(
-            "Aucun service PDF trouvé pour cette filière"
-        )    
-        
+            "Aucun service PDF trouvé pour cette filière.",
+            status=404,
+        )   
+    
+  
 def import_tronc_commun_excel(request):
     if request.method == "POST":
 

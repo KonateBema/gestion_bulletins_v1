@@ -1,0 +1,151 @@
+/* =========================================================
+   UIC — DJANGO ADMIN
+   ========================================================= */
+
+   #header {
+    background: #123b65;
+}
+
+#header a:link,
+#header a:visited {
+    color: #ffffff;
+}
+
+#branding h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#branding h1 a {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+#branding h1::before {
+    content: "";
+    display: inline-block;
+    width: 42px;
+    height: 42px;
+    background-image: url("/static/gestion/images/logo.jpeg");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+
+}
+:root {
+    --uic-primary: #123b65;
+    --uic-primary-dark: #0b2947;
+    --uic-secondary: #f2b705;
+    --uic-light: #f5f7fa;
+    --uic-border: #e2e8f0;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+#header {
+    background: var(--uic-primary);
+    color: #ffffff;
+}
+
+#branding h1 a {
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   MODULES
+   ========================================================= */
+
+.module h2,
+.module caption,
+.inline-group h2 {
+    background: var(--uic-primary);
+}
+
+
+/* =========================================================
+   BOUTONS
+   ========================================================= */
+
+.button,
+input[type=submit],
+input[type=button],
+.submit-row input,
+a.button {
+    background: var(--uic-primary);
+    border-radius: 6px;
+}
+
+.button:hover,
+input[type=submit]:hover,
+input[type=button]:hover {
+    background: var(--uic-primary-dark);
+}
+
+
+/* =========================================================
+   LIENS
+   ========================================================= */
+
+a:link,
+a:visited {
+    color: var(--uic-primary);
+}
+
+a:hover {
+    color: var(--uic-primary-dark);
+}
+
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.object-tools a {
+    background: var(--uic-primary);
+    border-radius: 5px;
+}
+
+.object-tools a:hover {
+    background: var(--uic-primary-dark);
+}
+
+
+/* =========================================================
+   TABLEAUX
+   ========================================================= */
+
+#result_list thead th {
+    background: var(--uic-primary);
+    color: #ffffff;
+}
+
+#result_list tbody tr:hover {
+    background: var(--uic-light);
+}
+
+
+/* =========================================================
+   FORMULAIRES
+   ========================================================= */
+
+input,
+select,
+textarea {
+    border-radius: 5px;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+#footer {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+}

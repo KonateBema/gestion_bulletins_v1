@@ -1624,3 +1624,34 @@ def generer_bulletin_lmd_pdf(
         raise ValueError(
             f"Aucun générateur PDF pour la filière {filiere}"
         )
+        
+        
+# ==========================================================
+# MEILLEURE NOTE (SESSION NORMALE vs RATTRAPAGE)
+# ==========================================================
+
+def get_meilleure_note(etudiant, ecue, semestre):
+    """
+    Retourne la note à retenir pour un etudiant/ecue/semestre :
+    priorité à la session de rattrapage (session="2") si elle existe,
+    sinon la session normale (session="1").
+    Fonction canonique : à utiliser dans TOUS les générateurs PDF
+    et dans calcul_moyenne_ecue().
+    """
+
+    note = NoteLMD.objects.filter(
+        etudiant=etudiant,
+        ecue=ecue,
+        semestre=semestre,
+        session="2",
+    ).first()
+
+    if note is None:
+        note = NoteLMD.objects.filter(
+            etudiant=etudiant,
+            ecue=ecue,
+            semestre=semestre,
+            session="1",
+        ).first()
+
+    return note
