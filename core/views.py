@@ -47,7 +47,7 @@ from reportlab.platypus import (
 # 🔐 LOGIN
 # =========================
 @csrf_protect
-def login_viewAAAA(request):
+def login_view(request):
 
     if request.method == "POST":
 
@@ -89,7 +89,7 @@ from django.views.decorators.csrf import csrf_protect
 # ==========================================================
 
 @csrf_protect
-def login_view(request):
+def login_viewRR(request):
 
     # ==========================================================
     # UTILISATEUR DÉJÀ CONNECTÉ
@@ -124,7 +124,7 @@ def login_view(request):
 
             return redirect("dashboard_gestionnaire")
 
-        elif profile.role == "PROF":
+        elif profile.role == "prof":
 
             return redirect("dashboard_prof")
 

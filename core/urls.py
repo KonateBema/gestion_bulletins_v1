@@ -80,5 +80,5 @@ urlpatterns = [
     path("ajax/matieres-par-classe/", views.matieres_par_classe, name="matieres_par_classe"),
     path("ajax/grandes-unites-par-filiere/", views.grandes_unites_par_filiere, name="grandes_unites_par_filiere"),
     path("etudiants/export/pdf/",export_etudiants_pdf,name="export_etudiants_pdf"),
-
+    
 ]
