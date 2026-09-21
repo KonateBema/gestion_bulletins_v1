@@ -48,7 +48,7 @@ CSRF_TRUSTED_ORIGINS = [
     # "http://gestion-bulletins-v1-2.onrender.com",
     # "http://uic.eu.com",
     "https://gestion-bulletins-v1-2.onrender.com",
-    # "https://uic.eu.com",
+    "https://uic.eu.com",
 ]
 
 
