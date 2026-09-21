@@ -51,6 +51,15 @@ CSRF_TRUSTED_ORIGINS = [
     "https://uic.eu.com",
 ]
 
+# 10 minutes = 600 secondes
+SESSION_COOKIE_AGE = 600
+# La session expire lorsque l'utilisateur ferme le navigateur
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# Renouvelle l'expiration à chaque nouvelle action/requête
+# de l'utilisateur.
+SESSION_SAVE_EVERY_REQUEST = True
+# Sécurité des cookies
+SESSION_COOKIE_HTTPONLY = True
 
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SAMESITE = "Lax"
